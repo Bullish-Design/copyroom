@@ -1,0 +1,191 @@
+-- allium: 3
+-- copyroom-session.allium
+
+-- Scope: CopyRoom CLI session lifecycle — mode detection and command dispatch
+-- Includes: CLISession, CLIMode enum, mode-gated command routing
+-- Excludes:
+--   - Project creation and template update (see copyroom-project.allium)
+--   - Workshop operations (see copyroom-workshop.allium)
+--   - Release checks (see copyroom-release.allium)
+-- Dependencies: None
+
+------------------------------------------------------------
+-- Enumerations
+------------------------------------------------------------
+
+enum CLIMode { workshop | project | template_repo | standalone }
+
+------------------------------------------------------------
+-- Entities
+------------------------------------------------------------
+
+entity CLISession {
+    status: mode_detecting | mode_detected | command_running | command_complete | command_failed | unknown_mode
+
+    mode: CLIMode when status != mode_detecting and status != unknown_mode
+
+    transitions status {
+        mode_detecting -> mode_detected
+        mode_detecting -> unknown_mode
+        mode_detected -> command_running
+        mode_detected -> command_failed
+        command_running -> command_complete
+        command_running -> command_failed
+        terminal: command_complete, command_failed, unknown_mode
+    }
+}
+
+------------------------------------------------------------
+-- Rules: Session Initialization
+------------------------------------------------------------
+
+rule InitializeCLISession {
+    when: StartCLI()
+    ensures: CLISession.created(status: mode_detecting)
+}
+
+------------------------------------------------------------
+-- Rules: Mode Detection
+------------------------------------------------------------
+
+rule DetectWorkshopMode {
+    when: DetectMode(session)
+    ensures: session.mode = workshop
+    @guidance
+        -- Detected when ancestor contains copyroom.yml with registry/ and scenarios/.
+}
+
+rule DetectProjectMode {
+    when: DetectMode(session)
+    requires: session.mode != workshop
+    ensures: session.mode = project
+    @guidance
+        -- Detected when ancestor contains .copier-answers.yml or copyroom.project.yml,
+        -- and no workshop markers exist.
+}
+
+rule DetectTemplateRepoMode {
+    when: DetectMode(session)
+    requires: session.mode != workshop
+        and session.mode != project
+    ensures: session.mode = template_repo
+    @guidance
+        -- Detected when ancestor contains copier.yml and not inside a workshop.
+}
+
+rule DetectStandaloneMode {
+    when: DetectMode(session)
+    ensures:
+        if session.mode not in {workshop, project, template_repo}:
+            session.mode = standalone
+}
+
+rule ModeDetected {
+    when: session: CLISession.mode != null
+    ensures: session.status = mode_detected
+}
+
+------------------------------------------------------------
+-- Rules: Mode-Gated Dispatch
+------------------------------------------------------------
+
+rule DispatchWorkshopCommand {
+    when: RunCommand(session, command)
+    requires: session.status = mode_detected
+        and session.mode = workshop
+        and command in {"registry", "render", "test", "golden", "release-check", "update-test"}
+    ensures: session.status = command_running
+}
+
+rule DispatchProjectCommand {
+    when: RunCommand(session, command)
+    requires: session.status = mode_detected
+        and session.mode = project
+        and command in {"inspect", "new", "update", "status"}
+    ensures: session.status = command_running
+}
+
+rule RejectCommandOutOfMode {
+    when: RunCommand(session, command)
+    requires: session.status = mode_detected
+    ensures:
+        if (session.mode != workshop and command in {"registry", "render", "test", "golden", "release-check", "update-test"})
+            or (session.mode != project and command in {"new", "update"}):
+            session.status = command_failed
+    @guidance
+        -- Commands not available in the current mode print "not available"
+        -- and exit with non-zero status.
+}
+
+rule NoModeDetected {
+    when: session: CLISession.status becomes mode_detecting
+    ensures:
+        if session.mode = null:
+            session.status = unknown_mode
+    @guidance
+        -- No workshop or project markers found in any ancestor directory.
+        -- Print "No CopyRoom project or workshop found here" and exit 1.
+}
+
+rule CommandComplete {
+    when: session: CLISession.status becomes command_running
+    ensures: session.status = command_complete
+}
+
+rule CommandFailed {
+    when: session: CLISession.status becomes command_failed
+    ensures:
+        true
+    @guidance
+        -- On failure: print what happened, what failed, where state was left.
+        -- Never attempt automatic rollback.
+        -- Exit with non-zero status.
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+invariant SingleMode {
+    for session in CLISessions where session.status != mode_detecting:
+        session.mode != null
+}
+
+invariant ModeExclusive {
+    for session in CLISessions where session.status = mode_detected:
+        (session.mode = workshop implies session.mode != project
+            and session.mode != template_repo and session.mode != standalone)
+        and (session.mode = project implies session.mode != template_repo
+            and session.mode != standalone)
+        and (session.mode = template_repo implies session.mode != standalone)
+}
+
+------------------------------------------------------------
+-- Actors
+------------------------------------------------------------
+
+actor CLIUser {
+    identified_by: true
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface CLISurface {
+    facing CLIUser
+
+    provides:
+        StartCLI()
+        DetectMode(session: CLISession)
+        RunCommand(session: CLISession, command: String)
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Mode precedence — should ancestor directory search prefer closer markers or specific mode types?"
+    -- Resolved for v0.x: closest ancestor with any marker wins (proximity over mode type).
+    -- At each ancestor, workshop markers checked before project markers.
+    -- template_repo and standalone held in reserve for future feature gates (v0.5.0).

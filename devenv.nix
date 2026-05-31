@@ -1,25 +1,34 @@
-{ pkgs, lib, config, inputs, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  inputs,
+  ...
+}:
 
 {
   # https://devenv.sh/basics/
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  packages = [ 
-    pkgs.git 
+  packages = [
+    pkgs.git
     pkgs.uv
-    ];
+    pkgs.secretspec
+  ];
+
+  allium.enable = true;
 
   # https://devenv.sh/languages/
   # languages.rust.enable = true;
   languages = {
-      python = {
-          enable = true;
-          version = "3.13";
-          venv.enable = true;
-          uv.enable = true;
-        };
+    python = {
+      enable = true;
+      version = "3.13";
+      venv.enable = true;
+      uv.enable = true;
     };
+  };
 
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";

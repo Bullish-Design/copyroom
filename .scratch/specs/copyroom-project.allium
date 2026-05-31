@@ -1,0 +1,320 @@
+-- allium: 3
+-- copyroom-project.allium
+
+-- Scope: CopyRoom project lifecycle — safe project creation and template update
+-- Includes: ProjectCreation, TemplateUpdate
+-- Excludes:
+--   - CLI session and mode dispatch (see copyroom-session.allium)
+--   - Workshop operations (see copyroom-workshop.allium)
+-- Dependencies: None
+
+------------------------------------------------------------
+-- Entities
+------------------------------------------------------------
+
+entity ProjectCreation {
+    template_source: String
+    target_dir: String
+    uses_answer_file: Boolean
+
+    status: initiated
+        | target_verified
+        | prompts_collected
+        | copy_executed
+        | post_create_run
+        | complete
+        | failed
+
+    result_suggestions: List<String>
+
+    transitions status {
+        initiated -> target_verified
+        initiated -> failed
+        target_verified -> prompts_collected
+        target_verified -> failed
+        prompts_collected -> copy_executed
+        prompts_collected -> failed
+        copy_executed -> post_create_run
+        copy_executed -> complete
+        copy_executed -> failed
+        post_create_run -> complete
+        post_create_run -> failed
+        terminal: complete, failed
+    }
+}
+
+entity TemplateUpdate {
+    project_root: String
+    template_id: String
+    previous_ref: String?
+    target_ref: String?
+
+    status: initiated
+        | config_loaded
+        | worktree_verified
+        | branch_created
+        | update_executed
+        | post_update_run
+        | complete
+        | failed
+
+    update_branch: String?
+    conflicts: Set<String>
+    rejects: Set<String>
+
+    transitions status {
+        initiated -> config_loaded
+        initiated -> failed
+        config_loaded -> worktree_verified
+        config_loaded -> failed
+        worktree_verified -> branch_created
+        worktree_verified -> update_executed
+        worktree_verified -> failed
+        branch_created -> update_executed
+        branch_created -> failed
+        update_executed -> post_update_run
+        update_executed -> complete
+        update_executed -> failed
+        post_update_run -> complete
+        post_update_run -> failed
+        terminal: complete, failed
+    }
+}
+
+------------------------------------------------------------
+-- Rules: Safe Project Creation
+------------------------------------------------------------
+
+rule InitiateProjectCreation {
+    when: CreateProject(source, target_dir, answer_file)
+    requires: source != ""
+    ensures: ProjectCreation.created(
+        template_source: source,
+        target_dir: target_dir ?? ".",
+        uses_answer_file: answer_file != null,
+        status: initiated
+    )
+}
+
+rule VerifyTargetDirectory {
+    when: creation: ProjectCreation.status becomes initiated
+    ensures: creation.status = target_verified
+    ensures:
+        if target_is_non_empty:
+            TargetDirectoryNotEmpty(creation)
+    @guidance
+        -- Target directory must not exist, or must be empty.
+        -- If target exists and is non-empty, emits TargetDirectoryNotEmpty
+        -- which triggers RejectNonEmptyTarget.
+}
+
+rule RejectNonEmptyTarget {
+    when: TargetDirectoryNotEmpty(creation)
+    ensures:
+        creation.status = failed
+        creation.result_suggestions = {"Target directory is not empty. Choose an empty or non-existent directory."}
+}
+
+rule CollectPrompts {
+    when: creation: ProjectCreation.status becomes target_verified
+    ensures: creation.status = prompts_collected
+    @guidance
+        -- If --answers was provided, load from YAML file.
+        -- Otherwise, run copier's interactive prompts.
+}
+
+rule ExecuteCopierCopy {
+    when: creation: ProjectCreation.status becomes prompts_collected
+    ensures: creation.status = copy_executed
+    ensures:
+        if copier_copy_failed:
+            CopierCopyFailed(creation)
+    @guidance
+        -- Run copier copy with collected answers.
+        -- Copier generates the project files.
+        -- If Copier fails, emits CopierCopyFailed which triggers CopierCopyFailed rule.
+}
+
+rule CopierCopyFailed {
+    when: CopierCopyFailed(creation)
+    ensures:
+        creation.status = failed
+        creation.result_suggestions = {
+            "Copier copy failed. Check the error output above.",
+            "The target directory may be in an inconsistent state."
+        }
+}
+
+rule DetectPostCreateCommands {
+    when: creation: ProjectCreation.status becomes copy_executed
+    ensures:
+        creation.status = post_create_run
+    @guidance
+        -- If the generated project contains copyroom.project.yml with
+        -- commands.post_project_create, those commands are executed.
+        -- If not, the implementation short-circuits to complete.
+}
+
+rule RunPostCreateCommands {
+    when: creation: ProjectCreation.status becomes post_create_run
+    ensures: creation.status = complete
+    @guidance
+        -- Run each post-create command. Commands are trusted local files.
+        -- Any failure is reported but does not block completion.
+}
+
+rule CompleteProjectCreation {
+    when: creation: ProjectCreation.status becomes complete
+    ensures:
+        creation.result_suggestions = {
+            "cd " + creation.target_dir,
+            "git init && git add . && git commit -m \"Initial generation\"",
+            "copyroom project inspect"
+        }
+}
+
+------------------------------------------------------------
+-- Rules: Safe Template Update
+------------------------------------------------------------
+
+rule InitiateTemplateUpdate {
+    when: UpdateTemplate(project_root, target_ref, use_branch)
+    requires: target_ref != null
+    ensures: TemplateUpdate.created(
+        project_root: project_root,
+        template_id: "from .copier-answers.yml",
+        previous_ref: "from .copier-answers.yml",
+        target_ref: target_ref,
+        status: initiated
+    )
+}
+
+rule ResolveLatestRef {
+    when: update: TemplateUpdate.status becomes initiated
+    requires: update.target_ref = null
+    ensures: update.target_ref = "latest semver tag from remote"
+}
+
+rule LoadUpdateConfig {
+    when: update: TemplateUpdate.status becomes initiated
+    ensures: update.status = config_loaded
+    @guidance
+        -- Load .copier-answers.yml (authoritative for template source and version)
+        -- and copyroom.project.yml (for git policy, check commands).
+}
+
+rule NoUpdateAvailable {
+    when: update: TemplateUpdate.status becomes config_loaded
+    requires: update.previous_ref = update.target_ref
+    ensures: update.status = failed
+    @guidance
+        -- Already at the target version. Nothing to do.
+}
+
+rule VerifyCleanWorktree {
+    when: update: TemplateUpdate.status becomes config_loaded
+    requires: update.previous_ref != update.target_ref
+    ensures: update.status = worktree_verified
+    ensures:
+        if worktree_not_clean:
+            WorktreeNotClean(update)
+    @guidance
+        -- git status --porcelain must be empty.
+        -- Clean worktree is the safety net: if anything fails,
+        -- git checkout . is always available.
+        -- If worktree is dirty, emits WorktreeNotClean which triggers RejectDirtyWorktree.
+}
+
+rule RejectDirtyWorktree {
+    when: WorktreeNotClean(update)
+    ensures:
+        update.status = failed
+    @guidance
+        -- Report: "Worktree is not clean. Commit or stash changes before updating."
+}
+
+rule CreateUpdateBranch {
+    when: update: TemplateUpdate.status becomes worktree_verified
+    ensures:
+        update.update_branch = "template-update/" + update.template_id + "-" + update.target_ref
+        update.status = branch_created
+    @guidance
+        -- Only when --branch is passed. Otherwise skip to update_executed.
+        -- Isolates the update from the main branch until reviewed.
+}
+
+rule ExecuteCopierUpdate {
+    when: update: TemplateUpdate.status becomes worktree_verified
+    ensures: update.status = update_executed
+}
+
+rule ExecuteCopierUpdateFromBranch {
+    when: update: TemplateUpdate.status becomes branch_created
+    ensures: update.status = update_executed
+    @guidance
+        -- Run copier update --defaults, optionally with --vcs-ref.
+        -- Captures changed files, conflicts, rejects, and warnings.
+}
+
+rule CaptureUpdateConflicts {
+    when: update: TemplateUpdate.status becomes update_executed
+    ensures: update.status = post_update_run
+    @guidance
+        -- Conflicts and .rej files are captured from Copier output.
+        -- If no post-update commands are configured, transit to complete.
+}
+
+rule RunPostUpdateCommands {
+    when: update: TemplateUpdate.status becomes post_update_run
+    ensures: update.status = complete
+    @guidance
+        -- Run post-template-update commands (e.g., pytest, ruff check).
+        -- Results are captured. Failures are reported but do not block.
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+invariant CleanWorktreeBeforeUpdate {
+    for update in TemplateUpdates where update.status in {
+        worktree_verified, branch_created, update_executed,
+        post_update_run, complete
+    }:
+        update.previous_ref != update.target_ref
+}
+
+invariant NoSilentErrors {
+    for creation in ProjectCreations where creation.status = failed:
+        creation.result_suggestions.count >= 1
+    for update in TemplateUpdates where update.status = failed:
+        update.previous_ref != null or update.target_ref != null
+}
+
+------------------------------------------------------------
+-- Actors
+------------------------------------------------------------
+
+actor CLIUser {
+    identified_by: true
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface ProjectSurface {
+    facing CLIUser
+
+    provides:
+        CreateProject(source: String, target_dir: String?, answer_file: String?)
+        UpdateTemplate(project_root: String, target_ref: String?, use_branch: String?)
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Should project new support a --dry-run flag?"
+open question "Should template update support --dry-run to preview changes before applying?"
+open question "Post-create command timeout — should long-running commands be bounded?"

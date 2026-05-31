@@ -1,7 +1,7 @@
 [project]
-name = "template-py"
+name = "copyroom"
 version = "0.1.0"
-description = "A Python project template with modern tooling."
+description = "Mode-aware CLI for template-driven project workflows, built on Copier."
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
@@ -12,7 +12,12 @@ authors = [
 
 dependencies = [
   "pydantic>=2.12.5",
+  "pyyaml>=6.0",
+  "copier>=9.15.1,<10",
 ]
+
+[project.scripts]
+copyroom = "copyroom.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -20,6 +25,7 @@ dev = [
   "pytest-cov>=4.1",
   "mypy>=1.10",
   "ruff>=0.5.0",
+  "hypothesis>=6.0",
 ]
 
 #[project.urls]
@@ -31,8 +37,7 @@ requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# Tell hatch which package to ship (your code lives in src/template_py)
-packages = ["src/template_py"]
+packages = ["src/copyroom"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -48,12 +53,12 @@ include = [
 # Keep the default behavior; this section is here so you can extend it later if needed.
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=embeddify --cov-report=term-missing"
+addopts = "-q --cov=copyroom --cov-report=term-missing"
 testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.13"
-packages = ["src/template_py"]
+packages = ["src/copyroom"]
 strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
@@ -67,6 +72,10 @@ no_implicit_optional = true
 line-length = 120
 target-version = "py313"
 src = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "ANN"]
+"src/copyroom/_compat/*" = ["D", "ANN"]
 
 [tool.ruff.lint]
 select = [

@@ -1,0 +1,109 @@
+-- allium: 3
+-- copyroom-release.allium
+
+-- Scope: Release readiness checks — matrix testing, quality gates, release advisories
+-- Includes: ReleaseCheck
+-- Excludes:
+--   - Scenario rendering and golden testing (see copyroom-workshop.allium)
+--   - Template authoring (happens in template repos)
+-- Dependencies: None
+--   (ReleaseCheck references workshop operations at the guidance level;
+--    the implementation wires scenario render, golden diff, and update
+--    simulation results into the check's boolean fields.)
+
+------------------------------------------------------------
+-- Entities
+------------------------------------------------------------
+
+entity ReleaseCheck {
+    template_id: String
+    matrix_passed: Boolean
+    worktree_clean: Boolean
+    golden_ok: Boolean
+
+    status: initiated | matrix_run | checked | passed | failed
+
+    transitions status {
+        initiated -> matrix_run
+        initiated -> failed
+        matrix_run -> checked
+        matrix_run -> failed
+        checked -> passed
+        checked -> failed
+        terminal: passed, failed
+    }
+}
+
+------------------------------------------------------------
+-- Rules: Release Check
+------------------------------------------------------------
+
+rule RunReleaseCheck {
+    when: ReleaseCheckCommand(template_id)
+    ensures: ReleaseCheck.created(
+        template_id: template_id,
+        matrix_passed: false,
+        worktree_clean: false,
+        golden_ok: false,
+        status: initiated
+    )
+}
+
+rule RunMatrix {
+    when: check: ReleaseCheck.status becomes initiated
+    ensures:
+        check.status = matrix_run
+    @guidance
+        -- Run all scenarios for this template: render, test, update-test, golden diff.
+        -- Results populate matrix_passed, worktree_clean, golden_ok.
+}
+
+rule EvaluateReleaseReadiness {
+    when: check: ReleaseCheck.status becomes matrix_run
+    ensures: check.status = checked
+}
+
+rule ReleaseCheckPassed {
+    when: check: ReleaseCheck.status becomes checked
+    requires: check.matrix_passed
+        and check.worktree_clean
+        and check.golden_ok
+    ensures: check.status = passed
+}
+
+rule ReleaseCheckFailed {
+    when: check: ReleaseCheck.status becomes checked
+    requires: not check.matrix_passed
+        or not check.worktree_clean
+        or not check.golden_ok
+    ensures: check.status = failed
+    @guidance
+        -- Release checks are advisory in v0.x.
+        -- Pass/fail is reported but does not block tagging.
+        -- Actual tagging is manual: git tag v0.4.0 && git push --tags.
+}
+
+------------------------------------------------------------
+-- Actors
+------------------------------------------------------------
+
+actor CLIUser {
+    identified_by: true
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface ReleaseSurface {
+    facing CLIUser
+
+    provides:
+        ReleaseCheckCommand(template_id: String)
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Matrix parallelism — can scenarios be rendered and tested concurrently?"

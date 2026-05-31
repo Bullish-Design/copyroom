@@ -1,0 +1,88 @@
+-- allium: 3
+-- copyroom.allium
+
+-- Scope: Entrypoint for the CopyRoom specification suite
+-- Includes: Cross-cutting invariants, deferred specs, open questions
+-- Dependencies:
+--   use "./copyroom-session.allium" as session
+--   use "./copyroom-project.allium" as project
+--   use "./copyroom-workshop.allium" as workshop
+--   use "./copyroom-release.allium" as release
+
+------------------------------------------------------------
+-- Module imports
+------------------------------------------------------------
+
+use "./copyroom-session.allium" as session
+use "./copyroom-project.allium" as project
+use "./copyroom-workshop.allium" as workshop
+use "./copyroom-release.allium" as release
+
+------------------------------------------------------------
+-- Given
+------------------------------------------------------------
+
+given {
+    -- No shared module-level instances.
+    -- Rules operate on their own entities via triggers.
+}
+
+------------------------------------------------------------
+-- Top-level Invariants
+------------------------------------------------------------
+
+invariant OperatingModelBoundary {
+    -- CopyRoom coordinates template work. Template repos contain template source.
+    -- Shared tooling repos contain reusable behavior. Generated projects own local choices.
+    true
+}
+
+invariant NoRemoteExecution {
+    -- The CLI never fetches scripts from URLs or executes commands from remote registry entries.
+    -- Template sources are Git URLs passed to Copier. Copier handles the fetch.
+    true
+}
+
+invariant CopierAnswersAuthoritative {
+    -- .copier-answers.yml is authoritative for Copier operations.
+    -- copyroom.project.yml is advisory for workflow metadata.
+    true
+}
+
+invariant OffRampAlwaysAvailable {
+    -- Removing CopyRoom from a project: delete copyroom.project.yml,
+    -- optionally remove copyroom from dev deps. .copier-answers.yml is unaffected.
+    -- The project remains a normal Copier-managed project.
+    true
+}
+
+invariant ErrorHandlingConsistent {
+    -- All errors: print what happened, what failed, where state was left.
+    -- Never automatic rollback. Never silent errors. Non-zero exit on failure.
+    -- For wrapped commands, print the underlying tool's stderr.
+    true
+}
+
+------------------------------------------------------------
+-- Deferred Specifications
+------------------------------------------------------------
+
+deferred TemplateAuthoring    -- @location "copyroom-workshop.allium"
+    -- How maintainers create and modify Copier templates. Template-side behavior.
+
+deferred MultiTemplateComposition    -- @location "copyroom-project.allium"
+    -- Layered partial templates composing into a single project. v1 targets single-template.
+
+deferred CrossRepoReleaseAutomation    -- @location "copyroom-release.allium"
+    -- Automated cross-repo releases. v0.x has advisory release checks only.
+
+deferred AgentSupport    -- @location "copyroom-session.allium"
+    -- Agent brief, context roots, agent tool manifests. Deferred to v0.4.0.
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "CLI Extraction — when should src/copyroom/ move to its own repository with independent versioning?"
+open question "Lock file strategy — when should copyroom.lock.yml be required vs optional?"
+open question "Policy enforcement — should policy violations block operations or warn?"
