@@ -285,8 +285,6 @@ actor CLIUser {
 ------------------------------------------------------------
 
 surface WorkshopSurface {
-    facing CLIUser
-
     provides:
         RenderCommand(template_id: String, scenario_id: String)
         GoldenDiffCommand(template_id: String, scenario_id: String)

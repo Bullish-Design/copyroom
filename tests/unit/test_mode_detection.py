@@ -6,6 +6,7 @@ Covers the ``detect_mode`` function and its helper predicates.
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -13,14 +14,13 @@ import pytest
 from copyroom.session.detector import detect_mode, is_project, is_workshop
 from copyroom.session.model import CLIMode
 
-
 # ---------------------------------------------------------------------------
 # Helper: create a temporary directory tree with markers
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture
-def tmp_path() -> Path:
+def tmp_path() -> Iterator[Path]:
     """Yield a clean tmp dir that is removed afterward."""
     d = Path(tempfile.mkdtemp(prefix="copyroom_ut_"))
     yield d

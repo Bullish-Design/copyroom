@@ -7,11 +7,11 @@ RejectCommandOutOfMode rules in copyroom-session.allium (L88-L117).
 from __future__ import annotations
 
 from .model import (
+    PROJECT_COMMANDS,
+    WORKSHOP_COMMANDS,
     CLIMode,
     CLISession,
-    PROJECT_COMMANDS,
     SessionStatus,
-    WORKSHOP_COMMANDS,
 )
 
 # Map commands to their expected mode.

@@ -67,16 +67,20 @@ invariant ErrorHandlingConsistent {
 -- Deferred Specifications
 ------------------------------------------------------------
 
-deferred TemplateAuthoring    -- @location "copyroom-workshop.allium"
+deferred TemplateAuthoring
+    -- @location "copyroom-workshop.allium"
     -- How maintainers create and modify Copier templates. Template-side behavior.
 
-deferred MultiTemplateComposition    -- @location "copyroom-project.allium"
+deferred MultiTemplateComposition
+    -- @location "copyroom-project.allium"
     -- Layered partial templates composing into a single project. v1 targets single-template.
 
-deferred CrossRepoReleaseAutomation    -- @location "copyroom-release.allium"
+deferred CrossRepoReleaseAutomation
+    -- @location "copyroom-release.allium"
     -- Automated cross-repo releases. v0.x has advisory release checks only.
 
-deferred AgentSupport    -- @location "copyroom-session.allium"
+deferred AgentSupport
+    -- @location "copyroom-session.allium"
     -- Agent brief, context roots, agent tool manifests. Deferred to v0.4.0.
 
 ------------------------------------------------------------

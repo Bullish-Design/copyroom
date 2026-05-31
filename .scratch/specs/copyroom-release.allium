@@ -96,8 +96,6 @@ actor CLIUser {
 ------------------------------------------------------------
 
 surface ReleaseSurface {
-    facing CLIUser
-
     provides:
         ReleaseCheckCommand(template_id: String)
 }

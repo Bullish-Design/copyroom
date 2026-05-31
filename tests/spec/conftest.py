@@ -12,11 +12,11 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Path resolution helpers
@@ -62,7 +62,7 @@ class CopyRoomCLI:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def temp_dir() -> Path:
+def temp_dir() -> Iterator[Path]:
     """A clean temporary directory that is removed after the test."""
     d = tempfile.mkdtemp(prefix="copyroom_test_")
     yield Path(d)
@@ -82,7 +82,6 @@ def cli(temp_dir: Path) -> CopyRoomCLI:
 # definitions and are used solely for test assertions — they are NOT
 # coupled to the implementation's internal representation.
 
-from dataclasses import dataclass, field
 from enum import Enum
 
 

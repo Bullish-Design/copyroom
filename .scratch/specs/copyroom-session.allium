@@ -173,8 +173,6 @@ actor CLIUser {
 ------------------------------------------------------------
 
 surface CLISurface {
-    facing CLIUser
-
     provides:
         StartCLI()
         DetectMode(session: CLISession)

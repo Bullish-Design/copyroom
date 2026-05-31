@@ -9,13 +9,12 @@ import pytest
 
 from copyroom.session.dispatcher import COMMAND_MODE_MAP, dispatch
 from copyroom.session.model import (
+    PROJECT_COMMANDS,
+    WORKSHOP_COMMANDS,
     CLIMode,
     CLISession,
-    PROJECT_COMMANDS,
     SessionStatus,
-    WORKSHOP_COMMANDS,
 )
-
 
 # ===========================================================================
 # COMMAND_MODE_MAP tests

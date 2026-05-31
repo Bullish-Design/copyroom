@@ -66,3 +66,31 @@ def detect_mode(cwd: str | Path | None = None) -> CLIMode | None:
             return CLIMode.project
 
     return None  # → unknown_mode
+
+
+def detect_workshop_root(cwd: str | Path | None = None) -> Path | None:
+    """Walk up ancestors from *cwd* to find the workshop root.
+
+    Returns the first ancestor that contains workshop markers
+    (``copyroom.yml`` + ``registry/`` + ``scenarios/``), or ``None``
+    if no workshop root is found.
+
+    This is the path that Phase 4 (release checks) and other workshop
+    commands use to locate ``scenarios/``, ``registry/``, and
+    ``copyroom.yml`` without hard-coding ``Path.cwd()``.
+
+    Returns
+    -------
+    Path or None
+        The workshop root directory, or ``None`` if no workshop is found.
+    """
+    if cwd is None:
+        cwd = Path.cwd()
+    elif isinstance(cwd, str):
+        cwd = Path(cwd)
+
+    for ancestor in [cwd.resolve()] + list(cwd.resolve().parents):
+        if is_workshop(ancestor):
+            return ancestor
+
+    return None

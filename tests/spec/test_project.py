@@ -14,15 +14,12 @@ Following the test-generation guide at .agents/skills/allium/references/test-gen
 
 from __future__ import annotations
 
-import pytest
-
 from .conftest import (
-    CreationStatus,
-    UpdateStatus,
     VALID_CREATION_TRANSITIONS,
     VALID_UPDATE_TRANSITIONS,
+    CreationStatus,
+    UpdateStatus,
 )
-
 
 # ===========================================================================
 # Entity tests — ProjectCreation

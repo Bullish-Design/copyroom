@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+
+
 def copier_copy(
     source: str,
     destination: Path,
@@ -25,9 +27,9 @@ def copier_copy(
     answers_file:
         Optional path to a YAML answers file.
     """
-    cmd = ["copier", "copy", "--quiet"]
+    cmd = ["copier", "copy", "--quiet", "--defaults"]
     if answers_file is not None:
-        cmd.extend(["--answers-file", str(answers_file)])
+        cmd.extend(["--data-file", str(answers_file)])
     cmd.extend([source, str(destination)])
     return subprocess.run(cmd, capture_output=True, text=True)
 

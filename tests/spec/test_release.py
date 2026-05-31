@@ -12,10 +12,7 @@ Following the test-generation guide at .agents/skills/allium/references/test-gen
 
 from __future__ import annotations
 
-import pytest
-
-from .conftest import ReleaseStatus, VALID_RELEASE_TRANSITIONS
-
+from .conftest import VALID_RELEASE_TRANSITIONS, ReleaseStatus
 
 # ===========================================================================
 # Entity tests
@@ -115,7 +112,14 @@ class TestRunReleaseCheck:
     def test_creates_release_check_in_initiated(self) -> None:
         """ReleaseCheckCommand creates ReleaseCheck with status = initiated,
         all boolean fields = false."""
-        pass  # Integration
+        from copyroom.release.check import create_check
+
+        check = create_check("my-template")
+        assert check.template_id == "my-template"
+        assert check.status == ReleaseStatus.initiated
+        assert check.matrix_passed is False
+        assert check.worktree_clean is False
+        assert check.golden_ok is False
 
 
 class TestRunMatrix:
@@ -127,7 +131,25 @@ class TestRunMatrix:
 
     def test_matrix_populates_boolean_fields(self) -> None:
         """@guidance: results populate matrix_passed, worktree_clean, golden_ok."""
-        pass  # Integration
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from copyroom.release.check import run_matrix
+        from copyroom.release.check import ReleaseCheck as ImplReleaseCheck
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # Workshop markers needed by _check_worktree_clean (git mock handles it)
+            (root / "scenarios").mkdir()
+
+            with patch("copyroom.release.check._check_worktree_clean", return_value=True):
+                check = ImplReleaseCheck(template_id="t1")
+                result = run_matrix(check, root, "/fake/source")
+                assert result == ReleaseStatus.matrix_run
+                # With no scenarios, all should be trivially true
+                assert check.matrix_passed is True
+                assert check.golden_ok is True
+                assert check.worktree_clean is True
 
 
 class TestEvaluateReleaseReadiness:
@@ -142,7 +164,30 @@ class TestReleaseCheckPassed:
 
     def test_all_three_conditions_required(self) -> None:
         """requires: matrix_passed and worktree_clean and golden_ok."""
-        pass  # All three must be True simultaneously
+        from copyroom.release.check import ReleaseCheck as ImplReleaseCheck
+        from copyroom.release.check import resolve
+
+        # All three True -> passed
+        check = ImplReleaseCheck(
+            template_id="t",
+            matrix_passed=True,
+            worktree_clean=True,
+            golden_ok=True,
+            status=ReleaseStatus.checked,
+        )
+        result = resolve(check)
+        assert result == ReleaseStatus.passed
+
+        # Just one False -> failed
+        check2 = ImplReleaseCheck(
+            template_id="t",
+            matrix_passed=True,
+            worktree_clean=False,
+            golden_ok=True,
+            status=ReleaseStatus.checked,
+        )
+        result2 = resolve(check2)
+        assert result2 == ReleaseStatus.failed
 
     def test_checked_to_passed_when_all_true(self) -> None:
         assert ReleaseStatus.passed in VALID_RELEASE_TRANSITIONS[ReleaseStatus.checked]
@@ -153,7 +198,25 @@ class TestReleaseCheckFailed:
 
     def test_any_single_failure_causes_failed(self) -> None:
         """requires: not matrix_passed or not worktree_clean or not golden_ok."""
-        pass  # Any one false triggers failed
+        from copyroom.release.check import ReleaseCheck as ImplReleaseCheck
+        from copyroom.release.check import resolve
+
+        # Any one False -> failed
+        for (mp, wc, go) in [
+            (False, True, True),
+            (True, False, True),
+            (True, True, False),
+        ]:
+            check = ImplReleaseCheck(
+                template_id="t",
+                matrix_passed=mp,
+                worktree_clean=wc,
+                golden_ok=go,
+                status=ReleaseStatus.checked,
+            )
+            result = resolve(check)
+            assert result == ReleaseStatus.failed, \
+                f"Expected failed for ({mp}, {wc}, {go})"
 
     def test_checked_to_failed_when_any_false(self) -> None:
         assert ReleaseStatus.failed in VALID_RELEASE_TRANSITIONS[ReleaseStatus.checked]
@@ -211,7 +274,14 @@ class TestReleaseSurface:
 
     def test_surface_provides_release_check(self) -> None:
         """ReleaseCheckCommand(template_id) is on the surface."""
-        pass  # Integration
+        from copyroom.release.check import run_release_check
+
+        # Verify the function is callable with the expected signature
+        assert callable(run_release_check)
+        import inspect
+        sig = inspect.signature(run_release_check)
+        params = list(sig.parameters.keys())
+        assert "template_id" in params
 
     def test_surface_faces_cli_user(self) -> None:
         pass  # Structural

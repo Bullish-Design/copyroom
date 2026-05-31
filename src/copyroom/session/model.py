@@ -5,12 +5,11 @@ Maps directly to the Allium spec at .scratch/specs/copyroom-session.allium.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
+from dataclasses import dataclass
+from enum import StrEnum
 
 
-class CLIMode(str, Enum):
+class CLIMode(StrEnum):
     """Dispatchable modes for CopyRoom.
 
     v0.x defines exactly two dispatchable modes: workshop and project.
@@ -23,7 +22,7 @@ class CLIMode(str, Enum):
     # template_repo and standalone — held in reserve
 
 
-class SessionStatus(str, Enum):
+class SessionStatus(StrEnum):
     """States in the CLISession lifecycle (copyroom-session.allium L16-L17)."""
 
     mode_detecting = "mode_detecting"
@@ -70,7 +69,7 @@ class CLISession:
     """
 
     status: SessionStatus = SessionStatus.mode_detecting
-    mode: Optional[CLIMode] = None
+    mode: CLIMode | None = None
 
 
 class InvalidTransitionError(Exception):

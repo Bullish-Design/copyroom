@@ -15,17 +15,14 @@ Following the test-generation guide at .agents/skills/allium/references/test-gen
 
 from __future__ import annotations
 
-import pytest
-
 from .conftest import (
-    GoldenStatus,
-    RenderStatus,
-    SimStatus,
     VALID_GOLDEN_TRANSITIONS,
     VALID_RENDER_TRANSITIONS,
     VALID_SIM_TRANSITIONS,
+    GoldenStatus,
+    RenderStatus,
+    SimStatus,
 )
-
 
 # ===========================================================================
 # Value type tests — GoldenDiffResult

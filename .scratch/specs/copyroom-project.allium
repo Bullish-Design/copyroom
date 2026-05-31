@@ -304,8 +304,6 @@ actor CLIUser {
 ------------------------------------------------------------
 
 surface ProjectSurface {
-    facing CLIUser
-
     provides:
         CreateProject(source: String, target_dir: String?, answer_file: String?)
         UpdateTemplate(project_root: String, target_ref: String?, use_branch: String?)

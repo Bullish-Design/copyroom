@@ -14,15 +14,11 @@ Following the test-generation guide at .agents/skills/allium/references/test-gen
 
 from __future__ import annotations
 
-import pytest
-
 from .conftest import (
-    CLIMode,
-    CopyRoomCLI,
-    SessionStatus,
     VALID_SESSION_TRANSITIONS,
+    CLIMode,
+    SessionStatus,
 )
-
 
 # ===========================================================================
 # Entity & Enumeration tests
