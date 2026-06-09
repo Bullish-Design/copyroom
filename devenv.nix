@@ -1,65 +1,11 @@
-{
-  pkgs,
-  lib,
-  config,
-  inputs,
-  ...
-}:
+# CopyRoom as an importable devenv module.
+#
+# `imports: - copyroom` in another project's devenv.yaml pulls in this file,
+# which exposes the `copyroom` CLI via modules/copyroom.nix. Keep this surface
+# minimal: development-only tooling lives in ./dev (loaded by this repo's own
+# devenv.yaml) so it never leaks into consumers.
+{ ... }:
 
 {
-  # https://devenv.sh/basics/
-  env.GREET = "devenv";
-
-  # https://devenv.sh/packages/
-  packages = [
-    pkgs.git
-    pkgs.uv
-    pkgs.secretspec
-  ];
-
-  allium.enable = true;
-
-  # https://devenv.sh/languages/
-  # languages.rust.enable = true;
-  languages = {
-    python = {
-      enable = true;
-      version = "3.13";
-      venv.enable = true;
-      uv.enable = true;
-    };
-  };
-
-  # https://devenv.sh/processes/
-  # processes.cargo-watch.exec = "cargo-watch";
-
-  # https://devenv.sh/services/
-  # services.postgres.enable = true;
-
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = ''
-    echo hello from $GREET
-  '';
-
-  enterShell = ''
-    hello
-    git --version
-  '';
-
-  # https://devenv.sh/tasks/
-  # tasks = {
-  #   "myproj:setup".exec = "mytool build";
-  #   "devenv:enterShell".after = [ "myproj:setup" ];
-  # };
-
-  # https://devenv.sh/tests/
-  enterTest = ''
-    echo "Running tests"
-    git --version | grep --color=auto "${pkgs.git.version}"
-  '';
-
-  # https://devenv.sh/pre-commit-hooks/
-  # pre-commit.hooks.shellcheck.enable = true;
-
-  # See full reference at https://devenv.sh/reference/options/
+  imports = [ ./modules/copyroom.nix ];
 }

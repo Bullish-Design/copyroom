@@ -39,6 +39,43 @@ copy of your project. Remote template sources are cloned into a cache
 repositories. Agents can follow the `copyroom-template-edit` skill
 (`.agents/skills/copyroom-template-edit/`) to run this loop end to end.
 
+## Adopting / templatizing an existing repo (agentic)
+
+CopyRoom can also bring an **existing, hand-written repo** under management —
+either by adopting it under a template you name, or by extracting a brand-new
+template from the repo and adopting that. These two commands are *bootstrap*
+commands: they run in an unmanaged repo (no `.copier-answers.yml`, no workshop
+markers) and resolve their own context.
+
+```bash
+# Path A — you already have a template:
+copyroom adopt <template> --ref v1.0.0 --answers answers.yml   # report drift
+copyroom adopt <template> --ref v1.0.0 --answers answers.yml --write  # + record link
+
+# Path B — no template yet: extract one, converge it, finalize, then adopt:
+copyroom templatize --into ../demo-template --name demo
+( cd ../demo-template && copyroom golden demo default )        # → no diffs when faithful
+# …parameterize template/ (rename files to *.jinja, insert {{ project_name }})…
+( cd ../demo-template && git init -q && git add -A \
+    && git commit -qm t && git tag v0.1.0 )
+copyroom adopt ../demo-template --ref v0.1.0 --answers answers.yml --write
+```
+
+`templatize` scaffolds a self-contained sibling template repo — a Copier template
+(`copier.yml` with `_subdirectory: template` + a verbatim `template/`) **and** the
+workshop that exercises it (`copyroom.yml`, `scenarios/`, and a `golden/` snapshot
+of the repo). Because Copier only renders `*.jinja` files, the verbatim template
+reproduces the repo exactly, so the golden loop starts at **no diffs**; you
+introduce parameters without breaking the match, then finalize to a tagged git
+repo.
+
+Adoption is **report-only**: it renders the template with your answers, diffs that
+against the repo for a drift report (and a patch under `.copyroom/adopt/`), and —
+only with `--write` — drops a `.copier-answers.yml` into the repo. **No other repo
+file is ever modified.** It refuses an already-managed repo unless you pass
+`--force`. Agents can follow the `copyroom-adopt` skill
+(`.agents/skills/copyroom-adopt/`) to run the whole arc.
+
 ## Trust model
 
 CopyRoom delegates project generation to Copier in a subprocess. A template's

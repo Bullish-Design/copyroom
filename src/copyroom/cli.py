@@ -14,6 +14,9 @@ import argparse
 import sys
 from collections.abc import Callable, Sequence
 
+from .manage import CopyRoomError as ManageError
+from .manage import adopt as _adopt
+from .manage import templatize as _templatize
 from .project.create import CopyRoomError as CreateError
 from .project.create import create_project
 from .project.model import CreationStatus, UpdateStatus
@@ -25,6 +28,7 @@ from .release.check import run_release_check as _run_release_check
 from .session.detector import detect_mode
 from .session.dispatcher import COMMAND_MODE_MAP, dispatch
 from .session.model import (
+    BOOTSTRAP_COMMANDS,
     PROJECT_COMMANDS,
     WORKSHOP_COMMANDS,
     CLIMode,
@@ -65,6 +69,12 @@ Project commands (in a project directory):
                                Render-test the edited template with this project's answers
   template-preview  [--from REF]
                                Preview the update this project would receive from the edit
+
+Bootstrap commands (in an unmanaged repo — no markers needed):
+  templatize    [--into PATH] [--name NAME] [--id ID]
+                               Scaffold a template repo from this repo
+  adopt         <template> [--ref REF] --answers FILE [--write] [--force]
+                               Link this repo to a template and report drift
 
 Workshop commands (in a workshop directory):
   registry      <action> [args...]
@@ -304,6 +314,75 @@ def _cmd_template_preview(args: argparse.Namespace) -> None:
     print("template change is committed/tagged, apply it with: copyroom update <ref>")
 
 
+def _cmd_templatize(args: argparse.Namespace) -> None:
+    """``copyroom templatize [--into PATH] [--name NAME] [--id ID]``.
+
+    Scaffold a self-contained template repo (Home A) from the current repo.
+    """
+    try:
+        tz = _templatize(
+            repo_root=None, into=args.into, name=args.name, template_id=args.id,
+        )
+    except ManageError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Template repo scaffolded at {tz.home_dir}")
+    print(f"  Template id: {tz.template_id}")
+    print(f"  Default project_name: {tz.project_name}")
+    print()
+    print("Next — parameterize, then converge the golden loop (from the template repo):")
+    print(f"  cd {tz.home_dir}")
+    print(f"  copyroom golden {tz.template_id} default      # → no diffs when faithful")
+    print("  # rename files under template/ to *.jinja and insert {{ project_name }}")
+    print(f"  copyroom render {tz.template_id} probe         # sanity-check parameterization")
+    print()
+    print("When the golden loop is clean, finalize and adopt:")
+    print("  git init -q && git add -A && git commit -qm 'template v0.1.0' && git tag v0.1.0")
+    print(f"  cd {tz.repo_root}")
+    print(f"  copyroom adopt {tz.home_dir} --ref v0.1.0 --answers <answers.yml> --write")
+
+
+def _cmd_adopt(args: argparse.Namespace) -> None:
+    """``copyroom adopt <template> [--ref REF] --answers FILE [--write] [--force]``.
+
+    Link this repo to a template and report drift (report-only unless --write).
+    """
+    try:
+        adoption = _adopt(
+            template=args.template,
+            repo_root=None,
+            ref=args.ref,
+            answers_file=args.answers_file,
+            write=args.write,
+            force=args.force,
+        )
+    except ManageError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    result = adoption.result
+    print(f"Adoption drift (repo vs {args.template} rendered with your answers):")
+    if result is None or not result.has_drift:
+        print("  No drift — the template reproduces this repo exactly.")
+    else:
+        if result.added:
+            print(f"  Template adds (absent in repo): {sorted(result.added)}")
+        if result.modified:
+            print(f"  Differs:                        {sorted(result.modified)}")
+        if result.removed:
+            print(f"  Repo-only (not in template):    {sorted(result.removed)}")
+    if result and result.patch_path:
+        print(f"  Patch: {result.patch_path}")
+    print()
+    if adoption.wrote_answers:
+        print("  Recorded .copier-answers.yml — this repo is now CopyRoom-managed.")
+        print("  No other repo file was modified. Verify with: git status")
+    else:
+        print("  Report-only: nothing was written. Re-run with --write to record")
+        print("  the link (.copier-answers.yml) once the answers look right.")
+
+
 def _cmd_registry(args: argparse.Namespace) -> None:
     """``copyroom registry <action> [args...]`` — deferred to Phase 3."""
     print(f"[copyroom registry] action={args.action} args={args.args}")
@@ -508,6 +587,46 @@ def _build_parser() -> argparse.ArgumentParser:
     p_tprev.add_argument("--from", dest="from_ref", default=None,
                          help="Base ref for the edit branch")
 
+    # --- Bootstrap commands (unmanaged repo) ---
+    p_templatize = subparsers.add_parser(
+        "templatize",
+        help="Scaffold a template repo from the current (unmanaged) repo",
+    )
+    p_templatize.add_argument(
+        "--into", default=None,
+        help="Where to create the template repo (default: <repo>-template sibling)",
+    )
+    p_templatize.add_argument(
+        "--name", default=None,
+        help="Project name to record as the template default (default: repo name)",
+    )
+    p_templatize.add_argument(
+        "--id", default=None,
+        help="Workshop/registry template id (default: slug of --name)",
+    )
+
+    p_adopt = subparsers.add_parser(
+        "adopt",
+        help="Link this repo to a template and report drift",
+    )
+    p_adopt.add_argument("template", help="Template source (local path or git URL)")
+    p_adopt.add_argument(
+        "--ref", default=None,
+        help="Template VCS ref to render (tag/branch/commit)",
+    )
+    p_adopt.add_argument(
+        "--answers", dest="answers_file", default=None,
+        help="Path to the YAML answers file inferred for this repo",
+    )
+    p_adopt.add_argument(
+        "--write", action="store_true",
+        help="Write .copier-answers.yml into the repo (otherwise report-only)",
+    )
+    p_adopt.add_argument(
+        "--force", action="store_true",
+        help="Re-adopt even if the repo already has .copier-answers.yml",
+    )
+
     # --- Workshop commands ---
     p_registry = subparsers.add_parser("registry", help="Manage template registry")
     p_registry.add_argument("action", help="Registry action (list, add, remove, etc.)")
@@ -550,6 +669,8 @@ def _build_parser() -> argparse.ArgumentParser:
 # ---------------------------------------------------------------------------
 
 COMMAND_FN: dict[str, Callable[..., None]] = {
+    "templatize": _cmd_templatize,
+    "adopt": _cmd_adopt,
     "new": _cmd_new,
     "update": _cmd_update,
     "template-checkout": _cmd_template_checkout,
@@ -591,11 +712,18 @@ def main(argv: Sequence[str] | None = None) -> None:
         parser.print_help()
         sys.exit(0)
 
+    cmd = args.command
+
+    # --- Bootstrap commands run in an unmanaged repo: skip mode detection and
+    # dispatch entirely; they resolve their own context from the repo/args. ---
+    if cmd in BOOTSTRAP_COMMANDS:
+        COMMAND_FN[cmd](args)
+        return
+
     # --- Mode detection ---
     session = _detect_and_report(mode_override=args.mode)
 
     # --- Dispatch ---
-    cmd = args.command
     result = dispatch(cmd, session)
 
     if result == SessionStatus.command_failed:

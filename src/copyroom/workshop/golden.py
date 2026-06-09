@@ -16,6 +16,7 @@ from pathlib import Path
 
 from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
+from .._compat.treediff import collect_files, tree_diff
 from .model import (
     VALID_GOLDEN_TRANSITIONS,
     GoldenDiff,
@@ -36,19 +37,6 @@ _golden_sm = StateMachine(
     VALID_GOLDEN_TRANSITIONS,
     entity_name="GoldenDiff",
 )
-
-
-def _is_copier_answers_file(name: str) -> bool:
-    """Return True for Copier's answers file (default or multi-template form).
-
-    Copier writes ``.copier-answers.yml`` (or ``.copier-answers.<name>.yml``)
-    into every rendered project. It records ``_src_path`` (an absolute path to
-    the template on the machine that rendered it) and ``_commit``, so its
-    contents differ across machines and checkouts. Including it in the golden
-    snapshot would produce spurious diffs and false ``release-check`` failures,
-    so it is excluded from the comparison.
-    """
-    return name.startswith(".copier-answers") and name.endswith(".yml")
 
 
 # ===================================================================
@@ -138,26 +126,12 @@ def compare_to_golden(
 
     if not golden_dir.is_dir():
         # No golden snapshot exists — everything is "added"
-        all_files = _collect_important_files(generated_dir)
+        all_files = collect_files(generated_dir)
         diff.result = GoldenDiffResult(added=all_files)
     else:
-        gen_files = _collect_important_files(generated_dir, relative_to=generated_dir)
-        gold_files = _collect_important_files(golden_dir, relative_to=golden_dir)
-
-        added = gen_files - gold_files
-        removed = gold_files - gen_files
-        modified: set[str] = set()
-
-        # Compare common files for content differences
-        for file in gen_files & gold_files:
-            gen_path = generated_dir / file
-            gold_path = golden_dir / file
-            if gen_path.is_file() and gold_path.is_file():
-                if _file_content_differs(gen_path, gold_path):
-                    modified.add(file)
-            elif gen_path.is_dir() != gold_path.is_dir():
-                modified.add(file)
-
+        # Baseline = golden, target = generated, so "added" means present in the
+        # new render but not the snapshot (matching the prior semantics).
+        added, modified, removed = tree_diff(golden_dir, generated_dir)
         diff.result = GoldenDiffResult(
             added=added, removed=removed, modified=modified,
         )
@@ -278,46 +252,3 @@ def golden_diff(
     # 3. CompareToGolden → GoldenHasDiffs | GoldenNoDiffs
     status = compare_to_golden(diff, workshop_root)
     return diff
-
-
-# ===================================================================
-# Internal helpers
-# ===================================================================
-
-
-def _collect_important_files(
-    directory: Path,
-    relative_to: Path | None = None,
-) -> set[str]:
-    """Collect the set of important files from a directory.
-
-    "Important files" are those that constitute the golden snapshot:
-    everything in the directory, represented as relative paths.
-
-    Parameters
-    ----------
-    directory:
-        The directory to scan.
-    relative_to:
-        If provided, paths are relative to this directory.
-    """
-    if relative_to is None:
-        relative_to = directory
-
-    files: set[str] = set()
-    for item in sorted(directory.rglob("*")):
-        if item.is_file():
-            if _is_copier_answers_file(item.name):
-                # Machine-specific (_src_path / _commit) — see _is_copier_answers_file.
-                continue
-            rel = item.relative_to(relative_to)
-            files.add(str(rel))
-    return files
-
-
-def _file_content_differs(path_a: Path, path_b: Path) -> bool:
-    """Return True if the two files have different content."""
-    try:
-        return path_a.read_bytes() != path_b.read_bytes()
-    except OSError:
-        return True

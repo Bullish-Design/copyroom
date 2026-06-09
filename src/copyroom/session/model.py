@@ -63,6 +63,11 @@ PROJECT_COMMANDS: frozenset[str] = frozenset(
     {"new", "update", "template-checkout", "template-test", "template-preview"},
 )
 
+# Bootstrap commands run in an *unmanaged* repo (no workshop/project markers),
+# so they bypass mode detection entirely — they resolve their own context from
+# the repo and arguments. Kept out of COMMAND_MODE_MAP for that reason.
+BOOTSTRAP_COMMANDS: frozenset[str] = frozenset({"adopt", "templatize"})
+
 _session_sm = StateMachine(VALID_SESSION_TRANSITIONS, entity_name="CLISession")
 
 

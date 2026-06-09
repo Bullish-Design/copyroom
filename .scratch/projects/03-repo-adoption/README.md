@@ -1,6 +1,7 @@
 # 03 — Repo adoption (templatize + adopt)
 
-**Status:** Planned, build-ready — not yet implemented
+**Status:** Implemented (2026-06-09) — `copyroom templatize` / `adopt` shipped;
+the repo is also packaged as an importable devenv module (`modules/copyroom.nix`).
 **Date:** 2026-06-09
 **Purpose:** Self-contained context for implementing the "turn a non-CopyRoom repo
 into a CopyRoom-managed repo" feature. This directory is the entry point for a fresh

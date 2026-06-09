@@ -18,6 +18,9 @@ inputs:
 imports:
   - allium-env
   - mypy-agent
+  # Development-only tooling (Python toolchain, etc.). Consumers that
+  # `imports: - copyroom` only pull in the root devenv.nix module, never this.
+  - ./dev
 
 # If you're using non-OSS software, you can set allowUnfree to true.
 # allowUnfree: true
