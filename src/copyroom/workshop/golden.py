@@ -14,6 +14,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
 from .model import (
     VALID_GOLDEN_TRANSITIONS,
@@ -21,7 +22,11 @@ from .model import (
     GoldenDiffResult,
     GoldenStatus,
 )
-from .render import execute_render, initiate as render_initiate
+from .registry import require_workshop_root, resolve_template_source
+from .render import execute_render
+from .render import initiate as render_initiate
+
+__all__ = ["CopyRoomError", "golden_diff", "refresh_golden"]
 
 # ---------------------------------------------------------------------------
 # State machine instance
@@ -31,21 +36,6 @@ _golden_sm = StateMachine(
     VALID_GOLDEN_TRANSITIONS,
     entity_name="GoldenDiff",
 )
-
-
-class CopyRoomError(Exception):
-    """Base error with structured message."""
-
-    def __init__(self, message: str, state: str | None = None) -> None:
-        self.message = message
-        self.state = state
-        super().__init__(self._format())
-
-    def _format(self) -> str:
-        parts = [f"Error: {self.message}"]
-        if self.state:
-            parts.append(f"State left: {self.state}")
-        return "\n".join(parts)
 
 
 # ===================================================================
@@ -190,13 +180,14 @@ def compare_to_golden(
 def refresh_golden(
     template_id: str,
     scenario_id: str,
-    workshop_root: Path,
+    workshop_root: Path | None = None,
 ) -> None:
     """Overwrite the golden snapshot with the current generated output.
 
     Copies ``generated/<template_id>/<scenario_id>/`` to
     ``golden/<template_id>/<scenario_id>/``.
     """
+    workshop_root = require_workshop_root(workshop_root)
     generated_dir = workshop_root / "generated" / template_id / scenario_id
     golden_dir = workshop_root / "golden" / template_id / scenario_id
 
@@ -234,12 +225,11 @@ def golden_diff(
     Returns the ``GoldenDiff`` entity in its final state
     (``has_diffs``, ``no_diffs``, or ``failed``).
     """
-    if workshop_root is None:
-        workshop_root = Path.cwd()
+    workshop_root = require_workshop_root(workshop_root)
 
     # Resolve template source from registry if not provided
     if template_source is None:
-        template_source = _resolve_template_source(workshop_root, template_id)
+        template_source = resolve_template_source(workshop_root, template_id)
         if template_source is None:
             diff = initiate(template_id, scenario_id)
             diff.status = _golden_sm.transition(
@@ -268,44 +258,6 @@ def golden_diff(
 # ===================================================================
 # Internal helpers
 # ===================================================================
-
-
-def _resolve_template_source(workshop_root: Path, template_id: str) -> str | None:
-    """Resolve a template ID to its source path/URL from the workshop registry."""
-    import yaml
-
-    config_path = workshop_root / "copyroom.yml"
-    if config_path.is_file():
-        try:
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-            if isinstance(config, dict):
-                templates = config.get("templates", config.get("registry", None))
-                if isinstance(templates, dict):
-                    source = templates.get(template_id)
-                    if isinstance(source, str):
-                        return source
-                    if isinstance(source, dict):
-                        return source.get("source", source.get("url", str(source)))
-        except yaml.YAMLError:
-            pass
-
-    # Also check registry/ directory
-    registry_dir = workshop_root / "registry"
-    template_yml = registry_dir / f"{template_id}.yml"
-    if template_yml.is_file():
-        try:
-            import yaml as _yaml
-            with open(template_yml) as f:
-                template = _yaml.safe_load(f)
-            if isinstance(template, dict):
-                source = template.get("source", template.get("url"))
-                if isinstance(source, str):
-                    return source
-        except yaml.YAMLError:
-            pass
-
-    return None
 
 
 def _collect_important_files(

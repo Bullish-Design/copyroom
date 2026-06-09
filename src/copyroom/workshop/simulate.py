@@ -13,9 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
 from .._compat.copier import copier_copy, copier_update
+from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
 from .edits import apply_edits, load_edits
 from .model import (
@@ -24,6 +23,9 @@ from .model import (
     UpdateSimulation,
     UpdateSimulationResult,
 )
+from .registry import load_checks, require_workshop_root, resolve_template_source
+
+__all__ = ["CopyRoomError", "run_update_simulation"]
 
 # ---------------------------------------------------------------------------
 # State machine instance
@@ -35,21 +37,6 @@ _sim_sm = StateMachine(
 )
 
 _work_dir_name = ".copyroom_sim"
-
-
-class CopyRoomError(Exception):
-    """Base error with structured message."""
-
-    def __init__(self, message: str, state: str | None = None) -> None:
-        self.message = message
-        self.state = state
-        super().__init__(self._format())
-
-    def _format(self) -> str:
-        parts = [f"Error: {self.message}"]
-        if self.state:
-            parts.append(f"State left: {self.state}")
-        return "\n".join(parts)
 
 
 # ===================================================================
@@ -150,6 +137,19 @@ def render_old_version(
             print(result.stderr, file=sys.stderr, end="")
         return sim.status
 
+    # ``copier update`` only works on git-tracked projects, so snapshot the
+    # freshly-rendered baseline. Failure here is fatal — the update can't run.
+    if not _git_snapshot(work_dir, "copyroom: render old version"):
+        sim.status = _sim_sm.transition(
+            SimStatus.initiated,
+            SimStatus.failed,
+        )
+        print(
+            "Error: Failed to initialise git in the simulation work dir.",
+            file=sys.stderr,
+        )
+        return sim.status
+
     sim.status = _sim_sm.transition(
         SimStatus.initiated,
         SimStatus.old_rendered,
@@ -175,10 +175,12 @@ def apply_user_edits(
     edits_path = workshop_root / "scenarios" / sim.template_id / f"{sim.scenario_id}-edits.yml"
 
     if not edits_path.is_file():
-        # No edits file — prune user_edited and go directly to update_applied
+        # No edits file: the user made zero edits, but the edit step still ran.
+        # Spec (copyroom-workshop.allium L82-L84) only allows
+        # old_rendered -> user_edited; never old_rendered -> update_applied.
         sim.status = _sim_sm.transition(
             SimStatus.old_rendered,
-            SimStatus.update_applied,
+            SimStatus.user_edited,
         )
         return sim.status
 
@@ -193,6 +195,9 @@ def apply_user_edits(
         )
         print(f"Error: Failed to apply user edits: {exc}", file=sys.stderr)
         return sim.status
+
+    # Commit the edits so the worktree is clean for ``copier update``.
+    _git_snapshot(work_dir, "copyroom: apply user edits")
 
     sim.status = _sim_sm.transition(
         SimStatus.old_rendered,
@@ -264,7 +269,7 @@ def run_checks(
     work_dir = workshop_root / _work_dir_name / sim.template_id / sim.scenario_id
 
     # Load checks from registry
-    checks = _load_checks(workshop_root, sim.template_id)
+    checks = load_checks(workshop_root, sim.template_id)
 
     if not checks:
         # No checks configured — transition to checks_run anyway
@@ -364,15 +369,14 @@ def run_update_simulation(
     Returns the ``UpdateSimulation`` entity in its final state
     (``complete`` or ``failed``).
     """
-    if workshop_root is None:
-        workshop_root = Path.cwd()
+    workshop_root = require_workshop_root(workshop_root)
 
     # 1. RunUpdateSimulation — create entity
     sim = initiate(template_id, scenario_id, old_version, new_version)
 
     # Resolve template source from registry if not provided
     if template_source is None:
-        template_source = _resolve_template_source(workshop_root, template_id)
+        template_source = resolve_template_source(workshop_root, template_id)
         if template_source is None:
             sim.status = _sim_sm.transition(
                 SimStatus.initiated,
@@ -389,17 +393,15 @@ def run_update_simulation(
     if status == SimStatus.failed:
         return sim
 
-    # 3. ApplyUserEdits (may prune to update_applied)
+    # 3. ApplyUserEdits (always advances to user_edited, even with zero edits)
     status = apply_user_edits(sim, workshop_root)
     if status == SimStatus.failed:
         return sim
 
-    # If edits pruned (no edits file), we're already at update_applied
-    if status == SimStatus.user_edited:
-        # 4. ApplyUpdate
-        status = apply_update(sim, workshop_root)
-        if status == SimStatus.failed:
-            return sim
+    # 4. ApplyUpdate (always runs — this is the update being simulated)
+    status = apply_update(sim, workshop_root)
+    if status == SimStatus.failed:
+        return sim
 
     # 5. RunUpdateChecks → UpdateSimulationComplete
     status = run_checks(sim, workshop_root)
@@ -411,75 +413,37 @@ def run_update_simulation(
 # ===================================================================
 
 
-def _resolve_template_source(workshop_root: Path, template_id: str) -> str | None:
-    """Resolve a template ID to its source path/URL from the workshop registry."""
-    config_path = workshop_root / "copyroom.yml"
-    if config_path.is_file():
+def _git_snapshot(work_dir: Path, message: str) -> bool:
+    """Init (if needed) and commit everything in *work_dir*.
+
+    ``copier update`` only operates on git-tracked projects with a clean
+    worktree, so the simulation commits its baseline (and any user edits)
+    here. A repo-local identity is configured so this works even when the
+    user has no global git identity. Returns ``False`` if git is unavailable.
+    """
+    def git(*args: str) -> subprocess.CompletedProcess[str] | None:
         try:
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-            if isinstance(config, dict):
-                templates = config.get("templates", config.get("registry", None))
-                if isinstance(templates, dict):
-                    source = templates.get(template_id)
-                    if isinstance(source, str):
-                        return source
-                    if isinstance(source, dict):
-                        return source.get("source", source.get("url", str(source)))
-        except yaml.YAMLError:
-            pass
+            return subprocess.run(
+                ["git", *args],
+                cwd=str(work_dir),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
 
-    registry_dir = workshop_root / "registry"
-    template_yml = registry_dir / f"{template_id}.yml"
-    if template_yml.is_file():
-        try:
-            with open(template_yml) as f:
-                template = yaml.safe_load(f)
-            if isinstance(template, dict):
-                source = template.get("source", template.get("url"))
-                if isinstance(source, str):
-                    return source
-        except yaml.YAMLError:
-            pass
+    if not (work_dir / ".git").is_dir():
+        if git("init") is None:
+            return False
+        git("config", "user.email", "copyroom@localhost")
+        git("config", "user.name", "CopyRoom Simulation")
+        git("config", "commit.gpgsign", "false")
 
-    return None
-
-
-def _load_checks(workshop_root: Path, template_id: str) -> list[str]:
-    """Load checks for a template from the workshop registry."""
-    checks: list[str] = []
-    config_path = workshop_root / "copyroom.yml"
-
-    if config_path.is_file():
-        try:
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-            if isinstance(config, dict):
-                templates = config.get("templates", {})
-                if isinstance(templates, dict):
-                    template = templates.get(template_id)
-                    if isinstance(template, dict):
-                        raw = template.get("checks", [])
-                        if isinstance(raw, list):
-                            checks = [str(c) for c in raw]
-        except yaml.YAMLError:
-            pass
-
-    if not checks:
-        registry_dir = workshop_root / "registry"
-        template_yml = registry_dir / f"{template_id}.yml"
-        if template_yml.is_file():
-            try:
-                with open(template_yml) as f:
-                    template = yaml.safe_load(f)
-                if isinstance(template, dict):
-                    raw = template.get("checks", [])
-                    if isinstance(raw, list):
-                        checks = [str(c) for c in raw]
-            except yaml.YAMLError:
-                pass
-
-    return checks
+    git("add", "-A")
+    # Allow empty commits so a no-op edit step still produces a clean HEAD.
+    git("commit", "--allow-empty", "-m", message)
+    return True
 
 
 def _capture_conflicts(sim: UpdateSimulation, output: str) -> None:

@@ -10,7 +10,6 @@ Each rule in the spec maps to a function or method in this module.
 
 from __future__ import annotations
 
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -18,12 +17,16 @@ from pathlib import Path
 import yaml
 
 from .._compat.copier import copier_update
+from .._compat.errors import CopyRoomError
+from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
 from .model import (
     VALID_UPDATE_TRANSITIONS,
     TemplateUpdate,
     UpdateStatus,
 )
+
+__all__ = ["CopyRoomError", "update_project"]
 
 # ---------------------------------------------------------------------------
 # State machine instance
@@ -33,25 +36,6 @@ _update_sm = StateMachine(
     VALID_UPDATE_TRANSITIONS,
     entity_name="TemplateUpdate",
 )
-
-# ---------------------------------------------------------------------------
-# Error
-# ---------------------------------------------------------------------------
-
-
-class CopyRoomError(Exception):
-    """Base error with structured message (§10.3 of the implementation plan)."""
-
-    def __init__(self, message: str, state: str | None = None) -> None:
-        self.message = message
-        self.state = state
-        super().__init__(self._format())
-
-    def _format(self) -> str:
-        parts = [f"Error: {self.message}"]
-        if self.state:
-            parts.append(f"State left: {self.state}")
-        return "\n".join(parts)
 
 
 # ===================================================================
@@ -67,39 +51,23 @@ def initiate(
     """Create a TemplateUpdate entity.
 
     Requires ``target_ref != null`` (InitiateTemplateUpdate requires clause).
-    Infers ``template_id`` and ``previous_ref`` from ``.copier-answers.yml``.
+    ``template_id`` and ``previous_ref`` are populated later by
+    :func:`load_config`, the single reader of ``.copier-answers.yml``.
     """
     if not target_ref:
         raise CopyRoomError(
-            "Target ref is required. Usage: copyroom update <target_ref>",
+            "Auto-resolving the latest template version isn't supported yet. "
+            "Pass an explicit ref: copyroom update <tag-or-branch>",
             state="not_started",
         )
 
-    answers_file = project_root / ".copier-answers.yml"
-    template_id = "unknown"
-    previous_ref = None
-
-    if answers_file.is_file():
-        try:
-            with open(answers_file) as f:
-                answers = yaml.safe_load(f)
-            if isinstance(answers, dict):
-                template_id = str(answers.get("_template", template_id))
-                previous_ref = answers.get("_commit")
-                if previous_ref is not None:
-                    previous_ref = str(previous_ref)
-        except (yaml.YAMLError, OSError):
-            # Non-fatal: we can still proceed with defaults
-            pass
-
-    update = TemplateUpdate(
+    return TemplateUpdate(
         project_root=project_root,
-        template_id=template_id,
-        previous_ref=previous_ref,
+        template_id="unknown",
+        previous_ref=None,
         target_ref=target_ref,
         use_branch=use_branch,
     )
-    return update
 
 
 # ===================================================================
@@ -407,10 +375,14 @@ def capture_conflicts(update: TemplateUpdate) -> UpdateStatus:
 # ===================================================================
 
 
-def run_post_update_commands(update: TemplateUpdate) -> UpdateStatus:
+def run_post_update_commands(
+    update: TemplateUpdate,
+    trust: bool = False,
+) -> UpdateStatus:
     """Execute post-update commands from ``copyroom.project.yml``.
 
-    Failures are reported but do not block completion.
+    Commands come from the template and only run when ``trust`` is set;
+    otherwise they are skipped with a warning. Failures do not block completion.
     """
     project_yml = update.project_root / "copyroom.project.yml"
 
@@ -425,34 +397,7 @@ def run_post_update_commands(update: TemplateUpdate) -> UpdateStatus:
         return update.status
 
     commands = _extract_post_update_commands(config)
-
-    for cmd in commands:
-        try:
-            result = subprocess.run(
-                cmd,
-                shell=True,
-                cwd=str(update.project_root),
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            if result.returncode != 0:
-                print(
-                    f"Warning: post-update command '{cmd}' failed (exit {result.returncode}):",
-                    file=sys.stderr,
-                )
-                if result.stderr:
-                    print(result.stderr, file=sys.stderr, end="")
-        except subprocess.TimeoutExpired:
-            print(
-                f"Warning: post-update command '{cmd}' timed out after 120s",
-                file=sys.stderr,
-            )
-        except Exception as exc:
-            print(
-                f"Warning: post-update command '{cmd}' raised {exc}",
-                file=sys.stderr,
-            )
+    run_hook_commands(commands, update.project_root, trust=trust, label="post-update")
 
     update.status = _update_sm.transition(
         UpdateStatus.post_update_run,
@@ -470,10 +415,14 @@ def update_project(
     project_root: str | Path | None = None,
     target_ref: str | None = None,
     use_branch: bool = False,
+    trust: bool = False,
 ) -> TemplateUpdate:
     """Run the full template update workflow.
 
     This is the top-level entry point called from the CLI.
+
+    ``trust`` enables execution of the template's post-update hook commands;
+    when ``False`` (the default) they are skipped with a warning.
 
     Returns the ``TemplateUpdate`` entity in its final state (``complete``
     or ``failed``).
@@ -530,7 +479,7 @@ def update_project(
         return update
 
     # 9. RunPostUpdateCommands
-    status = run_post_update_commands(update)
+    status = run_post_update_commands(update, trust=trust)
     return update
 
 
@@ -543,18 +492,19 @@ def _capture_conflicts_from_output(
     update: TemplateUpdate,
     output: str,
 ) -> None:
-    """Parse Copier output for conflict markers and .rej references."""
+    """Parse Copier output for conflict-marker lines.
+
+    Rejected hunks (``.rej`` files) are captured authoritatively by scanning
+    the filesystem in :func:`capture_conflicts`, so they are intentionally
+    *not* harvested here — doing both led to the same reject being recorded in
+    two places with different formatting.
+    """
     if not output:
         return
 
-    # Look for lines mentioning conflicts
     for line in output.splitlines():
-        if "conflict" in line.lower() or ".rej" in line:
+        if "conflict" in line.lower():
             update.conflicts.add(line.strip())
-
-    # Also capture any .rej files referenced in the output
-    for match in re.finditer(r"[\w./-]+\.rej", output):
-        update.rejects.add(match.group(0))
 
 
 def _extract_post_update_commands(config: object) -> list[str]:

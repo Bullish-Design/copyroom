@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from .._compat.state_machine import StateMachine
+
 
 class CLIMode(StrEnum):
     """Dispatchable modes for CopyRoom.
@@ -59,6 +61,8 @@ WORKSHOP_COMMANDS: frozenset[str] = frozenset(
 
 PROJECT_COMMANDS: frozenset[str] = frozenset({"new", "update"})
 
+_session_sm = StateMachine(VALID_SESSION_TRANSITIONS, entity_name="CLISession")
+
 
 @dataclass
 class CLISession:
@@ -71,11 +75,11 @@ class CLISession:
     status: SessionStatus = SessionStatus.mode_detecting
     mode: CLIMode | None = None
 
+    def advance(self, target: SessionStatus) -> None:
+        """Move to *target*, validating it against ``VALID_SESSION_TRANSITIONS``.
 
-class InvalidTransitionError(Exception):
-    """Raised when an entity attempts an invalid state transition."""
-
-    def __init__(self, status: SessionStatus, target: SessionStatus) -> None:
-        self.status = status
-        self.target = target
-        super().__init__(f"Invalid transition: {status.value} -> {target.value}")
+        Raises ``InvalidTransitionError`` (from ``_compat.state_machine``) when
+        the transition is not declared, keeping the session lifecycle honest
+        rather than decorative.
+        """
+        self.status = _session_sm.transition(self.status, target)

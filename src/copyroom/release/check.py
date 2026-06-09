@@ -17,14 +17,15 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-import yaml
-
+from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
 from ..session.detector import detect_workshop_root
 from ..workshop.golden import golden_diff as _golden_diff
 from ..workshop.model import GoldenStatus, RenderStatus
+from ..workshop.registry import resolve_template_source
 from ..workshop.render import render_scenario
 
+__all__ = ["CopyRoomError", "ReleaseCheck", "ReleaseStatus", "run_release_check"]
 
 # ===========================================================================
 # ReleaseCheck entity
@@ -54,26 +55,6 @@ _release_sm = StateMachine(
     VALID_RELEASE_TRANSITIONS,
     entity_name="ReleaseCheck",
 )
-
-# ---------------------------------------------------------------------------
-# Error
-# ---------------------------------------------------------------------------
-
-
-class CopyRoomError(Exception):
-    """Base error with structured message."""
-
-    def __init__(self, message: str, state: str | None = None) -> None:
-        self.message = message
-        self.state = state
-        super().__init__(self._format())
-
-    def _format(self) -> str:
-        parts = [f"Error: {self.message}"]
-        if self.state:
-            parts.append(f"State left: {self.state}")
-        return "\n".join(parts)
-
 
 # ===========================================================================
 # Entity dataclass
@@ -147,6 +128,12 @@ def run_matrix(
 
     Returns the new status (``matrix_run`` or ``failed``).
     """
+    # --- check worktree BEFORE rendering ---
+    # Rendering writes into generated/ and .copyroom_sim/, which would dirty the
+    # tree; capture the pre-render state so the result reflects the user's repo,
+    # not our own output.
+    check.worktree_clean = _check_worktree_clean(workshop_root)
+
     # --- discover scenarios ---
     scenario_ids = _discover_scenarios(workshop_root, check.template_id)
     check.scenario_ids = scenario_ids
@@ -193,9 +180,6 @@ def run_matrix(
             # failed or any other state: not a pass
 
         check.golden_ok = (check.golden_passed == check.golden_total)
-
-    # --- check worktree ---
-    check.worktree_clean = _check_worktree_clean(workshop_root)
 
     # Transition to matrix_run
     check.status = _release_sm.transition(
@@ -282,7 +266,7 @@ def run_release_check(
 
     # Resolve template source from registry if not provided
     if template_source is None:
-        template_source = _resolve_template_source(workshop_root, template_id)
+        template_source = resolve_template_source(workshop_root, template_id)
         if template_source is None:
             check.status = _release_sm.transition(
                 ReleaseStatus.initiated,
@@ -295,17 +279,17 @@ def run_release_check(
             return check
 
     # 2. RunMatrix — run all scenarios
-    status = run_matrix(check, workshop_root, template_source)
+    run_matrix(check, workshop_root, template_source)
 
     # If run_matrix failed or we advanced to failed directly
     if check.status == ReleaseStatus.failed:
         return check
 
     # 3. EvaluateReleaseReadiness
-    status = evaluate(check)
+    evaluate(check)
 
     # 4. ReleaseCheckPassed | ReleaseCheckFailed
-    status = resolve(check)
+    resolve(check)
     return check
 
 
@@ -416,61 +400,19 @@ def _discover_scenarios(
     return scenario_ids
 
 
-def _resolve_template_source(
-    workshop_root: Path,
-    template_id: str,
-) -> str | None:
-    """Resolve a template ID to its source path/URL from the workshop registry.
-
-    Uses the same logic as the workshop modules (copyroom.yml and
-    registry/<template_id>.yml).
-    """
-    # Try copyroom.yml first
-    config_path = workshop_root / "copyroom.yml"
-    if config_path.is_file():
-        try:
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-            if isinstance(config, dict):
-                templates = config.get("templates", config.get("registry", None))
-                if isinstance(templates, dict):
-                    source = templates.get(template_id)
-                    if isinstance(source, str):
-                        return source
-                    if isinstance(source, dict):
-                        return source.get(
-                            "source", source.get("url", str(source))
-                        )
-        except yaml.YAMLError:
-            pass
-
-    # Fall back to registry/ directory
-    registry_dir = workshop_root / "registry"
-    template_yml = registry_dir / f"{template_id}.yml"
-    if template_yml.is_file():
-        try:
-            with open(template_yml) as f:
-                template = yaml.safe_load(f)
-            if isinstance(template, dict):
-                source = template.get("source", template.get("url"))
-                if isinstance(source, str):
-                    return source
-        except yaml.YAMLError:
-            pass
-
-    return None
-
-
 def _check_worktree_clean(repo_root: Path) -> bool:
     """Check that the git working tree is clean (no uncommitted changes).
 
     Returns ``True`` when ``git status --porcelain`` produces no output.
-    If the directory is not inside a git repository (or git is not available),
-    returns ``True`` (no changes to report).
+    CopyRoom's own scratch output (``generated/`` and ``.copyroom_sim/``) is
+    excluded so a release check stays stable across re-runs even when those
+    paths aren't gitignored. If the directory is not inside a git repository
+    (or git is not available), returns ``True`` (no changes to report).
     """
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "--",
+             ".", ":(exclude)generated", ":(exclude).copyroom_sim"],
             cwd=str(repo_root),
             capture_output=True,
             text=True,

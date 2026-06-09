@@ -2,9 +2,9 @@
 
 Entry point::
 
-    copyroom [--no-detect] <command> [args...]
+    copyroom [--mode {workshop,project}] <command> [args...]
 
-Modes are auto-detected unless ``--no-detect`` is passed.
+Modes are auto-detected from directory markers unless ``--mode`` forces one.
 If neither workshop nor project markers are found, exits with a clear error.
 """
 
@@ -19,6 +19,9 @@ from .project.create import create_project
 from .project.model import CreationStatus, UpdateStatus
 from .project.update import CopyRoomError as UpdateError
 from .project.update import update_project
+from .release.check import CopyRoomError as ReleaseError
+from .release.check import ReleaseStatus
+from .release.check import run_release_check as _run_release_check
 from .session.detector import detect_mode
 from .session.dispatcher import COMMAND_MODE_MAP, dispatch
 from .session.model import (
@@ -28,8 +31,6 @@ from .session.model import (
     CLISession,
     SessionStatus,
 )
-from .release.check import CopyRoomError as ReleaseError
-from .release.check import ReleaseStatus, run_release_check as _run_release_check
 from .workshop.golden import CopyRoomError as GoldenError
 from .workshop.golden import golden_diff, refresh_golden
 from .workshop.model import GoldenStatus, RenderStatus, SimStatus
@@ -90,24 +91,29 @@ Run 'copyroom --help' for more information.
 # ---------------------------------------------------------------------------
 
 
-def _detect_and_report(no_detect: bool) -> CLISession:
-    """Detect mode and return a session. Prints status and may exit."""
+def _detect_and_report(mode_override: str | None) -> CLISession:
+    """Resolve the session mode and return a session. Prints status and may exit.
+
+    When *mode_override* is given (via ``--mode``), detection is skipped and the
+    forced mode is used. Otherwise the mode is auto-detected from directory
+    markers; an unknown mode prints a diagnostic and exits.
+    """
     session = CLISession()
 
-    if no_detect:
-        # --no-detect: skip detection; caller must specify mode explicitly
-        # (currently just echoes the mode)
+    if mode_override is not None:
+        session.mode = CLIMode(mode_override)
+        session.advance(SessionStatus.mode_detected)
         return session
 
     mode = detect_mode()
     if mode is None:
-        session.status = SessionStatus.unknown_mode
+        session.advance(SessionStatus.unknown_mode)
         print(NO_MODE_FOUND_MESSAGE, file=sys.stderr)
         sys.exit(1)
         # unreachable
 
     session.mode = mode
-    session.status = SessionStatus.mode_detected
+    session.advance(SessionStatus.mode_detected)
     return session
 
 
@@ -158,6 +164,7 @@ def _cmd_new(args: argparse.Namespace) -> None:
             source=args.source,
             target_dir=args.target or ".",
             answers_file=args.answers_file,
+            trust=args.trust,
         )
     except CreateError as exc:
         print(str(exc), file=sys.stderr)
@@ -180,6 +187,7 @@ def _cmd_update(args: argparse.Namespace) -> None:
             project_root=None,  # defaults to cwd
             target_ref=args.target_ref,
             use_branch=args.branch,
+            trust=args.trust,
         )
     except UpdateError as exc:
         print(str(exc), file=sys.stderr)
@@ -363,9 +371,10 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "--no-detect",
-        action="store_true",
-        help="Skip mode auto-detection",
+        "--mode",
+        choices=["workshop", "project"],
+        default=None,
+        help="Force a mode instead of auto-detecting from directory markers",
     )
     parser.add_argument(
         "--version",
@@ -381,12 +390,16 @@ def _build_parser() -> argparse.ArgumentParser:
     p_new.add_argument("target", nargs="?", default=".", help="Target directory")
     p_new.add_argument("--answers", dest="answers_file", default=None,
                        help="Path to YAML answers file")
+    p_new.add_argument("--trust", action="store_true",
+                       help="Execute the template's post-create hook commands")
 
     p_update = subparsers.add_parser("update", help="Update an existing project")
     p_update.add_argument("target_ref", nargs="?", default=None,
                           help="Target version ref (tag or branch)")
     p_update.add_argument("--branch", action="store_true",
                           help="Create an isolation branch for the update")
+    p_update.add_argument("--trust", action="store_true",
+                          help="Execute the template's post-update hook commands")
 
     # --- Workshop commands ---
     p_registry = subparsers.add_parser("registry", help="Manage template registry")
@@ -469,7 +482,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         sys.exit(0)
 
     # --- Mode detection ---
-    session = _detect_and_report(no_detect=args.no_detect)
+    session = _detect_and_report(mode_override=args.mode)
 
     # --- Dispatch ---
     cmd = args.command
@@ -479,18 +492,19 @@ def main(argv: Sequence[str] | None = None) -> None:
         if session.status == SessionStatus.unknown_mode:
             # Already printed the message and exited in _detect_and_report
             sys.exit(1)
-        elif session.mode and cmd in COMMAND_MODE_MAP:
+        session.advance(SessionStatus.command_failed)
+        if session.mode and cmd in COMMAND_MODE_MAP:
             _print_out_of_mode_error(cmd, session)
         else:
             _print_unknown_command_error(cmd)
         # unreachable
 
     # --- Run the command ---
-    session.status = SessionStatus.command_running
+    session.advance(SessionStatus.command_running)
     handler = COMMAND_FN.get(cmd)
     if handler is not None:
         handler(args)
-    session.status = SessionStatus.command_complete
+    session.advance(SessionStatus.command_complete)
 
 
 if __name__ == "__main__":

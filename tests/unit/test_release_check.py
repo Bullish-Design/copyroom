@@ -20,8 +20,8 @@ from copyroom.release.check import (
     run_release_check,
     _discover_scenarios,
     _check_worktree_clean,
-    _resolve_template_source,
 )
+from copyroom.workshop.registry import resolve_template_source as _resolve_template_source
 
 
 # ===========================================================================

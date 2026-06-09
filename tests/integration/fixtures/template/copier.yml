@@ -1,0 +1,5 @@
+_answers_file: .copier-answers.yml
+
+project_name:
+  type: str
+  default: myproject

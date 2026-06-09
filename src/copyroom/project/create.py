@@ -10,19 +10,22 @@ Each rule in the spec maps to a function or method in this module.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
 import yaml
 
 from .._compat.copier import copier_copy
+from .._compat.errors import CopyRoomError
+from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
 from .model import (
     VALID_CREATION_TRANSITIONS,
     CreationStatus,
     ProjectCreation,
 )
+
+__all__ = ["CopyRoomError", "create_project"]
 
 # ---------------------------------------------------------------------------
 # State machine instance
@@ -32,25 +35,6 @@ _creation_sm = StateMachine(
     VALID_CREATION_TRANSITIONS,
     entity_name="ProjectCreation",
 )
-
-# ---------------------------------------------------------------------------
-# CopyRoomError
-# ---------------------------------------------------------------------------
-
-
-class CopyRoomError(Exception):
-    """Base error with structured message (§10.3 of the implementation plan)."""
-
-    def __init__(self, message: str, state: str | None = None) -> None:
-        self.message = message
-        self.state = state
-        super().__init__(self._format())
-
-    def _format(self) -> str:
-        parts = [f"Error: {self.message}"]
-        if self.state:
-            parts.append(f"State left: {self.state}")
-        return "\n".join(parts)
 
 
 # ===================================================================
@@ -272,10 +256,14 @@ def detect_post_create_commands(creation: ProjectCreation) -> CreationStatus:
 # ===================================================================
 
 
-def run_post_create_commands(creation: ProjectCreation) -> CreationStatus:
+def run_post_create_commands(
+    creation: ProjectCreation,
+    trust: bool = False,
+) -> CreationStatus:
     """Execute post-create commands from ``copyroom.project.yml``.
 
-    Failures are reported but do not block completion.
+    Commands come from a fetched template and only run when ``trust`` is set;
+    otherwise they are skipped with a warning. Failures do not block completion.
     """
     project_yml = Path(creation.target_dir).resolve() / "copyroom.project.yml"
 
@@ -294,34 +282,7 @@ def run_post_create_commands(creation: ProjectCreation) -> CreationStatus:
 
     commands = _extract_post_create_commands(config)
     target = Path(creation.target_dir).resolve()
-
-    for cmd in commands:
-        try:
-            result = subprocess.run(
-                cmd,
-                shell=True,
-                cwd=str(target),
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            if result.returncode != 0:
-                print(
-                    f"Warning: post-create command '{cmd}' failed (exit {result.returncode}):",
-                    file=sys.stderr,
-                )
-                if result.stderr:
-                    print(result.stderr, file=sys.stderr, end="")
-        except subprocess.TimeoutExpired:
-            print(
-                f"Warning: post-create command '{cmd}' timed out after 120s",
-                file=sys.stderr,
-            )
-        except Exception as exc:
-            print(
-                f"Warning: post-create command '{cmd}' raised {exc}",
-                file=sys.stderr,
-            )
+    run_hook_commands(commands, target, trust=trust, label="post-create")
 
     creation.status = _creation_sm.transition(
         CreationStatus.post_create_run,
@@ -354,10 +315,14 @@ def create_project(
     source: str,
     target_dir: str = ".",
     answers_file: str | None = None,
+    trust: bool = False,
 ) -> ProjectCreation:
     """Run the full project creation workflow.
 
     This is the top-level entry point called from the CLI.
+
+    ``trust`` enables execution of the template's post-create hook commands;
+    when ``False`` (the default) they are skipped with a warning.
 
     Returns the ``ProjectCreation`` entity in its final state (``complete``
     or ``failed``).
@@ -388,7 +353,7 @@ def create_project(
         return creation
 
     # 6. RunPostCreateCommands
-    status = run_post_create_commands(creation)
+    status = run_post_create_commands(creation, trust=trust)
     return creation
 
 

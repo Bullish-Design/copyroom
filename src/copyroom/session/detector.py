@@ -58,7 +58,9 @@ def detect_mode(cwd: str | Path | None = None) -> CLIMode | None:
     elif isinstance(cwd, str):
         cwd = Path(cwd)
 
-    # Walk ancestors including cwd itself
+    # Walk ancestors including cwd itself. Proximity wins across levels (the
+    # closest ancestor with any marker decides); within a *single* directory
+    # that has both marker sets, workshop takes priority over project.
     for ancestor in [cwd.resolve()] + list(cwd.resolve().parents):
         if is_workshop(ancestor):
             return CLIMode.workshop

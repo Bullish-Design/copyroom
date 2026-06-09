@@ -1,0 +1,7 @@
+# Workshop registry. The `demo` template source is rewritten by the test
+# harness to point at a freshly-built, tagged template repo (see conftest.py).
+templates:
+  demo:
+    source: REWRITTEN_BY_CONFTEST
+    checks:
+      - "test -f README.md"

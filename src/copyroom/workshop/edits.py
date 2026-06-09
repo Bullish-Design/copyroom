@@ -23,11 +23,9 @@ When no edits file exists, no edits are applied (returns an empty list).
 
 from __future__ import annotations
 
-import textwrap
 from pathlib import Path
 
 import yaml
-
 
 # ---------------------------------------------------------------------------
 # Edits DSL types
@@ -357,7 +355,7 @@ def _set_nested_value(doc: dict, path: list[str], value: object) -> None:
     if not path:
         return
     current: object = doc
-    for i, key in enumerate(path[:-1]):
+    for key in path[:-1]:
         if isinstance(current, dict):
             if key not in current:
                 current[key] = {}
