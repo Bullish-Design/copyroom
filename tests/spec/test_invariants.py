@@ -276,14 +276,22 @@ class TestOperatingModelBoundary:
         """
         src_dir = Path(__file__).resolve().parent.parent.parent / "src" / "copyroom"
         template_files = list(src_dir.rglob("copier.yml"))
-        template_dirs = list(src_dir.rglob("template"))
         jinja_files = list(src_dir.rglob("*.jinja"))
         cookiecutter_files = list(src_dir.rglob("cookiecutter.json"))
 
         assert len(template_files) == 0, "copyroom/ must not contain copier.yml"
-        assert len(template_dirs) == 0, "copyroom/ must not contain template/ directories"
         assert len(jinja_files) == 0, "copyroom/ must not contain Jinja templates"
         assert len(cookiecutter_files) == 0, "copyroom/ must not contain cookiecutter.json"
+
+        # A directory named ``template`` is only a boundary violation if it embeds
+        # template *content*; a code package (the template-edit workflow) is fine.
+        content_dirs = [
+            d
+            for d in src_dir.rglob("template")
+            if d.is_dir()
+            and (list(d.rglob("copier.yml")) or list(d.rglob("*.jinja")))
+        ]
+        assert not content_dirs, "copyroom/ must not embed a template/ directory with template content"
 
     def test_generated_projects_own_local_choices(self) -> None:
         """Generated projects own local modifications (in .copier-answers.yml scope).

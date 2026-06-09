@@ -31,6 +31,11 @@ from .session.model import (
     CLISession,
     SessionStatus,
 )
+from .template.model import PreviewStatus
+from .template.preview import CopyRoomError as TemplateError
+from .template.preview import run_preview
+from .template.validate import validate_template
+from .template.workspace import checkout_template
 from .workshop.golden import CopyRoomError as GoldenError
 from .workshop.golden import golden_diff, refresh_golden
 from .workshop.model import GoldenStatus, RenderStatus, SimStatus
@@ -54,6 +59,12 @@ Project commands (in a project directory):
                                Create a new project from a template
   update    [target_ref] [--branch]
                                Update an existing project
+  template-checkout [--from REF]
+                               Resolve this project's template into an editable worktree
+  template-test     [--from REF] [--check CMD]
+                               Render-test the edited template with this project's answers
+  template-preview  [--from REF]
+                               Preview the update this project would receive from the edit
 
 Workshop commands (in a workshop directory):
   registry      <action> [args...]
@@ -219,6 +230,78 @@ def _cmd_update(args: argparse.Namespace) -> None:
         print("  Rejects captured:", file=sys.stderr)
         for r in update.rejects:
             print(f"    {r}", file=sys.stderr)
+
+
+def _cmd_template_checkout(args: argparse.Namespace) -> None:
+    """``copyroom template-checkout [--from REF]`` — editable template worktree."""
+    try:
+        checkout = checkout_template(project_root=None, from_ref=args.from_ref)
+    except TemplateError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    print("Template checked out for editing:")
+    print(f"  Worktree: {checkout.worktree_dir}")
+    print(f"  Branch:   {checkout.branch}")
+    print(f"  Source:   {checkout.template_source}")
+    print()
+    print("Edit files under the worktree, then run:")
+    print("  copyroom template-test       # confirm it still renders")
+    print("  copyroom template-preview    # see what your project would receive")
+
+
+def _cmd_template_test(args: argparse.Namespace) -> None:
+    """``copyroom template-test [--from REF] [--check CMD]`` — render-test the edit."""
+    try:
+        result = validate_template(
+            project_root=None, from_ref=args.from_ref, check_cmd=args.check,
+        )
+    except TemplateError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    if not result.ok:
+        print("Template test failed:", file=sys.stderr)
+        for msg in result.messages:
+            print(f"  {msg}", file=sys.stderr)
+        sys.exit(1)
+
+    for msg in result.messages:
+        print(f"  ✅ {msg}")
+    print(f"  Rendered into: {result.output_dir}")
+
+
+def _cmd_template_preview(args: argparse.Namespace) -> None:
+    """``copyroom template-preview [--from REF]`` — preview the project's update."""
+    try:
+        preview = run_preview(project_root=None, from_ref=args.from_ref)
+    except TemplateError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    if preview.status != PreviewStatus.complete or preview.result is None:
+        print("Template preview failed.", file=sys.stderr)
+        sys.exit(1)
+
+    result = preview.result
+    print(f"Update preview (project ← edited template on {preview.branch}):")
+    if not result.has_changes and not result.conflicts and not result.rejects:
+        print("  No changes — your project already matches the edited template.")
+    else:
+        if result.added:
+            print(f"  Added:    {sorted(result.added)}")
+        if result.modified:
+            print(f"  Modified: {sorted(result.modified)}")
+        if result.removed:
+            print(f"  Removed:  {sorted(result.removed)}")
+        if result.conflicts:
+            print(f"  ⚠️  Conflicts: {sorted(result.conflicts)}")
+        if result.rejects:
+            print(f"  ⚠️  Rejects:   {sorted(result.rejects)}")
+    print(f"  Patch: {result.patch_path}")
+    print()
+    print("Nothing was applied to your project. Review the patch, then once the")
+    print("template change is committed/tagged, apply it with: copyroom update <ref>")
 
 
 def _cmd_registry(args: argparse.Namespace) -> None:
@@ -401,6 +484,30 @@ def _build_parser() -> argparse.ArgumentParser:
     p_update.add_argument("--trust", action="store_true",
                           help="Execute the template's post-update hook commands")
 
+    # --- Template-edit commands (project mode) ---
+    p_tco = subparsers.add_parser(
+        "template-checkout",
+        help="Resolve this project's template into an editable worktree",
+    )
+    p_tco.add_argument("--from", dest="from_ref", default=None,
+                       help="Base ref for the edit branch (default: template's default branch)")
+
+    p_ttest = subparsers.add_parser(
+        "template-test",
+        help="Render-test the edited template with this project's answers",
+    )
+    p_ttest.add_argument("--from", dest="from_ref", default=None,
+                         help="Base ref for the edit branch")
+    p_ttest.add_argument("--check", default=None,
+                         help="Shell command to run against the rendered output")
+
+    p_tprev = subparsers.add_parser(
+        "template-preview",
+        help="Preview the update this project would receive from the edited template",
+    )
+    p_tprev.add_argument("--from", dest="from_ref", default=None,
+                         help="Base ref for the edit branch")
+
     # --- Workshop commands ---
     p_registry = subparsers.add_parser("registry", help="Manage template registry")
     p_registry.add_argument("action", help="Registry action (list, add, remove, etc.)")
@@ -445,6 +552,9 @@ def _build_parser() -> argparse.ArgumentParser:
 COMMAND_FN: dict[str, Callable[..., None]] = {
     "new": _cmd_new,
     "update": _cmd_update,
+    "template-checkout": _cmd_template_checkout,
+    "template-test": _cmd_template_test,
+    "template-preview": _cmd_template_preview,
     "registry": _cmd_registry,
     "render": _cmd_render,
     "test": _cmd_test,

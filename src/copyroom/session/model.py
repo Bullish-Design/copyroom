@@ -59,7 +59,9 @@ WORKSHOP_COMMANDS: frozenset[str] = frozenset(
     {"registry", "render", "test", "golden", "release-check", "update-test"},
 )
 
-PROJECT_COMMANDS: frozenset[str] = frozenset({"new", "update"})
+PROJECT_COMMANDS: frozenset[str] = frozenset(
+    {"new", "update", "template-checkout", "template-test", "template-preview"},
+)
 
 _session_sm = StateMachine(VALID_SESSION_TRANSITIONS, entity_name="CLISession")
 

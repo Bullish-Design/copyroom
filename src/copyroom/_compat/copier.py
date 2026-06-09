@@ -20,6 +20,7 @@ def copier_copy(
     source: str,
     destination: Path,
     answers_file: Path | None = None,
+    vcs_ref: str | None = None,
     timeout: int = _COPIER_TIMEOUT,
 ) -> subprocess.CompletedProcess[str]:
     """Run ``copier copy`` and return the result.
@@ -32,10 +33,16 @@ def copier_copy(
         Directory to create the project in.
     answers_file:
         Optional path to a YAML answers file.
+    vcs_ref:
+        Optional VCS ref (tag / branch / commit) to render. Without it Copier
+        renders the latest tag, which is wrong when rendering an edit branch;
+        the template-edit workflow passes the scratch branch here.
     timeout:
         Seconds to wait before raising ``subprocess.TimeoutExpired``.
     """
     cmd = ["copier", "copy", "--quiet", "--defaults"]
+    if vcs_ref is not None:
+        cmd.extend(["--vcs-ref", vcs_ref])
     if answers_file is not None:
         cmd.extend(["--data-file", str(answers_file)])
     cmd.extend([source, str(destination)])
