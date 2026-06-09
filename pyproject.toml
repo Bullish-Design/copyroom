@@ -76,8 +76,8 @@ target-version = "py313"
 src = ["src"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "ANN"]
-"src/copyroom/_compat/*" = ["D", "ANN"]
+"tests/**" = ["D", "ANN"]
+"src/copyroom/_compat/**" = ["D", "ANN"]
 
 [tool.ruff.lint]
 select = [

@@ -4,8 +4,8 @@ Implements the GoldenDiff state machine from copyroom-workshop.allium:
 
     initiated -> rendered -> compared -> has_diffs | no_diffs
 
-Golden targets: ``tree.txt`` (file listing) and ``important-files/``
-(pyproject.toml, README, CI config, etc.).
+The snapshot is the full rendered tree, compared file-by-file, excluding
+Copier's machine-specific ``.copier-answers.yml``.
 """
 
 from __future__ import annotations
@@ -36,6 +36,19 @@ _golden_sm = StateMachine(
     VALID_GOLDEN_TRANSITIONS,
     entity_name="GoldenDiff",
 )
+
+
+def _is_copier_answers_file(name: str) -> bool:
+    """Return True for Copier's answers file (default or multi-template form).
+
+    Copier writes ``.copier-answers.yml`` (or ``.copier-answers.<name>.yml``)
+    into every rendered project. It records ``_src_path`` (an absolute path to
+    the template on the machine that rendered it) and ``_commit``, so its
+    contents differ across machines and checkouts. Including it in the golden
+    snapshot would produce spurious diffs and false ``release-check`` failures,
+    so it is excluded from the comparison.
+    """
+    return name.startswith(".copier-answers") and name.endswith(".yml")
 
 
 # ===================================================================
@@ -105,11 +118,9 @@ def compare_to_golden(
 ) -> GoldenStatus:
     """Compare generated output to golden snapshot.
 
-    Golden targets:
-      * ``tree.txt`` — file listing of the golden directory
-      * ``important-files/`` — pyproject.toml, README, CI config, etc.
-
-    Produces lists of added, removed, and modified files in ``diff.result``.
+    Compares every file in the rendered tree against the golden snapshot,
+    excluding Copier's ``.copier-answers.yml`` (see ``_is_copier_answers_file``),
+    and produces lists of added, removed, and modified files in ``diff.result``.
     """
     generated_dir = workshop_root / "generated" / diff.template_id / diff.scenario_id
     golden_dir = workshop_root / "golden" / diff.template_id / diff.scenario_id
@@ -216,19 +227,27 @@ def golden_diff(
     scenario_id: str,
     workshop_root: Path | None = None,
     template_source: str | None = None,
+    reuse_generated: bool = False,
 ) -> GoldenDiff:
     """Run the full golden diff workflow.
 
     This is the top-level entry point called from the CLI for
     ``copyroom golden <template_id> <scenario_id>``.
 
+    When *reuse_generated* is ``True`` the existing
+    ``generated/<template_id>/<scenario_id>/`` output is compared as-is and the
+    render step is skipped. ``release-check`` uses this to avoid re-rendering a
+    scenario it has already rendered in the matrix pass (one Copier invocation
+    per scenario instead of two).
+
     Returns the ``GoldenDiff`` entity in its final state
     (``has_diffs``, ``no_diffs``, or ``failed``).
     """
     workshop_root = require_workshop_root(workshop_root)
 
-    # Resolve template source from registry if not provided
-    if template_source is None:
+    # Resolve template source from registry if not provided. Not needed when
+    # reusing already-generated output, since no render happens.
+    if template_source is None and not reuse_generated:
         template_source = resolve_template_source(workshop_root, template_id)
         if template_source is None:
             diff = initiate(template_id, scenario_id)
@@ -245,10 +264,16 @@ def golden_diff(
     # 1. DiffGolden — create entity
     diff = initiate(template_id, scenario_id)
 
-    # 2. RenderForGoldenDiff
-    status = render_for_golden(diff, workshop_root, template_source)
-    if status in (GoldenStatus.failed,):
-        return diff
+    # 2. RenderForGoldenDiff (or reuse the output a prior render produced)
+    if reuse_generated:
+        diff.status = _golden_sm.transition(
+            GoldenStatus.initiated,
+            GoldenStatus.rendered,
+        )
+    else:
+        status = render_for_golden(diff, workshop_root, template_source)
+        if status == GoldenStatus.failed:
+            return diff
 
     # 3. CompareToGolden → GoldenHasDiffs | GoldenNoDiffs
     status = compare_to_golden(diff, workshop_root)
@@ -282,6 +307,9 @@ def _collect_important_files(
     files: set[str] = set()
     for item in sorted(directory.rglob("*")):
         if item.is_file():
+            if _is_copier_answers_file(item.name):
+                # Machine-specific (_src_path / _commit) — see _is_copier_answers_file.
+                continue
             rel = item.relative_to(relative_to)
             files.add(str(rel))
     return files

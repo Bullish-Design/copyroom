@@ -81,6 +81,12 @@ class ReleaseCheck:
     worktree_clean: bool = False
     golden_ok: bool = False
 
+    # Reporting-only: whether the workshop is under git at all. When False the
+    # worktree gate could not actually run, so the report says "N/A" rather than
+    # claiming "CLEAN" (``worktree_clean`` stays True so the advisory check can
+    # still pass — there are no uncommitted changes to worry about).
+    worktree_is_git: bool = True
+
     status: ReleaseStatus = ReleaseStatus.initiated
 
     # Detail counts for reporting
@@ -133,6 +139,7 @@ def run_matrix(
     # tree; capture the pre-render state so the result reflects the user's repo,
     # not our own output.
     check.worktree_clean = _check_worktree_clean(workshop_root)
+    check.worktree_is_git = _is_git_repo(workshop_root)
 
     # --- discover scenarios ---
     scenario_ids = _discover_scenarios(workshop_root, check.template_id)
@@ -164,6 +171,8 @@ def run_matrix(
         check.matrix_passed = (check.scenario_passed == check.scenario_total)
 
         # --- run golden diff for every scenario ---
+        # The matrix render above already produced generated/ output, so reuse it
+        # instead of re-rendering each scenario a second time.
         check.golden_total = len(scenario_ids)
         check.golden_passed = 0
         for scenario_id in scenario_ids:
@@ -172,6 +181,7 @@ def run_matrix(
                 scenario_id=scenario_id,
                 workshop_root=workshop_root,
                 template_source=template_source,
+                reuse_generated=True,
             )
             if diff.status == GoldenStatus.no_diffs:
                 check.golden_passed += 1
@@ -329,7 +339,9 @@ def format_release_report(check: ReleaseCheck) -> str:
     lines.append(f"  Matrix:     {matrix_marker} {matrix_label} ({matrix_detail})")
 
     # Worktree line
-    if check.worktree_clean:
+    if not check.worktree_is_git:
+        lines.append("  Worktree:   ➖ N/A (not a git repository — nothing to verify)")
+    elif check.worktree_clean:
         lines.append("  Worktree:   ✅ CLEAN")
     else:
         lines.append("  Worktree:   ❌ DIRTY (uncommitted changes present)")
@@ -434,3 +446,26 @@ def _check_worktree_clean(repo_root: Path) -> bool:
         return True
 
     return result.stdout.strip() == ""
+
+
+def _is_git_repo(repo_root: Path) -> bool:
+    """Return ``True`` only when *repo_root* is inside a git work tree.
+
+    Used purely for reporting: it lets the release report distinguish a verified
+    clean tree from "couldn't check, there's no git here". Any failure to run
+    git (missing binary, timeout, not a repo) reports ``False``.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+    except Exception:
+        return False
+
+    return result.returncode == 0 and result.stdout.strip() == "true"

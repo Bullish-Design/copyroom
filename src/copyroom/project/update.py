@@ -73,26 +73,11 @@ def initiate(
 # ===================================================================
 # Rule: ResolveLatestRef               (spec L166-L170)
 # ===================================================================
-
-
-def resolve_latest_ref(update: TemplateUpdate) -> UpdateStatus:
-    """Resolve ``target_ref`` to the latest semver tag when it is ``None``.
-
-    This is a stub: in v0.x, if target_ref is None, the rule
-    short-circuits to ``failed`` with a message. Full semver resolution
-    from a remote is deferred (needs network + git ls-remote).
-    """
-    if update.target_ref is None:
-        # Deferred: needs network access to resolve latest semver tag
-        update.status = _update_sm.transition(
-            UpdateStatus.initiated,
-            UpdateStatus.failed,
-        )
-        # The entity keeps meaningful ref info per NoSilentErrors invariant
-        return update.status
-
-    # target_ref is already set; nothing to resolve
-    return update.status
+#
+# Deferred in v0.x: resolving ``target_ref`` to the latest semver tag needs
+# network access (``git ls-remote``). Until then :func:`initiate` rejects a
+# missing ref up front with actionable guidance, so there is no reachable
+# resolve step to implement here.
 
 
 # ===================================================================
@@ -435,50 +420,44 @@ def update_project(
         project_root = project_root.resolve()
 
     # 1. InitiateTemplateUpdate
-    # If target_ref is not given, set to None — ResolveLatestRef will handle it
+    # A missing ref is rejected here (ResolveLatestRef is deferred — see above).
     update = initiate(project_root, target_ref or "", use_branch)
 
-    # 2. ResolveLatestRef (if target_ref is null)
-    if update.target_ref is None or not update.target_ref:
-        status = resolve_latest_ref(update)
-        if status == UpdateStatus.failed:
-            return update
-
-    # 3. LoadUpdateConfig
+    # 2. LoadUpdateConfig
     status = load_config(update)
     if status == UpdateStatus.failed:
         return update
 
-    # 4. NoUpdateAvailable — check if already at target
+    # 3. NoUpdateAvailable — check if already at target
     if update.previous_ref is not None:
         status = no_update_available(update)
         if status == UpdateStatus.failed:
             return update
 
-    # 5. VerifyCleanWorktree / RejectDirtyWorktree
+    # 4. VerifyCleanWorktree / RejectDirtyWorktree
     status = verify_worktree(update)
     if status == UpdateStatus.failed:
         return update
 
-    # 6. CreateUpdateBranch (only if --branch)
+    # 5. CreateUpdateBranch (only if --branch)
     if use_branch:
         status = create_branch(update)
         if status == UpdateStatus.failed:
             return update
 
-    # 7. ExecuteCopierUpdate / ExecuteCopierUpdateFromBranch
+    # 6. ExecuteCopierUpdate / ExecuteCopierUpdateFromBranch
     status = execute_update(update)
     if status == UpdateStatus.failed:
         return update
 
-    # 8. CaptureUpdateConflicts (may short-circuit to complete)
+    # 7. CaptureUpdateConflicts (may short-circuit to complete)
     status = capture_conflicts(update)
     if status == UpdateStatus.failed:
         return update
     if status == UpdateStatus.complete:
         return update
 
-    # 9. RunPostUpdateCommands
+    # 8. RunPostUpdateCommands
     status = run_post_update_commands(update, trust=trust)
     return update
 

@@ -16,9 +16,7 @@ Following the test-generation guide at .agents/skills/allium/references/test-gen
 
 from __future__ import annotations
 
-import os
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -35,11 +33,11 @@ from copyroom.project.model import (
 from copyroom.session.dispatcher import COMMAND_MODE_MAP, dispatch
 from copyroom.session.model import (
     PROJECT_COMMANDS,
+    VALID_SESSION_TRANSITIONS,
     WORKSHOP_COMMANDS,
     CLIMode,
     CLISession,
     SessionStatus,
-    VALID_SESSION_TRANSITIONS,
 )
 
 # ===========================================================================
@@ -169,10 +167,10 @@ class TestNoRemoteExecution:
 
         Verify that the copier compat layer delegates entirely to Copier subprocess.
         """
-        from copyroom._compat.copier import copier_copy, copier_update
-
         # Inspect the function source to verify it only calls subprocess.run
         import inspect
+
+        from copyroom._compat.copier import copier_copy, copier_update
         copy_src = inspect.getsource(copier_copy)
         update_src = inspect.getsource(copier_update)
 
@@ -209,9 +207,9 @@ class TestNoRemoteExecution:
         Verify that the copier subprocess wrapper passes the source URL through
         to Copier without interception or transformation.
         """
-        from copyroom._compat.copier import copier_copy
-
         import inspect
+
+        from copyroom._compat.copier import copier_copy
         src = inspect.getsource(copier_copy)
 
         # The source parameter is passed directly to the copier subprocess command
@@ -241,8 +239,6 @@ class TestOperatingModelBoundary:
 
         A directory cannot simultaneously be a workshop and a project root.
         """
-        from copyroom.session.detector import is_workshop, is_project
-
         # The marker sets are mutually exclusive in structure:
         # - Workshop needs: copyroom.yml + registry/ + scenarios/
         # - Project needs: .copier-answers.yml or copyroom.project.yml
@@ -250,9 +246,10 @@ class TestOperatingModelBoundary:
         # While it's technically possible for a directory to have all these
         # files, the detector checks workshop first and returns immediately,
         # so the effective mode is always one or the other.
-
         # Verify the helper functions work independently
         import tempfile
+
+        from copyroom.session.detector import is_project, is_workshop
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)
@@ -294,9 +291,9 @@ class TestOperatingModelBoundary:
         Verify the detector distinguishes workshop mode from project mode.
         A generated project with .copier-answers.yml is detected as project mode.
         """
-        from copyroom.session.detector import is_project
-
         import tempfile
+
+        from copyroom.session.detector import is_project
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)
@@ -334,9 +331,9 @@ class TestCopierAnswersAuthoritative:
         project marker. The file contains Copier's authoritative answers
         (template source, version, answers).
         """
-        from copyroom.session.detector import is_project
-
         import tempfile
+
+        from copyroom.session.detector import is_project
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)
@@ -357,9 +354,9 @@ class TestCopierAnswersAuthoritative:
         this file carries advisory metadata (post-create commands, git policy)
         — it does NOT override the template source or version from .copier-answers.yml.
         """
-        from copyroom.session.detector import is_project
-
         import tempfile
+
+        from copyroom.session.detector import is_project
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)
@@ -403,9 +400,9 @@ class TestOffRampAlwaysAvailable:
         A project identified by .copier-answers.yml alone is still a valid
         Copier-managed project — the CopyRoom metadata file is purely additive.
         """
-        from copyroom.session.detector import is_project
-
         import tempfile
+
+        from copyroom.session.detector import is_project
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)
@@ -445,9 +442,9 @@ class TestOffRampAlwaysAvailable:
         1. The state machine provides explicit failure states (no silent corruption)
         2. The detector doesn't modify filesystem state (it only reads)
         """
-        from copyroom.session.detector import detect_mode
-
         import tempfile
+
+        from copyroom.session.detector import detect_mode
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td)

@@ -134,8 +134,9 @@ class TestRunMatrix:
         import tempfile
         from pathlib import Path
         from unittest.mock import patch
-        from copyroom.release.check import run_matrix
+
         from copyroom.release.check import ReleaseCheck as ImplReleaseCheck
+        from copyroom.release.check import run_matrix
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

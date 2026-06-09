@@ -277,6 +277,13 @@ def run_checks(
             SimStatus.update_applied,
             SimStatus.checks_run,
         )
+        # No checks ran, so nothing failed: the update itself succeeded.
+        # (apply_update already created sim.result via reject capture, whose
+        # default check_passed is False — flip it here so a clean, conflict-free
+        # update isn't reported as "had issues".)
+        if sim.result is None:
+            sim.result = UpdateSimulationResult()
+        sim.result.check_passed = True
         # Complete immediately
         return _complete(sim, workshop_root)
 

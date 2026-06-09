@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 from collections.abc import Iterator
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -82,17 +83,15 @@ def cli(temp_dir: Path) -> CopyRoomCLI:
 # definitions and are used solely for test assertions — they are NOT
 # coupled to the implementation's internal representation.
 
-from enum import Enum
 
-
-class CLIMode(str, Enum):
+class CLIMode(StrEnum):
     workshop = "workshop"
     project = "project"
     template_repo = "template_repo"
     standalone = "standalone"
 
 
-class SessionStatus(str, Enum):
+class SessionStatus(StrEnum):
     mode_detecting = "mode_detecting"
     mode_detected = "mode_detected"
     command_running = "command_running"
@@ -111,7 +110,7 @@ VALID_SESSION_TRANSITIONS: dict[SessionStatus, set[SessionStatus]] = {
 }
 
 
-class CreationStatus(str, Enum):
+class CreationStatus(StrEnum):
     initiated = "initiated"
     target_verified = "target_verified"
     prompts_collected = "prompts_collected"
@@ -132,7 +131,7 @@ VALID_CREATION_TRANSITIONS: dict[CreationStatus, set[CreationStatus]] = {
 }
 
 
-class UpdateStatus(str, Enum):
+class UpdateStatus(StrEnum):
     initiated = "initiated"
     config_loaded = "config_loaded"
     worktree_verified = "worktree_verified"
@@ -155,7 +154,7 @@ VALID_UPDATE_TRANSITIONS: dict[UpdateStatus, set[UpdateStatus]] = {
 }
 
 
-class ReleaseStatus(str, Enum):
+class ReleaseStatus(StrEnum):
     initiated = "initiated"
     matrix_run = "matrix_run"
     checked = "checked"
@@ -172,7 +171,7 @@ VALID_RELEASE_TRANSITIONS: dict[ReleaseStatus, set[ReleaseStatus]] = {
 }
 
 
-class RenderStatus(str, Enum):
+class RenderStatus(StrEnum):
     initiated = "initiated"
     rendered = "rendered"
     tested = "tested"
@@ -189,7 +188,7 @@ VALID_RENDER_TRANSITIONS: dict[RenderStatus, set[RenderStatus]] = {
 }
 
 
-class GoldenStatus(str, Enum):
+class GoldenStatus(StrEnum):
     initiated = "initiated"
     rendered = "rendered"
     compared = "compared"
@@ -207,7 +206,7 @@ VALID_GOLDEN_TRANSITIONS: dict[GoldenStatus, set[GoldenStatus]] = {
 }
 
 
-class SimStatus(str, Enum):
+class SimStatus(StrEnum):
     initiated = "initiated"
     old_rendered = "old_rendered"
     user_edited = "user_edited"

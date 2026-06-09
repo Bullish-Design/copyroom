@@ -13,16 +13,15 @@ from copyroom.release.check import (
     CopyRoomError,
     ReleaseCheck,
     ReleaseStatus,
+    _check_worktree_clean,
+    _discover_scenarios,
     create_check,
     evaluate,
     format_release_report,
     resolve,
     run_release_check,
-    _discover_scenarios,
-    _check_worktree_clean,
 )
 from copyroom.workshop.registry import resolve_template_source as _resolve_template_source
-
 
 # ===========================================================================
 # State machine tests
@@ -415,7 +414,7 @@ class TestReleaseCheckWorkflow:
                 patch("copyroom.release.check._check_worktree_clean", return_value=True),
             ):
                 # Mock render returns complete
-                from copyroom.workshop.model import ScenarioRender, RenderStatus, GoldenDiff, GoldenStatus
+                from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
                 mock_render.return_value = ScenarioRender(
                     template_id="t1", scenario_id="default",
                     status=RenderStatus.complete,
@@ -452,7 +451,7 @@ class TestReleaseCheckWorkflow:
                 patch("copyroom.release.check._golden_diff") as mock_golden,
                 patch("copyroom.release.check._check_worktree_clean", return_value=True),
             ):
-                from copyroom.workshop.model import ScenarioRender, RenderStatus, GoldenDiff, GoldenStatus
+                from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
                 mock_render.return_value = ScenarioRender(
                     template_id="t1", scenario_id="broken",
                     status=RenderStatus.failed,
@@ -487,7 +486,7 @@ class TestReleaseCheckWorkflow:
                 patch("copyroom.release.check._golden_diff") as mock_golden,
                 patch("copyroom.release.check._check_worktree_clean", return_value=True),
             ):
-                from copyroom.workshop.model import ScenarioRender, RenderStatus, GoldenDiff, GoldenStatus
+                from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
                 mock_render.return_value = ScenarioRender(
                     template_id="t1", scenario_id="default",
                     status=RenderStatus.complete,
