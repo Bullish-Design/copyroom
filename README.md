@@ -5,6 +5,31 @@ Mode-aware CLI for template-driven project workflows, built on [Copier](https://
 CopyRoom lives on top of Copier's lower-level operations, providing mode-aware command
 routing, safe lifecycle management, workshop testing, and release readiness checks.
 
+## Documentation
+
+Full documentation lives in [`docs/`](docs/README.md), in three tracks:
+
+- **[User Guide](docs/user/)** — [getting started](docs/user/getting-started.md),
+  [concepts & modes](docs/user/concepts.md), the full
+  [CLI reference](docs/user/cli-reference.md),
+  [projects](docs/user/projects.md),
+  [editing a template from a project](docs/user/template-editing.md),
+  [the workshop](docs/user/workshop.md),
+  [adoption](docs/user/adoption.md),
+  [configuration](docs/user/configuration.md), and the
+  [trust & safety model](docs/user/trust-and-safety.md).
+- **[Developer Guide](docs/developer/)** —
+  [architecture](docs/developer/architecture.md),
+  [module reference](docs/developer/module-reference.md),
+  [state machines](docs/developer/state-machines.md),
+  [the `_compat` layer](docs/developer/compat-layer.md),
+  [testing](docs/developer/testing.md), and
+  [contributing](docs/developer/contributing.md).
+- **[Copier Overview](docs/copier/overview.md)** — a detailed, self-contained
+  explanation of the [Copier](https://copier.readthedocs.io/) engine CopyRoom is
+  built on (templates, `copier.yml`, `.copier-answers.yml`, the three-way-merge
+  update, and how each CopyRoom command maps onto Copier).
+
 ## Development
 
 ```bash
@@ -12,6 +37,22 @@ devenv shell
 uv sync
 copyroom --help
 ```
+
+## Demo
+
+A scripted, end-to-end walkthrough drives every command against real Copier
+templates, projects, and a workshop in a throwaway directory — nothing mocked:
+
+```bash
+devenv shell -- bash demo/walkthrough.sh          # full run
+devenv shell -- bash demo/walkthrough.sh --pause  # press Enter between acts
+devenv shell -- bash demo/walkthrough.sh --keep   # keep the scratch workspace
+```
+
+It covers, in order: mode awareness → `new`/`update` → the agentic
+`template-checkout`/`template-test`/`template-preview` loop → the workshop
+(`render`/`golden`/`update-test`/`release-check`) → repo adoption
+(`templatize`/`adopt`).
 
 ## Editing the template from a project (agentic)
 
