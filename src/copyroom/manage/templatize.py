@@ -168,11 +168,14 @@ def _scaffold(tz: Templatization) -> None:
     (template_dir / ".copier-answers.yml.jinja").write_text(_ANSWERS_JINJA)
 
     # Workshop registry: inline source + a registry/ dir (required for the
-    # workshop-mode detector). Source points at this template repo's root.
+    # workshop-mode detector). A *relative* source ("." = the workshop root)
+    # keeps the repo relocatable — an absolute path would dangle on move/re-clone
+    # (P3-2). It is resolved against the workshop root for both validation and
+    # Copier (resolve_source_for_copier).
     (home / "copyroom.yml").write_text(
         "templates:\n"
         f"  {tid}:\n"
-        f"    source: {home}\n"
+        "    source: .\n"
     )
     (home / "registry").mkdir(exist_ok=True)
     (home / "registry" / ".gitkeep").write_text("")

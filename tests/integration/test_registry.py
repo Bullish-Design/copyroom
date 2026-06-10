@@ -173,6 +173,42 @@ def test_tilde_local_source_resolves(tmp_path: Path, monkeypatch) -> None:
     assert report.problems["demo"] == []
 
 
+def test_relative_source_resolves_from_descendant(tmp_path: Path, monkeypatch) -> None:
+    """#P3-2: a relative `source: .` (as templatize writes) must resolve against the
+    workshop root, so render + validate work from any descendant directory."""
+    from copyroom.workshop.model import RenderStatus
+    from copyroom.workshop.render import render_scenario
+
+    # A self-contained template+workshop: the workshop root *is* the template repo.
+    ws = tmp_path / "selfws"
+    (ws / "template").mkdir(parents=True)
+    (ws / "template" / "README.md.jinja").write_text("# {{ project_name }}\n")
+    (ws / "copier.yml").write_text(
+        "_subdirectory: template\n"
+        "project_name:\n  type: str\n  default: demo\n"
+    )
+    (ws / "registry").mkdir()
+    (ws / "scenarios" / "selftmpl").mkdir(parents=True)
+    (ws / "scenarios" / "selftmpl" / "default.yml").write_text("project_name: demo\n")
+    (ws / "copyroom.yml").write_text(
+        "templates:\n  selftmpl:\n    source: .\n"
+    )
+    _git("init", cwd=ws)
+    _git("add", "-A", cwd=ws)
+    _git("commit", "-qm", "v1", cwd=ws)
+    _git("tag", "v1.0.0", cwd=ws)
+
+    # validate resolves `.` against the workshop root (not the cwd).
+    assert validate_registry(ws).problems["selftmpl"] == []
+
+    # render from a *descendant* dir with workshop_root auto-detected.
+    subdir = ws / "scenarios" / "selftmpl"
+    monkeypatch.chdir(subdir)
+    render = render_scenario("selftmpl", "default")
+    assert render.status == RenderStatus.complete, render.status
+    assert (ws / "generated" / "selftmpl" / "default" / "README.md").read_text() == "# demo\n"
+
+
 # ---------------------------------------------------------------------------
 # CLI happy path + unknown action
 # ---------------------------------------------------------------------------

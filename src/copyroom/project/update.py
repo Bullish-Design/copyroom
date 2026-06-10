@@ -10,7 +10,6 @@ Each rule in the spec maps to a function or method in this module.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -250,15 +249,9 @@ def create_branch(update: TemplateUpdate) -> UpdateStatus:
         f"template-update/{update.template_id}-{update.target_ref}"
     )
 
-    try:
-        result = subprocess.run(
-            ["git", "checkout", "-b", branch_name],
-            cwd=str(update.project_root),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except FileNotFoundError:
+    result = gitutil.checkout_new_branch(update.project_root, branch_name)
+    if result is None:
+        # git unavailable (fail-soft helper returns None)
         update.status = _update_sm.transition(
             UpdateStatus.worktree_verified,
             UpdateStatus.failed,

@@ -24,7 +24,12 @@ from .model import (
     UpdateSimulation,
     UpdateSimulationResult,
 )
-from .registry import load_checks, require_workshop_root, resolve_template_source
+from .registry import (
+    load_checks,
+    require_workshop_root,
+    resolve_source_for_copier,
+    resolve_template_source,
+)
 
 __all__ = ["CopyRoomError", "run_update_simulation"]
 
@@ -378,6 +383,8 @@ def run_update_simulation(
                 file=sys.stderr,
             )
             return sim
+        # Resolve a relative local source against the workshop root (P3-2).
+        template_source = resolve_source_for_copier(workshop_root, template_source)
 
     # 2. RenderOldVersion
     status = render_old_version(sim, workshop_root, template_source)

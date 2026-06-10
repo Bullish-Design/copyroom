@@ -917,24 +917,23 @@ def main(argv: Sequence[str] | None = None) -> None:
     session = _detect_and_report(mode_override=args.mode)
 
     # --- Dispatch ---
+    # _detect_and_report already exited on an unknown mode, so the session is in
+    # mode_detected here; a command_failed result is therefore out-of-mode or an
+    # unknown command, both of which the helpers below report and exit on.
     result = dispatch(cmd, session)
 
     if result == SessionStatus.command_failed:
-        if session.status == SessionStatus.unknown_mode:
-            # Already printed the message and exited in _detect_and_report
-            sys.exit(1)
         session.advance(SessionStatus.command_failed)
         if session.mode and cmd in COMMAND_MODE_MAP:
             _print_out_of_mode_error(cmd, session)
         else:
             _print_unknown_command_error(cmd)
-        # unreachable
+        # unreachable — both helpers sys.exit(1)
 
-    # --- Run the command ---
+    # --- Run the command --- (dispatch returning command_running proves cmd is in
+    # COMMAND_MODE_MAP, every member of which has a COMMAND_FN entry.)
     session.advance(SessionStatus.command_running)
-    handler = COMMAND_FN.get(cmd)
-    if handler is not None:
-        handler(args)
+    COMMAND_FN[cmd](args)
     session.advance(SessionStatus.command_complete)
 
 

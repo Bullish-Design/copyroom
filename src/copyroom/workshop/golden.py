@@ -23,7 +23,11 @@ from .model import (
     GoldenDiffResult,
     GoldenStatus,
 )
-from .registry import require_workshop_root, resolve_template_source
+from .registry import (
+    require_workshop_root,
+    resolve_source_for_copier,
+    resolve_template_source,
+)
 from .render import execute_render
 from .render import initiate as render_initiate
 
@@ -234,6 +238,8 @@ def golden_diff(
                 file=sys.stderr,
             )
             return diff
+        # Resolve a relative local source against the workshop root (P3-2).
+        template_source = resolve_source_for_copier(workshop_root, template_source)
 
     # 1. DiffGolden — create entity
     diff = initiate(template_id, scenario_id)

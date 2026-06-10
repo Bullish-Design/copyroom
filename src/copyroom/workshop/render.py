@@ -22,7 +22,12 @@ from .model import (
     RenderStatus,
     ScenarioRender,
 )
-from .registry import load_checks, require_workshop_root, resolve_template_source
+from .registry import (
+    load_checks,
+    require_workshop_root,
+    resolve_source_for_copier,
+    resolve_template_source,
+)
 
 __all__ = ["CopyRoomError", "render_scenario"]
 
@@ -286,6 +291,9 @@ def render_scenario(
                 file=sys.stderr,
             )
             return render
+        # Resolve a relative local source against the workshop root so render
+        # works from any descendant directory (P3-2).
+        template_source = resolve_source_for_copier(workshop_root, template_source)
 
     # 2. ExecuteRender
     status = execute_render(render, workshop_root, template_source)

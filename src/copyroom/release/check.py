@@ -22,7 +22,7 @@ from .._compat.state_machine import StateMachine
 from ..session.detector import detect_workshop_root
 from ..workshop.golden import golden_diff as _golden_diff
 from ..workshop.model import GoldenStatus, RenderStatus
-from ..workshop.registry import resolve_template_source
+from ..workshop.registry import resolve_source_for_copier, resolve_template_source
 from ..workshop.render import render_scenario
 
 __all__ = ["CopyRoomError", "ReleaseCheck", "ReleaseStatus", "run_release_check"]
@@ -293,6 +293,8 @@ def run_release_check(
                 file=sys.stderr,
             )
             return check
+        # Resolve a relative local source against the workshop root (P3-2).
+        template_source = resolve_source_for_copier(workshop_root, template_source)
 
     # 2. RunMatrix — run all scenarios
     run_matrix(check, workshop_root, template_source)

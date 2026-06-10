@@ -14,6 +14,7 @@ import yaml
 
 from .._compat import gitutil
 from .._compat.errors import CopyRoomError
+from .._compat.fsutil import atomic_write_text
 from .._compat.semver import select_latest_semver
 from ..session.detector import detect_workshop_root
 from .model import RegistryEntry, RegistryValidation
@@ -175,6 +176,20 @@ def _resolve_local_source(workshop_root: Path, source: str) -> Path:
     return path
 
 
+def resolve_source_for_copier(workshop_root: Path, source: str) -> str:
+    """Return the source to hand to ``copier copy`` for a registry entry.
+
+    A *local* source is resolved to an absolute path against the workshop root,
+    so a relative source (e.g. ``source: .``) works no matter which descendant
+    directory the command runs from (the copier-facing callers used to pass the
+    raw source, which only worked when ``cwd == workshop root`` — P3-2). Remote
+    sources pass through unchanged.
+    """
+    if gitutil.looks_remote(source):
+        return source
+    return str(_resolve_local_source(workshop_root, source))
+
+
 def _validate_entry(workshop_root: Path, entry: RegistryEntry) -> list[str]:
     """Return the list of problems for one entry (empty when it is sound)."""
     problems: list[str] = []
@@ -243,11 +258,12 @@ def add_template(
         )
 
     registry_dir.mkdir(parents=True, exist_ok=True)
-    target.write_text(
+    atomic_write_text(
+        target,
         yaml.safe_dump(
             {"id": template_id, "source": source, "checks": []},
             sort_keys=False,
-        )
+        ),
     )
 
     if scaffold:
