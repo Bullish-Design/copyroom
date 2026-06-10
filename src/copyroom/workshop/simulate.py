@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .._compat.conflicts import scan_rejects
 from .._compat.copier import copier_copy, copier_update
 from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
@@ -468,5 +469,4 @@ def _capture_rejects(sim: UpdateSimulation, work_dir: Path) -> None:
     """Scan for .rej files in the work directory."""
     if sim.result is None:
         sim.result = UpdateSimulationResult()
-    for rej_file in work_dir.rglob("*.rej"):
-        sim.result.rejects.add(str(rej_file.relative_to(work_dir)))
+    sim.result.rejects.update(scan_rejects(work_dir))

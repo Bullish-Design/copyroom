@@ -133,6 +133,20 @@ def worktree_clean(
     return not lines
 
 
+def changed_paths(
+    path: Path | str,
+    *,
+    exclude: tuple[str, ...] = (),
+) -> set[str]:
+    """Return the set of dirty (changed/untracked) repo-relative paths in *path*.
+
+    Built on :func:`worktree_status`; a non-repo or missing git yields an empty
+    set. Used to find the files ``copier update`` touched (the tree was verified
+    clean first) so they can be scanned for inline conflict markers.
+    """
+    return {_porcelain_path(ln) for ln in (worktree_status(path, exclude=exclude) or [])}
+
+
 def default_branch(repo: Path) -> str | None:
     """Return the currently checked-out branch name of *repo*, if any."""
     result = run_git("rev-parse", "--abbrev-ref", "HEAD", cwd=repo)
@@ -176,6 +190,42 @@ def worktree_add(repo: Path, worktree_dir: Path, branch: str, base: str) -> bool
         result = run_git("worktree", "add", str(worktree_dir), branch, cwd=repo)
     else:
         result = run_git("worktree", "add", "-b", branch, str(worktree_dir), base, cwd=repo)
+    return result is not None and result.returncode == 0
+
+
+def checkout_new_branch(repo: Path, name: str) -> subprocess.CompletedProcess[str] | None:
+    """``git checkout -b <name>`` in *repo*.
+
+    Returns the ``CompletedProcess`` (so callers can forward stderr) or ``None``
+    when git is unavailable.
+    """
+    return run_git("checkout", "-b", name, cwd=repo)
+
+
+def commits_ahead(repo: Path, branch: str, base: str) -> int | None:
+    """Number of commits on *branch* not on *base* (``git rev-list --count base..branch``).
+
+    ``None`` when undeterminable (git unavailable or the refs don't resolve).
+    Used to warn about a reused, non-empty edit branch.
+    """
+    result = run_git("rev-list", "--count", f"{base}..{branch}", cwd=repo)
+    if result is None or result.returncode != 0:
+        return None
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return None
+
+
+def worktree_remove(repo: Path, worktree_dir: Path) -> bool:
+    """``git worktree remove --force <dir>``. ``False`` on failure / missing git."""
+    result = run_git("worktree", "remove", "--force", str(worktree_dir), cwd=repo)
+    return result is not None and result.returncode == 0
+
+
+def delete_branch(repo: Path, branch: str) -> bool:
+    """``git branch -D <branch>``. ``False`` on failure / missing git."""
+    result = run_git("branch", "-D", branch, cwd=repo)
     return result is not None and result.returncode == 0
 
 

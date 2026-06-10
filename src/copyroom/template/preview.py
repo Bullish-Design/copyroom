@@ -24,6 +24,7 @@ from pathlib import Path
 import yaml
 
 from .._compat import gitutil
+from .._compat.conflicts import scan_conflict_markers, scan_rejects
 from .._compat.copier import copier_update
 from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
@@ -109,12 +110,10 @@ def run_preview(
         # --- 3. diff S0 -> post-update ---
         patch = gitutil.add_all_and_diff_cached(sandbox)
         added, modified, removed = _name_status(sandbox)
-        rejects = {
-            str(p.relative_to(sandbox)) for p in sandbox.rglob("*.rej")
-        }
+        rejects = scan_rejects(sandbox)
         # Copier's default conflict mode writes inline git markers into the file
         # (not .rej), so scan the changed files for them.
-        conflicts = _scan_conflict_markers(sandbox, added | modified)
+        conflicts = scan_conflict_markers(sandbox, added | modified)
 
         # A non-zero exit with nothing applied is a real error, not a conflict.
         if updated.returncode != 0 and not patch.strip() and not rejects:
@@ -195,27 +194,6 @@ def _name_status(sandbox: Path) -> tuple[set[str], set[str], set[str]]:
         else:  # M, C, T, ...
             modified.add(path)
     return added, modified, removed
-
-
-_CONFLICT_MARKERS = ("<<<<<<<", ">>>>>>>")
-
-
-def _scan_conflict_markers(sandbox: Path, candidates: set[str]) -> set[str]:
-    """Return changed files that contain git-style conflict markers.
-
-    Copier's default (inline) conflict mode leaves ``<<<<<<<`` / ``>>>>>>>``
-    markers in files rather than writing ``.rej`` siblings, so a clash with the
-    user's local edits shows up as marker text inside an otherwise-modified file.
-    """
-    found: set[str] = set()
-    for rel in candidates:
-        try:
-            text = (sandbox / rel).read_text(errors="ignore")
-        except OSError:
-            continue
-        if any(marker in text for marker in _CONFLICT_MARKERS):
-            found.add(rel)
-    return found
 
 
 def _write_patch(project_root: Path, patch: str) -> Path:
