@@ -65,6 +65,17 @@ Workshop checks are the *whole point* of `test`/`release-check`: they're the
 author's own commands, on their own machine, validating their own templates.
 Gating them would defeat the feature.
 
+> ⚠️ **The trust boundary is the workshop you stand in.** Workshop `checks` run
+> with `shell=True` and **no** trust gate, by design — but that means running
+> `render` / `test` / `golden` / `update-test` / `release-check` inside a workshop
+> executes whatever commands its `copyroom.yml` / `registry/` declare. If you
+> **clone a third-party workshop** and run those commands in it, you are running
+> its author's arbitrary shell commands. Treat `cd`-ing into a workshop and
+> running a workshop command as trusting that workshop, the same way you'd trust a
+> `Makefile` or `npm` script before running it. (Template `post_*` hooks are
+> different: those travel with a *generated project* and **are** gated behind
+> `--trust`.)
+
 ---
 
 ## What CopyRoom never does

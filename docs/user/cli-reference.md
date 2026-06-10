@@ -35,12 +35,14 @@ Running `copyroom` with **no command** prints help and exits 0.
 # Project commands
 
 Run inside a generated project (a directory, or descendant, with
-`.copier-answers.yml` or `copyroom.project.yml`). For `new` in an empty dir, pass
-`--mode project`.
+`.copier-answers.yml` or `copyroom.project.yml`). `new` is the exception — it is a
+**bootstrap command** that runs anywhere (see below).
 
 ## `copyroom new`
 
-Create a new project from a template.
+Create a new project from a template. **Bootstrap command:** it runs in an
+unmanaged directory (no markers needed) — it exists to *create* a project, so it
+bypasses mode detection rather than requiring `--mode project`.
 
 ```
 copyroom new <source> [target] [--answers FILE] [--trust]
@@ -74,7 +76,9 @@ copyroom update [target_ref] [--branch] [--trust]
 | `--trust` | Execute the template's `post_template_update` hooks. |
 
 **Behavior:** loads `.copier-answers.yml` (reads `_src_path`, `_commit`) →
-**resolves the ref** → no-ops if already at it → **requires a clean git worktree**
+**resolves the ref** → if already at it, prints "Already at…" and **exits 0** (an
+idempotent no-op is a success, safe in a Makefile/CI loop) → otherwise **requires
+a clean git worktree**
 (refuses a dirty one, listing the dirty files) → optional isolation branch →
 `copier update --defaults --vcs-ref <ref>` → captures conflicts (inline markers)
 and rejects (`*.rej`) → runs trusted post-update hooks → reports the outcome.
@@ -275,8 +279,10 @@ command). Re-rendering cleans the previous output first.
 copyroom test <template_id> <scenario_id>
 ```
 
-Alias for `render` with a testing focus — identical workflow (render then run
-checks).
+Runs the registry `checks` against a **fresh render** — the same workflow as
+`render` (it is equivalent to `render` whenever checks are configured). It does
+**not** run golden snapshot comparison; use [`copyroom golden`](#copyroom-golden)
+for that.
 
 ## `copyroom golden`
 

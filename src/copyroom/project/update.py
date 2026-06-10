@@ -207,6 +207,9 @@ def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
     On clean: transitions to ``worktree_verified``.
     On dirty: transitions to ``failed`` with remediation guidance.
     """
+    # Unlike release-check (which excludes its own generated/ + .copyroom_sim/
+    # scratch output), this intentionally excludes *nothing*: Copier's 3-way
+    # update requires a fully clean tree so `git checkout .` is always a way back.
     dirty = gitutil.worktree_status(update.project_root)
 
     if dirty:

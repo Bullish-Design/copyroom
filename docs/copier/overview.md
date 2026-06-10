@@ -340,11 +340,15 @@ Copier templates can declare `_tasks` / migration hooks that run shell commands
 after `copy`/`update`. Because a template is often fetched from a remote source,
 running its commands is **arbitrary code execution from an untrusted source**.
 
-CopyRoom takes a deliberate stance here. It does not execute Copier's native
-`_tasks` implicitly; instead, the *project's* `copyroom.project.yml` may declare
-`post_project_create` / `post_template_update` command lists, and CopyRoom runs
-them **only when you pass `--trust`** (`_compat/shellcmd.py`). See
-[trust and safety](../user/trust-and-safety.md).
+CopyRoom takes a deliberate stance here. It **never runs Copier's native
+`_tasks` / migrations at all** — not even with `--trust`. CopyRoom does not pass
+`--trust` through to Copier, so a template's own `_tasks` are silently a no-op
+under CopyRoom (a deliberate limitation, not a bug). Instead, the *project's*
+`copyroom.project.yml` may declare `post_project_create` /
+`post_template_update` command lists, and CopyRoom runs **those** — and only
+those — **when you pass `--trust`** (`_compat/shellcmd.py`). If you maintain a
+template that relies on Copier `_tasks`, port that logic into a CopyRoom
+post-hook. See [trust and safety](../user/trust-and-safety.md).
 
 ---
 

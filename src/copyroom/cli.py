@@ -96,7 +96,8 @@ Workshop commands (in a workshop directory):
   render        <template_id> <scenario_id>
                                Render a template scenario
   test          <template_id> <scenario_id>
-                               Test rendered output
+                               Run configured checks on a fresh render
+                               (= render when checks exist; not golden)
   golden        <template_id> <scenario_id>
                                Golden test a scenario
   release-check <template_id>  Run release readiness checks
@@ -578,8 +579,9 @@ def _cmd_render(args: argparse.Namespace) -> None:
 def _cmd_test(args: argparse.Namespace) -> None:
     """``copyroom test <template_id> <scenario_id>`` — Phase 3.
 
-    Delegates to ``render`` with a focus on testing. The render workflow
-    already runs tests when checks are configured.
+    Runs the configured registry ``checks`` against a fresh render — equivalent
+    to ``render`` when checks exist (the render workflow runs them). It does
+    **not** run golden snapshot comparison; use ``copyroom golden`` for that.
     """
     _cmd_render(args)
 
@@ -826,7 +828,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_render.add_argument("template_id", help="Template identifier")
     p_render.add_argument("scenario_id", help="Scenario identifier")
 
-    p_test = subparsers.add_parser("test", help="Test rendered output")
+    p_test = subparsers.add_parser(
+        "test", help="Run configured checks on a fresh render (not golden)",
+    )
     p_test.add_argument("template_id", help="Template identifier")
     p_test.add_argument("scenario_id", help="Scenario identifier")
 
