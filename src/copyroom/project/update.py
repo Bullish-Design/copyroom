@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from .._compat import gitutil
+from .._compat.conflicts import scan_conflict_markers, scan_rejects
 from .._compat.copier import copier_update
 from .._compat.errors import CopyRoomError
 from .._compat.refs import same_version
@@ -326,9 +327,6 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
         from_state,
         UpdateStatus.update_executed,
     )
-
-    # Capture any conflict or .rej artifacts from the output
-    _capture_conflicts_from_output(update, result.stdout)
     return update.status
 
 
@@ -338,7 +336,13 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
 
 
 def capture_conflicts(update: TemplateUpdate) -> UpdateStatus:
-    """Capture conflicts and rejects from the Copier output.
+    """Capture conflicts and rejects left by ``copier update``.
+
+    The worktree was verified clean before the update (:func:`verify_worktree`),
+    so its now-dirty files *are* the update's output. ``.rej`` siblings and inline
+    ``<<<<<<<`` / ``>>>>>>>`` markers in those changed files are both captured via
+    the shared :mod:`_compat.conflicts` scanners — the same logic ``preview`` and
+    ``simulate`` use (was: a fragile stdout grep — P2-1).
 
     If no post-update commands are configured, short-circuits to ``complete``.
     Otherwise transitions to ``post_update_run``.
@@ -346,10 +350,9 @@ def capture_conflicts(update: TemplateUpdate) -> UpdateStatus:
     On success: transitions to ``post_update_run`` or ``complete``.
     On failure: transitions to ``failed``.
     """
-    # Scan for .rej files in the project tree
-    rej_files = list(update.project_root.rglob("*.rej"))
-    if rej_files:
-        update.rejects.update(str(f.relative_to(update.project_root)) for f in rej_files)
+    update.rejects.update(scan_rejects(update.project_root))
+    changed = gitutil.changed_paths(update.project_root)
+    update.conflicts.update(scan_conflict_markers(update.project_root, changed))
 
     # Check for post-update commands. Read through the resilient accessor so a
     # schema-divergent (but readable) config never silently drops configured
@@ -490,27 +493,3 @@ def update_project(
     # 8. RunPostUpdateCommands
     status = run_post_update_commands(update, trust=trust)
     return update
-
-
-# ===================================================================
-# Internal helpers
-# ===================================================================
-
-
-def _capture_conflicts_from_output(
-    update: TemplateUpdate,
-    output: str,
-) -> None:
-    """Parse Copier output for conflict-marker lines.
-
-    Rejected hunks (``.rej`` files) are captured authoritatively by scanning
-    the filesystem in :func:`capture_conflicts`, so they are intentionally
-    *not* harvested here — doing both led to the same reject being recorded in
-    two places with different formatting.
-    """
-    if not output:
-        return
-
-    for line in output.splitlines():
-        if "conflict" in line.lower():
-            update.conflicts.add(line.strip())

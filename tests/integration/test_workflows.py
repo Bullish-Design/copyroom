@@ -291,6 +291,37 @@ def test_update_project_no_ref_already_at_latest_is_clean_noop(
     assert update.previous_ref == update.target_ref == "v1.0.0"
 
 
+def test_update_project_captures_inline_conflict(template_repo: Path, tmp_path: Path) -> None:
+    """#P2-1: an inline-marker conflict from `copier update` is reported.
+
+    The old stdout grep missed inline `<<<<<<<` markers Copier writes silently;
+    the shared scan over the post-update dirty files catches them.
+    """
+    from copyroom._compat.copier import copier_copy
+
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj).returncode == 0
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    # Commit a local change to README on the line the template will rewrite in v2.
+    (proj / "README.md").write_text("# demo\n\nLOCAL EDIT on the shared line.\n")
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated + local edit", cwd=proj)
+
+    # Publish a v2 that changes the same README line → 3-way merge conflict.
+    (template_repo / "README.md.jinja").write_text(
+        "# {{ project_name }}\n\nTEMPLATE V2 on the shared line.\n"
+    )
+    _git("add", "-A", cwd=template_repo)
+    _git("commit", "-qm", "v2", cwd=template_repo)
+    _git("tag", "v2.0.0", cwd=template_repo)
+
+    update = update_project(project_root=proj, target_ref="v2.0.0")
+
+    # The clash surfaces as a reported conflict and/or a reject.
+    assert update.conflicts or update.rejects
+
+
 def test_update_project_rejects_dirty_worktree(template_repo: Path, tmp_path: Path) -> None:
     """An uncommitted change blocks the update (RejectDirtyWorktree)."""
     from copyroom._compat.copier import copier_copy
