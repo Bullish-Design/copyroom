@@ -74,6 +74,29 @@ def test_status_no_update_when_at_latest(template_repo: Path, tmp_path: Path) ->
     assert report.worktree_clean is True
 
 
+def test_status_no_update_for_describe_suffix_commit(
+    template_repo: Path, tmp_path: Path
+) -> None:
+    """#P1-2: a project generated at a post-tag commit records a describe-form
+    `_commit` (vX.Y.Z-N-gsha). `status` must read that as current — not report a
+    spurious 'update available' against the same latest tag."""
+    # Commit after v1.0.0 (no new tag) and generate from HEAD.
+    (template_repo / "EXTRA.md").write_text("post-tag commit\n")
+    _git("add", "-A", cwd=template_repo)
+    _git("commit", "-qm", "post-tag", cwd=template_repo)
+
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj, vcs_ref="HEAD").returncode == 0
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    report = project_status(project_root=proj)
+    assert report.current_ref is not None and report.current_ref.startswith("v1.0.0-1-g")
+    assert report.latest_ref == "v1.0.0"
+    assert report.update_available is False
+
+
 def test_status_reports_update_available(template_repo: Path, tmp_path: Path) -> None:
     proj = _generate_project(template_repo, tmp_path / "proj")
     tag_v2(template_repo)  # publish v2.0.0

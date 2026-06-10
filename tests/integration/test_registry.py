@@ -16,6 +16,8 @@ from copyroom.workshop.registry import (
     validate_registry,
 )
 
+from .conftest import _git
+
 
 def _run(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -105,6 +107,70 @@ def test_add_refuses_overwrite(workshop: Path, template_repo: Path) -> None:
 def test_add_scaffold_creates_scenario(workshop: Path, template_repo: Path) -> None:
     add_template(workshop, "scaffolded", str(template_repo), scaffold=True)
     assert (workshop / "scenarios" / "scaffolded" / "default.yml").is_file()
+
+
+def test_add_refuses_id_already_in_copyroom_yml(workshop: Path, template_repo: Path) -> None:
+    """#P1-3: 'demo' is defined inline in copyroom.yml; a registry/demo.yml would
+    be shadowed by the resolver, so `add` must refuse rather than write a dead file."""
+    with pytest.raises(CopyRoomError, match="already registered"):
+        add_template(workshop, "demo", str(template_repo))
+    assert not (workshop / "registry" / "demo.yml").exists()
+
+
+def test_add_round_trips_special_characters(workshop: Path) -> None:
+    """#P2-4: a source needing YAML quoting must survive write -> reload."""
+    tricky = "gh:org/repo  # comment-like"
+    add_template(workshop, "tricky", tricky)
+    # Reload through the resolver: a hand-formatted line would have truncated at ` #`.
+    assert load_entry(workshop, "tricky").source == tricky
+
+
+def test_add_round_trips_flow_indicator_source(workshop: Path) -> None:
+    """#P2-4: a source starting with a YAML flow indicator round-trips."""
+    tricky = "{not-a-mapping}"
+    add_template(workshop, "flowy", tricky)
+    assert load_entry(workshop, "flowy").source == tricky
+
+
+def test_registry_keyed_workshop_reports_checks(tmp_path: Path, template_repo: Path) -> None:
+    """#P2-5: a `registry:`-keyed copyroom.yml (alias of `templates:`) must still
+    surface the configured checks, not an empty list."""
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    (ws / "copyroom.yml").write_text(
+        "registry:\n"
+        "  demo:\n"
+        f"    source: {template_repo}\n"
+        "    checks:\n"
+        '      - "test -f README.md"\n'
+    )
+    entry = load_entry(ws, "demo")
+    assert entry.checks == ["test -f README.md"]
+    assert entry.source == str(template_repo)
+
+
+def test_tilde_local_source_resolves(tmp_path: Path, monkeypatch) -> None:
+    """#P2-6: a `~/...` local source must be expanded, not used literally."""
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+
+    tmpl = home / "tmpl"
+    tmpl.mkdir()
+    (tmpl / "README.md.jinja").write_text("# {{ project_name }}\n")
+    _git("init", cwd=tmpl)
+    _git("add", "-A", cwd=tmpl)
+    _git("commit", "-qm", "v1", cwd=tmpl)
+    _git("tag", "v1.0.0", cwd=tmpl)
+
+    ws = tmp_path / "ws"
+    (ws / "scenarios" / "demo").mkdir(parents=True)
+    (ws / "copyroom.yml").write_text(
+        "templates:\n  demo:\n    source: ~/tmpl\n"
+    )
+    report = validate_registry(ws)
+    # A literal-`~` path can't exist; expansion makes the repo + its tag resolvable.
+    assert report.problems["demo"] == []
 
 
 # ---------------------------------------------------------------------------

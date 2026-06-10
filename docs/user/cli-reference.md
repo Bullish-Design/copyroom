@@ -325,7 +325,7 @@ copyroom registry add <template_id> --source <path-or-url> [--scaffold]
 | `list` | Lists every registered template id (from `copyroom.yml` and `registry/*.yml`) with its resolved source and check count. |
 | `show <id>` | Prints the full resolved entry (source + checks) for one template; errors on an unknown id. |
 | `validate` | Checks every entry: the source resolves (local path exists and is a git repo, or a remote is reachable), carries at least one **semver tag**, and has a `scenarios/<id>/` directory. Reports problems and **exits non-zero** if any entry fails. |
-| `add <id> --source <src>` | Writes a **new** `registry/<id>.yml`. Refuses to overwrite an existing one. With `--scaffold`, also creates a `scenarios/<id>/default.yml` skeleton. |
+| `add <id> --source <src>` | Writes a **new** `registry/<id>.yml`. Refuses when the id is already registered — whether by an existing `registry/<id>.yml` **or** an inline entry in `copyroom.yml` (which would shadow the new file) — pointing you at the existing definition. With `--scaffold`, also creates a `scenarios/<id>/default.yml` skeleton. The `source` is YAML-encoded, so values containing `#`, `{`, etc. round-trip safely. |
 
 There is **no `remove`** — delete the `registry/<id>.yml` file directly. An
 unknown action is rejected with the list of supported ones.

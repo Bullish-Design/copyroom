@@ -78,6 +78,61 @@ def is_git_repo(path: Path) -> bool:
     return result is not None and result.returncode == 0 and result.stdout.strip() == "true"
 
 
+def local_path(source: str) -> Path:
+    """Turn a local source string into a real :class:`Path`, expanding ``~``.
+
+    The one place a user-supplied local source becomes a filesystem path, so a
+    ``~/templates/foo`` source resolves to the home directory rather than a
+    literal ``~`` directory.
+    """
+    return Path(source).expanduser()
+
+
+def _porcelain_path(line: str) -> str:
+    """Extract the file path from one ``git status --porcelain`` line."""
+    # porcelain v1: "XY PATH"; a rename is "XY ORIG -> PATH".
+    path = line[3:] if len(line) > 3 else line
+    if " -> " in path:
+        path = path.split(" -> ", 1)[1]
+    return path
+
+
+def worktree_status(
+    path: Path | str,
+    *,
+    exclude: tuple[str, ...] = (),
+) -> list[str] | None:
+    """Return the ``git status --porcelain`` lines for *path*.
+
+    ``None`` when *path* isn't a git repo (or git is unavailable) — so callers
+    can tell "not a repo" apart from "clean". ``exclude`` drops lines whose path
+    starts with any given prefix (e.g. ``("generated/", ".copyroom_sim/")``).
+    """
+    result = run_git("status", "--porcelain", cwd=path)
+    if result is None or result.returncode != 0:
+        return None
+    lines = [ln for ln in result.stdout.splitlines() if ln.strip()]
+    if exclude:
+        lines = [ln for ln in lines if not _porcelain_path(ln).startswith(exclude)]
+    return lines
+
+
+def worktree_clean(
+    path: Path | str,
+    *,
+    exclude: tuple[str, ...] = (),
+) -> bool | None:
+    """Return whether *path*'s worktree is clean, or ``None`` if not a git repo.
+
+    Thin boolean view over :func:`worktree_status`; ``exclude`` is forwarded so
+    callers can ignore their own scratch output (``generated/`` etc.).
+    """
+    lines = worktree_status(path, exclude=exclude)
+    if lines is None:
+        return None
+    return not lines
+
+
 def default_branch(repo: Path) -> str | None:
     """Return the currently checked-out branch name of *repo*, if any."""
     result = run_git("rev-parse", "--abbrev-ref", "HEAD", cwd=repo)
@@ -222,5 +277,5 @@ def resolve_latest_ref(source: str) -> str | None:
         if tags is None:
             return None
     else:
-        tags = list_tags(Path(source))
+        tags = list_tags(local_path(source))
     return select_latest_semver(tags)

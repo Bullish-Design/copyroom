@@ -9,6 +9,7 @@ import pytest
 from copyroom.project.config import (
     CopyRoomError,
     CopyRoomProjectConfig,
+    load_hook_commands,
     load_project_config,
 )
 
@@ -118,8 +119,71 @@ def test_non_mapping_raises(tmp_path: Path) -> None:
         load_project_config(_write(tmp_path, "- just\n- a\n- list\n"))
 
 
-def test_invalid_field_value_raises(tmp_path: Path) -> None:
+def test_future_kind_value_loads(tmp_path: Path) -> None:
+    """#P1-1: a forward-compat-sensitive field carrying a value this CLI doesn't
+    know (a newer template's `kind`) must LOAD, not abort generation."""
+    cfg = load_project_config(_write(tmp_path, "project:\n  kind: library\n"))
+    assert cfg.project.kind == "library"
+
+
+def test_future_ref_policy_value_loads(tmp_path: Path) -> None:
+    """#P1-1: an unknown template_ref_policy value loads (additive evolution)."""
+    cfg = load_project_config(
+        _write(tmp_path, "project:\n  template_ref_policy: pinned\n")
+    )
+    assert cfg.project.template_ref_policy == "pinned"
+
+
+# ---------------------------------------------------------------------------
+# load_hook_commands — resilient hook accessor (P1-1 / P2-7)
+# ---------------------------------------------------------------------------
+
+
+def test_hook_commands_missing_file_is_empty(tmp_path: Path) -> None:
+    assert load_hook_commands(tmp_path / "nope.yml", "post_project_create") == []
+
+
+def test_hook_commands_reads_normal_config(tmp_path: Path) -> None:
+    p = _write(tmp_path, "commands:\n  post_template_update:\n    - uv run pytest\n")
+    assert load_hook_commands(p, "post_template_update") == ["uv run pytest"]
+
+
+def test_hook_commands_survive_invalid_unrelated_field(tmp_path: Path) -> None:
+    """#P1-1/P2-7: a schema problem unrelated to hooks must not drop the hooks.
+
+    A type slip on a known field (here, version as a non-int) makes full
+    validation raise, but the configured hooks must still be returned so
+    new/update don't silently skip them.
+    """
+    p = _write(
+        tmp_path,
+        "git:\n"
+        "  require_clean_worktree: maybe\n"
+        "commands:\n"
+        "  post_template_update:\n"
+        "    - uv run pytest\n",
+    )
+    # Full validation rejects it...
     with pytest.raises(CopyRoomError):
-        load_project_config(
-            _write(tmp_path, "project:\n  kind: not-a-valid-kind\n")
-        )
+        load_project_config(p)
+    # ...but the resilient accessor still surfaces the hook.
+    assert load_hook_commands(p, "post_template_update") == ["uv run pytest"]
+
+
+def test_hook_commands_bare_string_in_fallback(tmp_path: Path) -> None:
+    """A bare-string hook is coerced to a list even on the fallback path."""
+    p = _write(
+        tmp_path,
+        "git:\n  require_clean_worktree: maybe\ncommands:\n  post_project_create: echo hi\n",
+    )
+    assert load_hook_commands(p, "post_project_create") == ["echo hi"]
+
+
+def test_hook_commands_truly_broken_yaml_raises(tmp_path: Path) -> None:
+    with pytest.raises(CopyRoomError):
+        load_hook_commands(_write(tmp_path, "commands: [unclosed\n"), "post_project_create")
+
+
+def test_hook_commands_non_mapping_raises(tmp_path: Path) -> None:
+    with pytest.raises(CopyRoomError):
+        load_hook_commands(_write(tmp_path, "- a\n- b\n"), "post_project_create")

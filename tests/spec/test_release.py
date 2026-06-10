@@ -140,10 +140,10 @@ class TestRunMatrix:
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            # Workshop markers needed by _check_worktree_clean (git mock handles it)
+            # Worktree-clean check goes through gitutil now (git mock handles it)
             (root / "scenarios").mkdir()
 
-            with patch("copyroom.release.check._check_worktree_clean", return_value=True):
+            with patch("copyroom.release.check.gitutil.worktree_clean", return_value=True):
                 check = ImplReleaseCheck(template_id="t1")
                 result = run_matrix(check, root, "/fake/source")
                 assert result == ReleaseStatus.matrix_run

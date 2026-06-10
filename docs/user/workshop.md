@@ -204,10 +204,13 @@ source resolves (a local path exists and is a git repo, or a remote is
 reachable), carries at least one **semver tag**, and has a `scenarios/<id>/`
 directory — and exits non-zero if anything is off, so it's CI-friendly.
 
-`add` is **create-only**: it writes a fresh `registry/<id>.yml` (refusing to
-overwrite an existing one) and, with `--scaffold`, a `scenarios/<id>/default.yml`
-skeleton. It **never rewrites `copyroom.yml`** — round-tripping that file through
-a YAML library would lose its comments and ordering, so inline-registry edits and
+`add` is **create-only**: it writes a fresh `registry/<id>.yml` and, with
+`--scaffold`, a `scenarios/<id>/default.yml` skeleton. It refuses when the id is
+**already registered** — either an existing `registry/<id>.yml` or an inline
+entry in `copyroom.yml`; the latter would shadow the new file, since the resolver
+reads `copyroom.yml` first, so `add` rejects it instead of writing a dead entry.
+It **never rewrites `copyroom.yml`** — round-tripping that file through a YAML
+library would lose its comments and ordering, so inline-registry edits and
 removals stay manual (delete the `registry/<id>.yml` file to remove an entry).
 
 ---
