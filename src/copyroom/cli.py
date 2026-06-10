@@ -11,6 +11,7 @@ If neither workshop nor project markers are found, exits with a clear error.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Callable, Sequence
 
@@ -19,6 +20,8 @@ from .manage import adopt as _adopt
 from .manage import templatize as _templatize
 from .project.create import CopyRoomError as CreateError
 from .project.create import create_project
+from .project.inspect import CopyRoomError as InspectError
+from .project.inspect import inspect_project, project_status
 from .project.model import CreationStatus, UpdateStatus
 from .project.update import CopyRoomError as UpdateError
 from .project.update import update_project
@@ -43,6 +46,14 @@ from .template.workspace import checkout_template
 from .workshop.golden import CopyRoomError as GoldenError
 from .workshop.golden import golden_diff, refresh_golden
 from .workshop.model import GoldenStatus, RenderStatus, SimStatus
+from .workshop.registry import CopyRoomError as RegistryError
+from .workshop.registry import (
+    add_template,
+    list_templates,
+    load_entry,
+    require_workshop_root,
+    validate_registry,
+)
 from .workshop.render import CopyRoomError as RenderError
 from .workshop.render import render_scenario
 from .workshop.simulate import CopyRoomError as SimError
@@ -62,7 +73,9 @@ Project commands (in a project directory):
   new       <source> [target] [--answers FILE]
                                Create a new project from a template
   update    [target_ref] [--branch]
-                               Update an existing project
+                               Update an existing project (latest tag if no ref)
+  inspect   [--json]           Full report on this project + its template link
+  status    [--json]           Terse status: mode, ref, worktree, update available
   template-checkout [--from REF]
                                Resolve this project's template into an editable worktree
   template-test     [--from REF] [--check CMD]
@@ -77,8 +90,8 @@ Bootstrap commands (in an unmanaged repo — no markers needed):
                                Link this repo to a template and report drift
 
 Workshop commands (in a workshop directory):
-  registry      <action> [args...]
-                               Manage template registry
+  registry      list | show <id> | validate | add <id> --source <src> [--scaffold]
+                               Inspect the template registry (add is create-only)
   render        <template_id> <scenario_id>
                                Render a template scenario
   test          <template_id> <scenario_id>
@@ -88,8 +101,6 @@ Workshop commands (in a workshop directory):
   release-check <template_id>  Run release readiness checks
   update-test   <template_id> <scenario_id> <old> <new>
                                Simulate a template update
-
-Deferred (v0.3.0): inspect, status
 """
 
 NO_MODE_FOUND_MESSAGE = """\
@@ -174,7 +185,7 @@ def _print_unknown_command_error(command: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Subcommand stubs (Phases 2-4 will fill these in)
+# Subcommand handlers (one thin _cmd_* per command)
 # ---------------------------------------------------------------------------
 
 
@@ -216,7 +227,13 @@ def _cmd_update(args: argparse.Namespace) -> None:
 
     if update.status == UpdateStatus.failed:
         if update.previous_ref == update.target_ref:
-            print(f"Already at version {update.target_ref}; nothing to update.", file=sys.stderr)
+            if update.resolved_latest:
+                print(
+                    f"Already at the latest version ({update.target_ref}); nothing to update.",
+                    file=sys.stderr,
+                )
+            else:
+                print(f"Already at version {update.target_ref}; nothing to update.", file=sys.stderr)
         else:
             print(f"Update failed at state: {update.status.value}", file=sys.stderr)
         if update.conflicts:
@@ -240,6 +257,59 @@ def _cmd_update(args: argparse.Namespace) -> None:
         print("  Rejects captured:", file=sys.stderr)
         for r in update.rejects:
             print(f"    {r}", file=sys.stderr)
+
+
+def _cmd_inspect(args: argparse.Namespace) -> None:
+    """``copyroom inspect [--json]`` — full read-only project report."""
+    try:
+        report = inspect_project(project_root=None)
+    except InspectError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        print(json.dumps(report.to_dict(), indent=2))
+        return
+
+    print(f"Project: {report.project_root}")
+    print(f"  Template id:     {report.template_id or '(none)'}")
+    print(f"  Template source: {report.template_source or '(none)'}")
+    print(f"  Recorded commit: {report.commit or '(none)'}")
+    print(f"  Answers file:    {report.answers_file}")
+    print(f"  Project config:  {'present' if report.has_project_config else 'absent'}")
+    if report.hooks:
+        print("  Configured commands:")
+        for name, cmds in report.hooks.items():
+            print(f"    {name}:")
+            for cmd in cmds:
+                print(f"      - {cmd}")
+    else:
+        print("  Configured commands: (none)")
+
+
+def _cmd_status(args: argparse.Namespace) -> None:
+    """``copyroom status [--json]`` — terse "where am I" project status."""
+    try:
+        report = project_status(project_root=None)
+    except InspectError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        print(json.dumps(report.to_dict(), indent=2))
+        return
+
+    if report.worktree_clean is None:
+        worktree = "N/A (not a git repository)"
+    else:
+        worktree = "clean" if report.worktree_clean else "dirty"
+
+    print(f"Mode:             {report.mode or 'unknown'}")
+    print(f"Template:         {report.template_id or report.template_source or '(none)'}")
+    print(f"Current ref:      {report.current_ref or '(none)'}")
+    print(f"Latest ref:       {report.latest_ref or 'unknown'}")
+    print(f"Update available: {'yes' if report.update_available else 'no'}")
+    print(f"Worktree:         {worktree}")
 
 
 def _cmd_template_checkout(args: argparse.Namespace) -> None:
@@ -383,10 +453,82 @@ def _cmd_adopt(args: argparse.Namespace) -> None:
         print("  the link (.copier-answers.yml) once the answers look right.")
 
 
+_REGISTRY_ACTIONS = ("list", "show", "validate", "add")
+
+
 def _cmd_registry(args: argparse.Namespace) -> None:
-    """``copyroom registry <action> [args...]`` — deferred to Phase 3."""
-    print(f"[copyroom registry] action={args.action} args={args.args}")
-    # TODO Phase 3: implement registry operations
+    """``copyroom registry <list|show|validate|add> ...``.
+
+    Read-only (``list``/``show``/``validate``) plus a create-only ``add`` that
+    writes a new ``registry/<id>.yml`` — ``copyroom.yml`` is never rewritten.
+    """
+    action = args.action
+    try:
+        root = require_workshop_root(None)
+
+        if action == "list":
+            entries = list_templates(root)
+            if not entries:
+                print("No templates registered.")
+                return
+            for entry in entries:
+                print(f"{entry.template_id}")
+                print(f"  source: {entry.source or '(unresolved)'}")
+                if entry.checks:
+                    print(f"  checks: {len(entry.checks)} configured")
+            return
+
+        if action == "show":
+            if not args.args:
+                print("Usage: copyroom registry show <template_id>", file=sys.stderr)
+                sys.exit(1)
+            entry = load_entry(root, args.args[0])
+            print(f"{entry.template_id}")
+            print(f"  source: {entry.source or '(unresolved)'}")
+            print(f"  checks: {entry.checks or '(none)'}")
+            return
+
+        if action == "validate":
+            report = validate_registry(root)
+            if not report.problems:
+                print("No templates registered — nothing to validate.")
+                return
+            for template_id, problems in report.problems.items():
+                if problems:
+                    print(f"✗ {template_id}", file=sys.stderr)
+                    for problem in problems:
+                        print(f"    - {problem}", file=sys.stderr)
+                else:
+                    print(f"✓ {template_id}")
+            if not report.ok:
+                sys.exit(1)
+            return
+
+        if action == "add":
+            if not args.args:
+                print(
+                    "Usage: copyroom registry add <template_id> --source <src> [--scaffold]",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            if not args.source:
+                print("registry add requires --source <path-or-url>", file=sys.stderr)
+                sys.exit(1)
+            path = add_template(root, args.args[0], args.source, scaffold=args.scaffold)
+            print(f"Created registry entry: {path.relative_to(root)}")
+            if args.scaffold:
+                print(f"Scaffolded scenarios/{args.args[0]}/default.yml")
+            return
+
+        supported = ", ".join(_REGISTRY_ACTIONS)
+        print(
+            f"Error: unknown registry action '{action}'. Supported: {supported}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except RegistryError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
 
 
 def _cmd_render(args: argparse.Namespace) -> None:
@@ -563,6 +705,18 @@ def _build_parser() -> argparse.ArgumentParser:
     p_update.add_argument("--trust", action="store_true",
                           help="Execute the template's post-update hook commands")
 
+    p_inspect = subparsers.add_parser(
+        "inspect", help="Full read-only report on this project and its template link",
+    )
+    p_inspect.add_argument("--json", action="store_true",
+                           help="Emit the report as JSON")
+
+    p_status = subparsers.add_parser(
+        "status", help="Terse project status (mode, ref, worktree, update available)",
+    )
+    p_status.add_argument("--json", action="store_true",
+                          help="Emit the status as JSON")
+
     # --- Template-edit commands (project mode) ---
     p_tco = subparsers.add_parser(
         "template-checkout",
@@ -628,9 +782,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     # --- Workshop commands ---
-    p_registry = subparsers.add_parser("registry", help="Manage template registry")
-    p_registry.add_argument("action", help="Registry action (list, add, remove, etc.)")
-    p_registry.add_argument("args", nargs="*", help="Additional arguments")
+    p_registry = subparsers.add_parser(
+        "registry", help="Inspect the template registry (list/show/validate/add)",
+    )
+    p_registry.add_argument("action", help="Registry action: list, show, validate, add")
+    p_registry.add_argument("args", nargs="*", help="Template id (for show/add)")
+    p_registry.add_argument("--source", default=None,
+                            help="Template source for 'add' (local path or git URL)")
+    p_registry.add_argument("--scaffold", action="store_true",
+                            help="With 'add', also scaffold a scenarios/<id>/ skeleton")
 
     p_render = subparsers.add_parser("render", help="Render a template scenario")
     p_render.add_argument("template_id", help="Template identifier")
@@ -673,6 +833,8 @@ COMMAND_FN: dict[str, Callable[..., None]] = {
     "adopt": _cmd_adopt,
     "new": _cmd_new,
     "update": _cmd_update,
+    "inspect": _cmd_inspect,
+    "status": _cmd_status,
     "template-checkout": _cmd_template_checkout,
     "template-test": _cmd_template_test,
     "template-preview": _cmd_template_preview,

@@ -11,12 +11,12 @@ actual tagging is manual.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+from .._compat import gitutil
 from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
 from ..session.detector import detect_workshop_root
@@ -138,8 +138,14 @@ def run_matrix(
     # Rendering writes into generated/ and .copyroom_sim/, which would dirty the
     # tree; capture the pre-render state so the result reflects the user's repo,
     # not our own output.
-    check.worktree_clean = _check_worktree_clean(workshop_root)
-    check.worktree_is_git = _is_git_repo(workshop_root)
+    # generated/ and .copyroom_sim/ are CopyRoom's own scratch output — exclude
+    # them so the check stays stable across re-runs even when ungitignored.
+    clean = gitutil.worktree_clean(
+        workshop_root, exclude=("generated/", ".copyroom_sim/")
+    )
+    # A non-git workshop "couldn't check" → report clean (True) but flag not-git.
+    check.worktree_clean = True if clean is None else clean
+    check.worktree_is_git = gitutil.is_git_repo(workshop_root)
 
     # --- discover scenarios ---
     scenario_ids = _discover_scenarios(workshop_root, check.template_id)
@@ -410,62 +416,3 @@ def _discover_scenarios(
         scenario_ids.append(entry.stem)
 
     return scenario_ids
-
-
-def _check_worktree_clean(repo_root: Path) -> bool:
-    """Check that the git working tree is clean (no uncommitted changes).
-
-    Returns ``True`` when ``git status --porcelain`` produces no output.
-    CopyRoom's own scratch output (``generated/`` and ``.copyroom_sim/``) is
-    excluded so a release check stays stable across re-runs even when those
-    paths aren't gitignored. If the directory is not inside a git repository
-    (or git is not available), returns ``True`` (no changes to report).
-    """
-    try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain", "--",
-             ".", ":(exclude)generated", ":(exclude).copyroom_sim"],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except FileNotFoundError:
-        # git not available — nothing to check
-        return True
-    except subprocess.TimeoutExpired:
-        # git timed out — can't verify, assume clean
-        return True
-    except Exception:
-        return True
-
-    # If git isn't initialised at this path, treat as clean
-    if result.returncode != 0 and "not a git repository" in (
-        result.stderr or ""
-    ):
-        return True
-
-    return result.stdout.strip() == ""
-
-
-def _is_git_repo(repo_root: Path) -> bool:
-    """Return ``True`` only when *repo_root* is inside a git work tree.
-
-    Used purely for reporting: it lets the release report distinguish a verified
-    clean tree from "couldn't check, there's no git here". Any failure to run
-    git (missing binary, timeout, not a repo) reports ``False``.
-    """
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--is-inside-work-tree"],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return False
-    except Exception:
-        return False
-
-    return result.returncode == 0 and result.stdout.strip() == "true"

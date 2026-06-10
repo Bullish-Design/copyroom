@@ -246,8 +246,54 @@ rule UpdateSimulationComplete {
 }
 
 ------------------------------------------------------------
+-- Rules: Template Registry (read-only + create-only)
+------------------------------------------------------------
+-- The registry maps template ids to a source + checks, read from copyroom.yml
+-- (a templates/registry map) and registry/<id>.yml files. These operations are
+-- reads or a single file create — there is no multi-step lifecycle to guard, so
+-- no entity/state machine is declared (cf. release-check's reporter).
+
+rule ListRegistry {
+    when: RegistryListCommand()
+    ensures: "every registered template id is reported with its source and checks"
+}
+
+rule ShowRegistryEntry {
+    when: RegistryShowCommand(template_id)
+    ensures: "the resolved entry (source, checks) for template_id is reported"
+    @guidance
+        -- An unknown template_id is a clear error.
+}
+
+rule ValidateRegistry {
+    when: RegistryValidateCommand()
+    ensures: "each entry is checked: source resolves (path exists / is a git repo,
+              or remote is reachable), carries at least one semver tag, and has a
+              scenarios/<id>/ directory; problems are reported and a failing
+              validation exits non-zero"
+    @guidance
+        -- Reuses the latest-ref resolver (git tag / git ls-remote --tags) to
+        -- confirm a template actually has real semver tags.
+}
+
+rule AddRegistryEntry {
+    when: RegistryAddCommand(template_id, source, scaffold)
+    ensures: "a NEW registry/<template_id>.yml is written (refusing to overwrite);
+              with scaffold, a scenarios/<template_id>/ skeleton is also created"
+    @guidance
+        -- copyroom.yml is never rewritten (round-tripping YAML is lossy). There
+        -- is no `remove` — users delete the file directly.
+}
+
+------------------------------------------------------------
 -- Invariants
 ------------------------------------------------------------
+
+invariant RegistryNeverRewritesCopyroomYml {
+    -- `registry add` only ever creates a new registry/<id>.yml; the workshop's
+    -- copyroom.yml (with its comments and ordering) is never modified.
+    true
+}
 
 invariant GeneratedOutputNotCommitted {
     -- generated/ is a scratch area. Outputs are not committed to version control.
@@ -290,6 +336,10 @@ surface WorkshopSurface {
         GoldenDiffCommand(template_id: String, scenario_id: String)
         GoldenRefreshCommand(template_id: String, scenario_id: String)
         UpdateTestCommand(template_id: String, scenario_id: String, old_version: String, new_version: String)
+        RegistryListCommand()
+        RegistryShowCommand(template_id: String)
+        RegistryValidateCommand()
+        RegistryAddCommand(template_id: String, source: String, scaffold: Boolean)
 }
 
 ------------------------------------------------------------

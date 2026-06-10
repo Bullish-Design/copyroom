@@ -41,6 +41,37 @@ class UpdateSimulationResult:
 
 
 # ===========================================================================
+# Registry value types (read-only / create-only — no lifecycle)
+# ===========================================================================
+
+
+@dataclass
+class RegistryEntry:
+    """A resolved registry entry for one template id.
+
+    Registry operations (``list``/``show``/``validate``/``add``) are reads or a
+    single create — there is no multi-step lifecycle to guard, so these are
+    plain value types rather than state-machine entities.
+    """
+
+    template_id: str
+    source: str | None = None
+    checks: list[str] = field(default_factory=list)
+
+
+@dataclass
+class RegistryValidation:
+    """Outcome of ``registry validate`` — problems keyed by template id."""
+
+    problems: dict[str, list[str]] = field(default_factory=dict)
+
+    @property
+    def ok(self) -> bool:
+        """True when no entry reported a problem."""
+        return not any(self.problems.values())
+
+
+# ===========================================================================
 # ScenarioRender
 # ===========================================================================
 

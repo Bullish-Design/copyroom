@@ -119,9 +119,14 @@ class TestDispatchUnknownCommand(BaseDispatchMixin):
         session = self._make_session(CLIMode.workshop)
         assert dispatch("", session) == SessionStatus.command_failed
 
-    def test_deferred_command_returns_failed(self) -> None:
-        """inspect and status are deferred to v0.3.0 — should fail dispatch."""
+    def test_inspect_and_status_dispatch_in_project_mode(self) -> None:
+        """inspect and status are project commands (shipped flat in v0.3.0)."""
         session = self._make_session(CLIMode.project)
+        assert dispatch("inspect", session) == SessionStatus.command_running
+        assert dispatch("status", session) == SessionStatus.command_running
+
+    def test_inspect_and_status_rejected_in_workshop_mode(self) -> None:
+        session = self._make_session(CLIMode.workshop)
         assert dispatch("inspect", session) == SessionStatus.command_failed
         assert dispatch("status", session) == SessionStatus.command_failed
 

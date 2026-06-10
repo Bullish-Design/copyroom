@@ -8,12 +8,12 @@ from unittest.mock import patch
 
 import pytest
 
+from copyroom._compat import gitutil
 from copyroom.release.check import (
     VALID_RELEASE_TRANSITIONS,
     CopyRoomError,
     ReleaseCheck,
     ReleaseStatus,
-    _check_worktree_clean,
     _discover_scenarios,
     create_check,
     evaluate,
@@ -278,39 +278,48 @@ class TestDiscoverScenarios:
 
 
 # ===========================================================================
-# _check_worktree_clean tests
+# gitutil.worktree_clean — the shared check release-check now uses (P3-9)
 # ===========================================================================
 
 
 class TestWorktreeClean:
-    """Git worktree cleanliness check."""
+    """Git worktree cleanliness check (the consolidated gitutil primitive).
+
+    ``worktree_clean`` returns ``None`` for "couldn't check" (no repo / no git);
+    release-check maps that to "clean" at its call site.
+    """
 
     def test_clean_worktree(self) -> None:
         """Mocked git status --porcelain returning empty output."""
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 0
             mock_run.return_value.stdout = ""
-            result = _check_worktree_clean(Path("/fake"))
-            assert result is True
+            assert gitutil.worktree_clean(Path("/fake")) is True
 
     def test_dirty_worktree(self) -> None:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 0
             mock_run.return_value.stdout = " M modified_file.py\n"
-            result = _check_worktree_clean(Path("/fake"))
-            assert result is False
+            assert gitutil.worktree_clean(Path("/fake")) is False
 
     def test_git_not_available(self) -> None:
         with patch("subprocess.run", side_effect=FileNotFoundError):
-            result = _check_worktree_clean(Path("/fake"))
-            assert result is True
+            assert gitutil.worktree_clean(Path("/fake")) is None
 
     def test_not_a_git_repo(self) -> None:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 128
             mock_run.return_value.stderr = "fatal: not a git repository"
-            result = _check_worktree_clean(Path("/fake"))
-            assert result is True
+            assert gitutil.worktree_clean(Path("/fake")) is None
+
+    def test_exclude_filters_scratch_paths(self) -> None:
+        """Lines under excluded prefixes don't count as dirty (release-check use)."""
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            mock_run.return_value.stdout = "?? generated/\n?? .copyroom_sim/\n"
+            assert gitutil.worktree_clean(
+                Path("/fake"), exclude=("generated/", ".copyroom_sim/")
+            ) is True
 
 
 # ===========================================================================
@@ -411,7 +420,7 @@ class TestReleaseCheckWorkflow:
             with (
                 patch("copyroom.release.check.render_scenario") as mock_render,
                 patch("copyroom.release.check._golden_diff") as mock_golden,
-                patch("copyroom.release.check._check_worktree_clean", return_value=True),
+                patch("copyroom.release.check.gitutil.worktree_clean", return_value=True),
             ):
                 # Mock render returns complete
                 from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
@@ -449,7 +458,7 @@ class TestReleaseCheckWorkflow:
             with (
                 patch("copyroom.release.check.render_scenario") as mock_render,
                 patch("copyroom.release.check._golden_diff") as mock_golden,
-                patch("copyroom.release.check._check_worktree_clean", return_value=True),
+                patch("copyroom.release.check.gitutil.worktree_clean", return_value=True),
             ):
                 from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
                 mock_render.return_value = ScenarioRender(
@@ -484,7 +493,7 @@ class TestReleaseCheckWorkflow:
             with (
                 patch("copyroom.release.check.render_scenario") as mock_render,
                 patch("copyroom.release.check._golden_diff") as mock_golden,
-                patch("copyroom.release.check._check_worktree_clean", return_value=True),
+                patch("copyroom.release.check.gitutil.worktree_clean", return_value=True),
             ):
                 from copyroom.workshop.model import GoldenDiff, GoldenStatus, RenderStatus, ScenarioRender
                 mock_render.return_value = ScenarioRender(

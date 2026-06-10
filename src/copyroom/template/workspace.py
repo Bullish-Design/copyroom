@@ -94,19 +94,9 @@ def _project_slug(project_root: Path) -> str:
     return digest
 
 
-def _looks_remote(source: str) -> bool:
-    if "://" in source or source.startswith(("gh:", "gl:", "git@")):
-        return True
-    # Filesystem paths are local even when currently missing — this yields a
-    # clean "path not found" rather than a confusing "failed to clone".
-    if source.startswith(("/", "./", "../", "~")):
-        return False
-    return not Path(source).exists()
-
-
 def _ensure_local_repo(source: str, cache_dir: Path) -> Path:
     """Return a local git repo for *source*, cloning remote sources into cache."""
-    if _looks_remote(source):
+    if gitutil.looks_remote(source):
         repo = cache_dir / "repo"
         if repo.is_dir():
             gitutil.fetch(repo)

@@ -110,7 +110,7 @@ rule RejectCommandOutOfMode {
     requires: session.status = mode_detected
     ensures:
         if (session.mode != workshop and command in {"registry", "render", "test", "golden", "release-check", "update-test"})
-            or (session.mode != project and command in {"new", "update"}):
+            or (session.mode != project and command in {"inspect", "new", "update", "status"}):
             session.status = command_failed
     @guidance
         -- Commands not available in the current mode print "not available"

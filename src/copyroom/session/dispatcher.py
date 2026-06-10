@@ -14,8 +14,8 @@ from .model import (
     SessionStatus,
 )
 
-# Map commands to their expected mode.
-# ``inspect`` and ``status`` are deferred to v0.3.0 (see §13).
+# Map commands to their expected mode (derived from the command sets, so new
+# project/workshop commands are gated automatically).
 COMMAND_MODE_MAP: dict[str, CLIMode] = {}
 for cmd in WORKSHOP_COMMANDS:
     COMMAND_MODE_MAP[cmd] = CLIMode.workshop

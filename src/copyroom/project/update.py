@@ -16,10 +16,13 @@ from pathlib import Path
 
 import yaml
 
+from .._compat import gitutil
 from .._compat.copier import copier_update
 from .._compat.errors import CopyRoomError
+from .._compat.refs import same_version
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
+from .config import load_hook_commands
 from .model import (
     VALID_UPDATE_TRANSITIONS,
     TemplateUpdate,
@@ -39,54 +42,41 @@ _update_sm = StateMachine(
 
 
 # ===================================================================
-# Rule: InitiateTemplateUpdate         (spec L154-L164)
+# Rule: InitiateTemplateUpdate         (spec L181-L195)
 # ===================================================================
 
 
 def initiate(
     project_root: Path,
-    target_ref: str,
+    target_ref: str | None,
     use_branch: bool = False,
 ) -> TemplateUpdate:
     """Create a TemplateUpdate entity.
 
-    Requires ``target_ref != null`` (InitiateTemplateUpdate requires clause).
-    ``template_id`` and ``previous_ref`` are populated later by
+    ``target_ref`` may be ``None`` — :func:`resolve_latest_ref` fills it in from
+    the template's latest semver tag (InitiateTemplateUpdate + ResolveLatestRef).
+    ``template_id``, ``previous_ref``, and ``template_source`` are populated by
     :func:`load_config`, the single reader of ``.copier-answers.yml``.
     """
-    if not target_ref:
-        raise CopyRoomError(
-            "Auto-resolving the latest template version isn't supported yet. "
-            "Pass an explicit ref: copyroom update <tag-or-branch>",
-            state="not_started",
-        )
-
     return TemplateUpdate(
         project_root=project_root,
         template_id="unknown",
         previous_ref=None,
-        target_ref=target_ref,
+        target_ref=target_ref or None,
         use_branch=use_branch,
     )
 
 
 # ===================================================================
-# Rule: ResolveLatestRef               (spec L166-L170)
-# ===================================================================
-#
-# Deferred in v0.x: resolving ``target_ref`` to the latest semver tag needs
-# network access (``git ls-remote``). Until then :func:`initiate` rejects a
-# missing ref up front with actionable guidance, so there is no reachable
-# resolve step to implement here.
-
-
-# ===================================================================
-# Rule: LoadUpdateConfig               (spec L172-L177)
+# Rule: LoadUpdateConfig               (spec L197-L204)
 # ===================================================================
 
 
 def load_config(update: TemplateUpdate) -> UpdateStatus:
-    """Load configuration from ``.copier-answers.yml`` and ``copyroom.project.yml``.
+    """Load configuration from ``.copier-answers.yml``.
+
+    Captures the template source (``_src_path``) and recorded version
+    (``_commit``), which feed :func:`resolve_latest_ref` and the no-op check.
 
     On success: transitions to ``config_loaded``.
     On failure: transitions to ``failed``.
@@ -117,12 +107,61 @@ def load_config(update: TemplateUpdate) -> UpdateStatus:
         commit = answers.get("_commit")
         if commit is not None:
             update.previous_ref = str(commit)
+        src_path = answers.get("_src_path")
+        if src_path is not None:
+            update.template_source = str(src_path)
 
     update.status = _update_sm.transition(
         UpdateStatus.initiated,
         UpdateStatus.config_loaded,
     )
     return update.status
+
+
+# ===================================================================
+# Rule: ResolveLatestRef               (spec L206-L217)
+# ===================================================================
+
+
+def resolve_latest_ref(update: TemplateUpdate) -> None:
+    """Resolve a missing ``target_ref`` to the template's latest semver tag.
+
+    Only runs on the no-arg ``copyroom update`` path (``target_ref is None``);
+    an explicit ref is left untouched and stays fully offline. Resolution lists
+    the template's tags (locally via ``git tag``, or remotely via
+    ``git ls-remote`` — fetch-class, may need the network) and picks the highest
+    ``vX.Y.Z``. A source we can't read or that has no semver tags is a clear
+    ``CopyRoomError`` rather than a silent fallback to Copier's implicit latest.
+    """
+    if update.target_ref is not None:
+        return
+
+    if not update.template_source:
+        update.status = _update_sm.transition(
+            UpdateStatus.config_loaded,
+            UpdateStatus.failed,
+        )
+        raise CopyRoomError(
+            "Cannot resolve the latest template version: no _src_path recorded "
+            "in .copier-answers.yml. Pass an explicit ref: copyroom update <ref>",
+            state="config_loaded",
+        )
+
+    latest = gitutil.resolve_latest_ref(update.template_source)
+    if latest is None:
+        update.status = _update_sm.transition(
+            UpdateStatus.config_loaded,
+            UpdateStatus.failed,
+        )
+        raise CopyRoomError(
+            f"Could not resolve the latest version of template "
+            f"'{update.template_source}'. The source may be unreachable or have "
+            "no semver (vX.Y.Z) tags. Pass an explicit ref: copyroom update <ref>",
+            state="config_loaded",
+        )
+
+    update.target_ref = latest
+    update.resolved_latest = True
 
 
 # ===================================================================
@@ -133,10 +172,12 @@ def load_config(update: TemplateUpdate) -> UpdateStatus:
 def no_update_available(update: TemplateUpdate) -> UpdateStatus:
     """Check if the update is a no-op.
 
-    When ``previous_ref == target_ref``, the update is already at the
-    target — transition to ``failed`` with a clear message.
+    The recorded ``previous_ref`` (Copier's ``_commit``) may be a bare tag, a
+    ``git describe`` string (``vX.Y.Z-N-gsha``), or a SHA, so this compares
+    *versions* via :func:`same_version` rather than raw strings — a project
+    generated at a post-tag commit of the target version is still a no-op.
     """
-    if update.previous_ref == update.target_ref:
+    if same_version(update.previous_ref, update.target_ref):
         update.status = _update_sm.transition(
             UpdateStatus.config_loaded,
             UpdateStatus.failed,
@@ -156,36 +197,16 @@ def no_update_available(update: TemplateUpdate) -> UpdateStatus:
 def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
     """Verify that the git worktree is clean.
 
-    Runs ``git status --porcelain`` in the project root.
+    Reads ``git status --porcelain`` via :func:`gitutil.worktree_status` (so it
+    inherits the shared 120s git timeout and fail-soft behavior). A non-repo or
+    missing git (``None``) is treated as clean.
+
     On clean: transitions to ``worktree_verified``.
     On dirty: transitions to ``failed`` with remediation guidance.
     """
-    try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=str(update.project_root),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except FileNotFoundError:
-        # Not a git repository or git not installed — treat as clean
-        update.status = _update_sm.transition(
-            UpdateStatus.config_loaded,
-            UpdateStatus.worktree_verified,
-        )
-        return update.status
+    dirty = gitutil.worktree_status(update.project_root)
 
-    if result.returncode != 0:
-        # Not a git repository — treat as clean
-        update.status = _update_sm.transition(
-            UpdateStatus.config_loaded,
-            UpdateStatus.worktree_verified,
-        )
-        return update.status
-
-    if result.stdout.strip():
-        # Worktree is dirty
+    if dirty:
         update.status = _update_sm.transition(
             UpdateStatus.config_loaded,
             UpdateStatus.failed,
@@ -195,11 +216,11 @@ def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
             file=sys.stderr,
         )
         print("Dirty files:", file=sys.stderr)
-        for line in result.stdout.strip().splitlines():
+        for line in dirty:
             print(f"  {line}", file=sys.stderr)
         return update.status
 
-    # Worktree is clean
+    # Clean, not a git repo, or git unavailable — all treated as clean.
     update.status = _update_sm.transition(
         UpdateStatus.config_loaded,
         UpdateStatus.worktree_verified,
@@ -327,20 +348,24 @@ def capture_conflicts(update: TemplateUpdate) -> UpdateStatus:
     if rej_files:
         update.rejects.update(str(f.relative_to(update.project_root)) for f in rej_files)
 
-    # Check for post-update commands
+    # Check for post-update commands. Read through the resilient accessor so a
+    # schema-divergent (but readable) config never silently drops configured
+    # hooks — both this reader and run_post_update_commands now agree.
     project_yml = update.project_root / "copyroom.project.yml"
-    has_post_commands = False
+    try:
+        commands = load_hook_commands(project_yml, "post_template_update")
+    except CopyRoomError:
+        update.status = _update_sm.transition(
+            UpdateStatus.update_executed,
+            UpdateStatus.failed,
+        )
+        print(
+            "Failed to parse copyroom.project.yml for post-update commands.",
+            file=sys.stderr,
+        )
+        return update.status
 
-    if project_yml.is_file():
-        try:
-            with open(project_yml) as f:
-                config = yaml.safe_load(f)
-            commands = _extract_post_update_commands(config)
-            has_post_commands = bool(commands)
-        except (yaml.YAMLError, OSError):
-            pass
-
-    if not has_post_commands:
+    if not commands:
         # Short-circuit to complete
         update.status = _update_sm.transition(
             UpdateStatus.update_executed,
@@ -372,16 +397,14 @@ def run_post_update_commands(
     project_yml = update.project_root / "copyroom.project.yml"
 
     try:
-        with open(project_yml) as f:
-            config = yaml.safe_load(f)
-    except (yaml.YAMLError, OSError):
+        commands = load_hook_commands(project_yml, "post_template_update")
+    except CopyRoomError:
         update.status = _update_sm.transition(
             UpdateStatus.post_update_run,
             UpdateStatus.failed,
         )
         return update.status
 
-    commands = _extract_post_update_commands(config)
     run_hook_commands(commands, update.project_root, trust=trust, label="post-update")
 
     update.status = _update_sm.transition(
@@ -419,14 +442,17 @@ def update_project(
     else:
         project_root = project_root.resolve()
 
-    # 1. InitiateTemplateUpdate
-    # A missing ref is rejected here (ResolveLatestRef is deferred — see above).
-    update = initiate(project_root, target_ref or "", use_branch)
+    # 1. InitiateTemplateUpdate (target_ref may be None — resolved below)
+    update = initiate(project_root, target_ref, use_branch)
 
-    # 2. LoadUpdateConfig
+    # 2. LoadUpdateConfig — reads _src_path / _commit
     status = load_config(update)
     if status == UpdateStatus.failed:
         return update
+
+    # 2b. ResolveLatestRef — only when no explicit ref was given. Raises a clear
+    # CopyRoomError (caught by the CLI) when the latest tag can't be resolved.
+    resolve_latest_ref(update)
 
     # 3. NoUpdateAvailable — check if already at target
     if update.previous_ref is not None:
@@ -484,26 +510,3 @@ def _capture_conflicts_from_output(
     for line in output.splitlines():
         if "conflict" in line.lower():
             update.conflicts.add(line.strip())
-
-
-def _extract_post_update_commands(config: object) -> list[str]:
-    """Extract post-update commands from a copyroom.project.yml dict.
-
-    Expected structure::
-
-        commands:
-          post_template_update:
-            - "pytest"
-            - "ruff check"
-    """
-    if not isinstance(config, dict):
-        return []
-    commands = config.get("commands", {})
-    if not isinstance(commands, dict):
-        return []
-    post = commands.get("post_template_update", [])
-    if isinstance(post, list):
-        return [str(c) for c in post]
-    if isinstance(post, str):
-        return [post]
-    return []

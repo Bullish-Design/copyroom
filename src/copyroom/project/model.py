@@ -121,3 +121,9 @@ class TemplateUpdate:
     update_branch: str | None = None
     conflicts: set[str] = field(default_factory=set)
     rejects: set[str] = field(default_factory=set)
+    # The template source (``_src_path`` from .copier-answers.yml), captured by
+    # load_config and used to resolve the latest semver tag for a no-arg update.
+    template_source: str | None = None
+    # True when target_ref was auto-resolved (the no-arg "update to latest" path)
+    # rather than passed explicitly — drives the "already at latest" message.
+    resolved_latest: bool = False
