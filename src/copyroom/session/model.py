@@ -60,7 +60,8 @@ WORKSHOP_COMMANDS: frozenset[str] = frozenset(
 )
 
 PROJECT_COMMANDS: frozenset[str] = frozenset(
-    {"new", "update", "template-checkout", "template-test", "template-preview"},
+    {"new", "update", "inspect", "status",
+     "template-checkout", "template-test", "template-preview"},
 )
 
 # Bootstrap commands run in an *unmanaged* repo (no workshop/project markers),
