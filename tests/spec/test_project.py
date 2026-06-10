@@ -313,7 +313,7 @@ class TestCompleteProjectCreation:
 
     def test_complete_sets_result_suggestions(self) -> None:
         """On complete, result_suggestions populated with next-steps."""
-        # result_suggestions includes "cd <target>", "git init && ...", "copyroom project inspect"
+        # result_suggestions includes "cd <target>", "git init && ...", "copyroom inspect"
         pass  # Integration
 
 
@@ -323,34 +323,34 @@ class TestCompleteProjectCreation:
 
 
 class TestInitiateTemplateUpdate:
-    """Rule InitiateTemplateUpdate (L154-L164)."""
+    """Rule InitiateTemplateUpdate (L181-L195)."""
 
-    def test_requires_target_ref_not_null(self) -> None:
-        """target_ref != null required for initiation."""
+    def test_target_ref_is_optional(self) -> None:
+        """target_ref may be null — the no-arg path resolves it (ResolveLatestRef)."""
         pass  # Integration
 
     def test_infers_previous_ref_from_answers_file(self) -> None:
-        """previous_ref derived from .copier-answers.yml."""
+        """previous_ref and template_source derived from .copier-answers.yml."""
         pass  # Integration
 
 
 class TestResolveLatestRef:
-    """Rule ResolveLatestRef (L166-L170)."""
+    """Rule ResolveLatestRef (L206-L217)."""
 
     def test_null_target_ref_resolved_to_latest_semver(self) -> None:
-        """When target_ref = null on initiated, resolved to latest semver tag."""
+        """When target_ref = null on config_loaded, resolved to the latest semver tag."""
         pass  # Integration
 
 
 class TestLoadUpdateConfig:
-    """Rule LoadUpdateConfig (L172-L177)."""
+    """Rule LoadUpdateConfig (L197-L204)."""
 
     def test_initiated_to_config_loaded(self) -> None:
         assert UpdateStatus.config_loaded in VALID_UPDATE_TRANSITIONS[UpdateStatus.initiated]
 
 
 class TestNoUpdateAvailable:
-    """Rule NoUpdateAvailable (L179-L183)."""
+    """Rule NoUpdateAvailable (L219-L225)."""
 
     def test_already_at_target_version(self) -> None:
         """When previous_ref = target_ref, transition to failed."""
@@ -358,7 +358,7 @@ class TestNoUpdateAvailable:
 
 
 class TestVerifyCleanWorktree:
-    """Rule VerifyCleanWorktree (L185-L192)."""
+    """Rule VerifyCleanWorktree (L227-L239)."""
 
     def test_config_to_worktree_verified_when_refs_differ(self) -> None:
         """config_loaded -> worktree_verified when previous_ref != target_ref."""
@@ -366,7 +366,7 @@ class TestVerifyCleanWorktree:
 
 
 class TestRejectDirtyWorktree:
-    """Rule RejectDirtyWorktree (L194-L199)."""
+    """Rule RejectDirtyWorktree (L241-L247)."""
 
     def test_dirty_worktree_fails_update(self) -> None:
         """WorktreeNotClean stimulus -> failed."""

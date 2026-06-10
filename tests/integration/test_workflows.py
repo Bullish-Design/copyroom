@@ -247,6 +247,46 @@ def test_update_project_applies_new_version(template_repo: Path, tmp_path: Path)
     assert (proj / "CHANGELOG.md").is_file()  # v2-only file proves the update ran
 
 
+def test_update_project_resolves_latest_tag(template_repo: Path, tmp_path: Path) -> None:
+    """A no-ref `copyroom update` resolves and applies the latest semver tag."""
+    from copyroom._compat.copier import copier_copy
+
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj).returncode == 0
+    assert not (proj / "CHANGELOG.md").exists()
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    tag_v2(template_repo)  # publish v2.0.0 (now the latest)
+    update = update_project(project_root=proj, target_ref=None)  # no explicit ref
+
+    assert update.status == UpdateStatus.complete, update.status
+    assert update.target_ref == "v2.0.0"
+    assert update.resolved_latest is True
+    assert (proj / "CHANGELOG.md").is_file()  # v2-only file proves the update ran
+
+
+def test_update_project_no_ref_already_at_latest_is_clean_noop(
+    template_repo: Path, tmp_path: Path
+) -> None:
+    """When already on the latest tag, a no-ref update is a clean no-op (failed)."""
+    from copyroom._compat.copier import copier_copy
+
+    # The project is generated from v1.0.0, which is also the latest tag.
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj).returncode == 0
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    update = update_project(project_root=proj, target_ref=None)
+
+    assert update.status == UpdateStatus.failed
+    assert update.resolved_latest is True
+    assert update.previous_ref == update.target_ref == "v1.0.0"
+
+
 def test_update_project_rejects_dirty_worktree(template_repo: Path, tmp_path: Path) -> None:
     """An uncommitted change blocks the update (RejectDirtyWorktree)."""
     from copyroom._compat.copier import copier_copy

@@ -19,6 +19,7 @@ from .._compat.copier import copier_copy
 from .._compat.errors import CopyRoomError
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
+from .config import load_project_config
 from .model import (
     VALID_CREATION_TRANSITIONS,
     CreationStatus,
@@ -222,9 +223,8 @@ def detect_post_create_commands(creation: ProjectCreation) -> CreationStatus:
         return creation.status
 
     try:
-        with open(project_yml) as f:
-            config = yaml.safe_load(f)
-    except (yaml.YAMLError, OSError):
+        config = load_project_config(project_yml)
+    except CopyRoomError:
         creation.status = _creation_sm.transition(
             CreationStatus.copy_executed,
             CreationStatus.failed,
@@ -234,7 +234,7 @@ def detect_post_create_commands(creation: ProjectCreation) -> CreationStatus:
         ]
         return creation.status
 
-    commands = _extract_post_create_commands(config)
+    commands = config.commands.get("post_project_create", [])
     if not commands:
         # No post-create commands configured — short-circuit to complete
         creation.status = _creation_sm.transition(
@@ -268,9 +268,8 @@ def run_post_create_commands(
     project_yml = Path(creation.target_dir).resolve() / "copyroom.project.yml"
 
     try:
-        with open(project_yml) as f:
-            config = yaml.safe_load(f)
-    except (yaml.YAMLError, OSError):
+        config = load_project_config(project_yml)
+    except CopyRoomError:
         creation.status = _creation_sm.transition(
             CreationStatus.post_create_run,
             CreationStatus.failed,
@@ -280,7 +279,7 @@ def run_post_create_commands(
         ]
         return creation.status
 
-    commands = _extract_post_create_commands(config)
+    commands = config.commands.get("post_project_create", [])
     target = Path(creation.target_dir).resolve()
     run_hook_commands(commands, target, trust=trust, label="post-create")
 
@@ -302,7 +301,7 @@ def _populate_completion_suggestions(creation: ProjectCreation) -> None:
     creation.result_suggestions = [
         f"cd {creation.target_dir}",
         "git init && git add . && git commit -m \"Initial generation\"",
-        "copyroom project inspect",  # deferred but listed as a hint
+        "copyroom inspect",
     ]
 
 
@@ -355,31 +354,3 @@ def create_project(
     # 6. RunPostCreateCommands
     status = run_post_create_commands(creation, trust=trust)
     return creation
-
-
-# ===================================================================
-# Internal helpers
-# ===================================================================
-
-
-def _extract_post_create_commands(config: object) -> list[str]:
-    """Extract the list of post-create commands from a copyroom.project.yml dict.
-
-    Expected structure::
-
-        commands:
-          post_project_create:
-            - "pytest"
-            - "ruff check"
-    """
-    if not isinstance(config, dict):
-        return []
-    commands = config.get("commands", {})
-    if not isinstance(commands, dict):
-        return []
-    post = commands.get("post_project_create", [])
-    if isinstance(post, list):
-        return [str(c) for c in post]
-    if isinstance(post, str):
-        return [post]
-    return []
