@@ -27,6 +27,8 @@ from pathlib import Path
 
 import yaml
 
+from .._compat.fsutil import atomic_write_text
+
 # ---------------------------------------------------------------------------
 # Edits DSL types
 # ---------------------------------------------------------------------------
@@ -226,109 +228,58 @@ def _set_field_yaml(file_path: Path, path: list[str], value: object) -> None:
 
     _set_nested_value(doc, path, value)
 
-    with open(file_path, "w") as f:
-        yaml.safe_dump(doc, f, default_flow_style=False, sort_keys=False)
+    atomic_write_text(
+        file_path,
+        yaml.safe_dump(doc, default_flow_style=False, sort_keys=False),
+    )
 
 
 def _set_field_toml(file_path: Path, path: list[str], value: object) -> None:
-    """Set a field in a TOML file at the given path.
+    """Set a field at *path* in a TOML file, preserving comments and formatting.
 
-    Uses basic string manipulation — proper TOML editing via ``tomllib``
-    / ``tomli_w`` is deferred to a future version.
+    Parses with :mod:`tomlkit` (a round-tripping TOML library), sets the nested
+    key, and writes the document back. Tables along *path* are created as needed.
+    Unlike the previous hand-rolled string writer, this survives inline tables,
+    arrays-of-tables, quoted keys, and comments mid-section — a botched edit can
+    no longer silently produce a misleading simulation (P2-2).
     """
-    # Simple implementation: read lines, find/replace or append
-    if len(path) >= 2:
-        # Table-based path: [table] key = value
-        section = path[:-1]
-        key = path[-1]
-        _set_toml_table_key(file_path, section, key, value)
-    elif len(path) == 1:
-        # Top-level key = value
-        _set_toml_key(file_path, path[0], value)
+    import tomlkit
+    from tomlkit.exceptions import TOMLKitError
 
+    try:
+        doc = tomlkit.parse(file_path.read_text())
+    except TOMLKitError as exc:
+        raise EditsParseError(f"set-field: failed to parse {file_path}: {exc}") from exc
 
-def _set_toml_key(file_path: Path, key: str, value: object) -> None:
-    """Set a top-level key in a TOML file."""
-    lines = file_path.read_text().splitlines()
-    key_eq = f"{key} ="
-    value_str = _toml_value_str(value)
-    found = False
-    new_lines = []
-    for line in lines:
-        if line.strip().startswith(key_eq):
-            new_lines.append(f"{key} = {value_str}")
-            found = True
-        else:
-            new_lines.append(line)
-    if not found:
-        new_lines.append(f"{key} = {value_str}")
-    file_path.write_text("\n".join(new_lines) + "\n")
+    _set_nested_value(doc, path, value)
 
-
-def _set_toml_table_key(file_path: Path, section: list[str], key: str, value: object) -> None:
-    """Set a key inside a TOML [table] section."""
-    lines = file_path.read_text().splitlines()
-    section_str = "[" + ".".join(section) + "]"
-    key_eq = f"{key} ="
-    value_str = _toml_value_str(value)
-    in_section = False
-    found = False
-    new_lines = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped == section_str:
-            in_section = True
-            new_lines.append(line)
-            continue
-        if in_section and (stripped.startswith("[") or not stripped):
-            # We left our section; insert key if not found
-            if not found:
-                new_lines.insert(-1, f"{key} = {value_str}")
-                found = True
-            in_section = stripped.startswith("[")
-            new_lines.append(line)
-            continue
-        if in_section and stripped.startswith(key_eq):
-            new_lines.append(f"{key} = {value_str}")
-            found = True
-            continue
-        new_lines.append(line)
-    if not found:
-        # Section not found; append it
-        new_lines.append("")
-        new_lines.append(section_str)
-        new_lines.append(f"{key} = {value_str}")
-    file_path.write_text("\n".join(new_lines) + "\n")
-
-
-def _toml_value_str(value: object) -> str:
-    """Convert a Python value to a TOML-compatible string."""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, list):
-        items = [_toml_value_str(v) for v in value]
-        return "[" + ", ".join(items) + "]"
-    if isinstance(value, str):
-        # For simple strings, use double quotes
-        return f'"{value}"'
-    return str(value)
+    atomic_write_text(file_path, tomlkit.dumps(doc))
 
 
 def _apply_patch(file_path: Path, patch_text: str, target_dir: Path) -> None:
-    """Apply a unified diff patch to *file_path*.
+    """Apply a unified diff patch to *file_path* via the system ``patch`` binary.
 
-    Uses ``patch`` command via subprocess.
+    The ``patch`` binary is an external dependency; its absence, or a failed
+    apply, is **fatal** (raises :class:`EditsParseError`) rather than a warning.
+    A silently-skipped patch would yield a wrong ``update-test`` simulation that
+    looks authoritative (P2-2). ``apply_user_edits`` wraps this in a try/except
+    that fails the simulation, so the error is surfaced, not swallowed.
     """
+    import shutil
     import subprocess
-    import sys
 
     if not patch_text:
         return
 
+    if shutil.which("patch") is None:
+        raise EditsParseError(
+            "the 'patch' binary is required to apply a 'patch' edit but was not "
+            "found on PATH.",
+        )
+
     # Ensure the directory exists for new files
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Run patch
     result = subprocess.run(
         ["patch", "--quiet", "--force", str(file_path)],
         input=patch_text,
@@ -338,8 +289,9 @@ def _apply_patch(file_path: Path, patch_text: str, target_dir: Path) -> None:
     )
 
     if result.returncode != 0:
-        if result.stderr:
-            print(f"Warning: patch failed for {file_path}: {result.stderr}", file=sys.stderr)
+        raise EditsParseError(
+            f"patch failed for {file_path}: {result.stderr.strip() or 'no output'}",
+        )
 
 
 # ---------------------------------------------------------------------------
