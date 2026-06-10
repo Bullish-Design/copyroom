@@ -46,15 +46,18 @@ def main() -> None:
 
     _section("2a. NO MARKERS → clear error, exit 1")
     with tempfile.TemporaryDirectory() as td:
-        r = _run("new", "gh:org/demo", cwd=td)
+        # `update` is a mode-gated project command, so it exercises detection.
+        # (`new` is a bootstrap command — it runs anywhere, see Part 1.)
+        r = _run("update", cwd=td)
         assert r.returncode != 0 and "No CopyRoom project or workshop found" in r.stderr
     _ok("Unknown mode → clear diagnostic, not silent fallback")
 
     _section("2b. PROJECT MARKERS → cmds accepted/rejected")
     with tempfile.TemporaryDirectory() as td:
         (Path(td) / ".copier-answers.yml").touch()
-        assert "Target directory" in _run("new", "gh:org/template", cwd=td).stderr
-        _ok("Project command 'new' accepted (reaches Copier step)")
+        r = _run("update", cwd=td)
+        assert "workshop command" not in r.stderr and "Unknown command" not in r.stderr
+        _ok("Project command 'update' accepted (reaches its workflow)")
         r = _run("render", "t", "s", cwd=td)
         assert r.returncode != 0 and "workshop command" in r.stderr
         _ok("Workshop command 'render' rejected with clear mode error")
@@ -65,9 +68,9 @@ def main() -> None:
         (Path(td) / "registry").mkdir(); (Path(td) / "scenarios").mkdir()
         assert "not found in workshop registry" in _run("render", "t", "s", cwd=td).stderr
         _ok("Workshop command 'render' accepted (reaches registry lookup)")
-        r = _run("new", "gh:org/demo", cwd=td)
+        r = _run("update", cwd=td)
         assert r.returncode != 0 and "project command" in r.stderr
-        _ok("Project command 'new' rejected with clear mode error")
+        _ok("Project command 'update' rejected with clear mode error")
 
     _section("2d. PROXIMITY (project inside workshop)")
     with tempfile.TemporaryDirectory() as td:

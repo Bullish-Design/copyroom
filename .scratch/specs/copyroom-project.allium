@@ -57,6 +57,7 @@ entity TemplateUpdate {
         | update_executed
         | post_update_run
         | complete
+        | up_to_date
         | failed
 
     update_branch: String?
@@ -67,6 +68,7 @@ entity TemplateUpdate {
         initiated -> config_loaded
         initiated -> failed
         config_loaded -> worktree_verified
+        config_loaded -> up_to_date
         config_loaded -> failed
         worktree_verified -> branch_created
         worktree_verified -> update_executed
@@ -78,7 +80,7 @@ entity TemplateUpdate {
         update_executed -> failed
         post_update_run -> complete
         post_update_run -> failed
-        terminal: complete, failed
+        terminal: complete, up_to_date, failed
     }
 }
 
@@ -227,9 +229,11 @@ rule ResolveLatestRef {
 rule NoUpdateAvailable {
     when: update: TemplateUpdate.status becomes config_loaded
     requires: update.previous_ref = update.target_ref
-    ensures: update.status = failed
+    ensures: update.status = up_to_date
     @guidance
-        -- Already at the target version. Nothing to do.
+        -- Already at the target version. Nothing to do — this is a *success*
+        -- terminal (up_to_date), not a failure: an idempotent `copyroom update`
+        -- must exit 0 so it is safe in a Makefile/CI loop (P1-2).
         -- The recorded previous_ref (Copier's _commit) is a `git describe`
         -- string — a bare tag, `tag-N-gsha`, or a SHA — so the comparison is by
         -- *version* (strip the describe suffix to its base tag), not raw string

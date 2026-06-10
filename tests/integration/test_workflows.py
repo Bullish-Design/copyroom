@@ -270,7 +270,11 @@ def test_update_project_resolves_latest_tag(template_repo: Path, tmp_path: Path)
 def test_update_project_no_ref_already_at_latest_is_clean_noop(
     template_repo: Path, tmp_path: Path
 ) -> None:
-    """When already on the latest tag, a no-ref update is a clean no-op (failed)."""
+    """When already on the latest tag, a no-ref update is a clean no-op.
+
+    #P1-2: a no-op is a *success* terminal (up_to_date), not a failure, so the
+    CLI can exit 0 in a Makefile/CI loop.
+    """
     from copyroom._compat.copier import copier_copy
 
     # The project is generated from v1.0.0, which is also the latest tag.
@@ -282,7 +286,7 @@ def test_update_project_no_ref_already_at_latest_is_clean_noop(
 
     update = update_project(project_root=proj, target_ref=None)
 
-    assert update.status == UpdateStatus.failed
+    assert update.status == UpdateStatus.up_to_date
     assert update.resolved_latest is True
     assert update.previous_ref == update.target_ref == "v1.0.0"
 
@@ -329,7 +333,7 @@ def test_update_project_post_tag_commit_is_clean_noop(
 
     update = update_project(project_root=proj, target_ref=None)
 
-    assert update.status == UpdateStatus.failed  # no-op
+    assert update.status == UpdateStatus.up_to_date  # no-op (success terminal)
     assert update.target_ref == "v1.0.0"
     assert update.resolved_latest is True
 

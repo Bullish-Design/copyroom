@@ -192,7 +192,8 @@ class TestCommandDispatch:
     """
 
     WORKSHOP_COMMANDS = {"registry", "render", "test", "golden", "release-check", "update-test"}
-    PROJECT_COMMANDS = {"new", "update"}
+    # `new` is a bootstrap command (P1-1), not a mode-gated project command.
+    PROJECT_COMMANDS = {"update", "inspect", "status"}
 
     def test_workshop_command_in_workshop_mode(self) -> None:
         """Workshop commands dispatch when mode = workshop."""
@@ -217,8 +218,8 @@ class TestCommandDispatch:
     def test_project_command_rejected_out_of_mode(self) -> None:
         """RejectCommandOutOfMode fires for project commands when mode != project."""
         # Conditions: (session.mode != project and cmd in project set)
-        assert "new" in self.PROJECT_COMMANDS
-        assert "new" not in self.WORKSHOP_COMMANDS
+        assert "update" in self.PROJECT_COMMANDS
+        assert "update" not in self.WORKSHOP_COMMANDS
 
     def test_status_transitions_to_command_failed_on_rejection(self) -> None:
         """When a command is rejected out-of-mode, status becomes command_failed."""

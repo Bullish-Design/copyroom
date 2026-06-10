@@ -101,8 +101,12 @@ rule DispatchProjectCommand {
     when: RunCommand(session, command)
     requires: session.status = mode_detected
         and session.mode = project
-        and command in {"inspect", "new", "update", "status"}
+        and command in {"inspect", "update", "status"}
     ensures: session.status = command_running
+    @guidance
+        -- `new` is a bootstrap command (like adopt/templatize): it runs in an
+        -- unmanaged repo to *create* a project, so it bypasses mode detection
+        -- entirely rather than being gated on project markers.
 }
 
 rule RejectCommandOutOfMode {
@@ -110,7 +114,7 @@ rule RejectCommandOutOfMode {
     requires: session.status = mode_detected
     ensures:
         if (session.mode != workshop and command in {"registry", "render", "test", "golden", "release-check", "update-test"})
-            or (session.mode != project and command in {"inspect", "new", "update", "status"}):
+            or (session.mode != project and command in {"inspect", "update", "status"}):
             session.status = command_failed
     @guidance
         -- Commands not available in the current mode print "not available"

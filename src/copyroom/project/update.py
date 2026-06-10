@@ -176,11 +176,14 @@ def no_update_available(update: TemplateUpdate) -> UpdateStatus:
     ``git describe`` string (``vX.Y.Z-N-gsha``), or a SHA, so this compares
     *versions* via :func:`same_version` rather than raw strings — a project
     generated at a post-tag commit of the target version is still a no-op.
+
+    A no-op transitions to ``up_to_date`` (a *success* terminal): "already at
+    the target version, nothing to do" is not a failure (P1-2).
     """
     if same_version(update.previous_ref, update.target_ref):
         update.status = _update_sm.transition(
             UpdateStatus.config_loaded,
-            UpdateStatus.failed,
+            UpdateStatus.up_to_date,
         )
         return update.status
 
@@ -454,10 +457,11 @@ def update_project(
     # CopyRoomError (caught by the CLI) when the latest tag can't be resolved.
     resolve_latest_ref(update)
 
-    # 3. NoUpdateAvailable — check if already at target
+    # 3. NoUpdateAvailable — check if already at target. A no-op is a success
+    # terminal (up_to_date), not a failure.
     if update.previous_ref is not None:
         status = no_update_available(update)
-        if status == UpdateStatus.failed:
+        if status in (UpdateStatus.up_to_date, UpdateStatus.failed):
             return update
 
     # 4. VerifyCleanWorktree / RejectDirtyWorktree

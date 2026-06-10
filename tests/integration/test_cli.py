@@ -65,3 +65,42 @@ def test_new_runs_hooks_with_trust(template_repo: Path, tmp_path: Path) -> None:
     r = _run("--mode", "project", "new", str(template_repo), str(target), "--trust", cwd=tmp_path)
     assert r.returncode == 0, r.stderr
     assert (target / "HOOK_RAN").exists()
+
+
+def _git(*args: str, cwd: Path) -> None:
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
+        cwd=str(cwd), check=True, capture_output=True, text=True,
+    )
+
+
+def test_update_noop_exits_zero(template_repo: Path, tmp_path: Path) -> None:
+    """#P1-2: a no-op `update` (already at latest) exits 0, not 1.
+
+    An idempotent "nothing to do" reported as failure breaks scripting/CI on
+    the common case (`copyroom update` in a Makefile/loop).
+    """
+    from copyroom._compat.copier import copier_copy
+
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj).returncode == 0  # generated at v1.0.0 (latest)
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    r = _run("update", cwd=proj)
+    assert r.returncode == 0, r.stderr
+    assert "Already at the latest version" in r.stdout
+
+
+def test_new_bootstraps_without_mode(template_repo: Path, tmp_path: Path) -> None:
+    """#P1-1: `new` creates a project from an unmanaged dir, no --mode needed.
+
+    `new` runs to *create* a project, so the project markers it would otherwise
+    be gated on don't exist yet. It must bootstrap like adopt/templatize.
+    """
+    target = tmp_path / "out"
+    r = _run("new", str(template_repo), str(target), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (target / "README.md").is_file()
+    assert (target / ".copier-answers.yml").is_file()

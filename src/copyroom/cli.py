@@ -70,8 +70,6 @@ Modes are auto-detected from directory markers. The command set adapts
 to the detected mode.
 
 Project commands (in a project directory):
-  new       <source> [target] [--answers FILE]
-                               Create a new project from a template
   update    [target_ref] [--branch]
                                Update an existing project (latest tag if no ref)
   inspect   [--json]           Full report on this project + its template link
@@ -84,6 +82,8 @@ Project commands (in a project directory):
                                Preview the update this project would receive from the edit
 
 Bootstrap commands (in an unmanaged repo — no markers needed):
+  new       <source> [target] [--answers FILE]
+                               Create a new project from a template (runs anywhere)
   templatize    [--into PATH] [--name NAME] [--id ID]
                                Scaffold a template repo from this repo
   adopt         <template> [--ref REF] --answers FILE [--write] [--force]
@@ -225,17 +225,16 @@ def _cmd_update(args: argparse.Namespace) -> None:
         print(str(exc), file=sys.stderr)
         sys.exit(1)
 
-    if update.status == UpdateStatus.failed:
-        if update.previous_ref == update.target_ref:
-            if update.resolved_latest:
-                print(
-                    f"Already at the latest version ({update.target_ref}); nothing to update.",
-                    file=sys.stderr,
-                )
-            else:
-                print(f"Already at version {update.target_ref}; nothing to update.", file=sys.stderr)
+    # A no-op (already at the target version) is a success, not a failure (P1-2).
+    if update.status == UpdateStatus.up_to_date:
+        if update.resolved_latest:
+            print(f"Already at the latest version ({update.target_ref}); nothing to update.")
         else:
-            print(f"Update failed at state: {update.status.value}", file=sys.stderr)
+            print(f"Already at version {update.target_ref}; nothing to update.")
+        return  # exit 0
+
+    if update.status == UpdateStatus.failed:
+        print(f"Update failed at state: {update.status.value}", file=sys.stderr)
         if update.conflicts:
             print("Conflicts:", file=sys.stderr)
             for c in update.conflicts:

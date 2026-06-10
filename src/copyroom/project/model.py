@@ -76,13 +76,18 @@ class UpdateStatus(StrEnum):
     update_executed = "update_executed"
     post_update_run = "post_update_run"
     complete = "complete"
+    up_to_date = "up_to_date"  # no-op terminal: already at the target version (success)
     failed = "failed"
 
 
 # copyroom-project.allium L58-L72
 VALID_UPDATE_TRANSITIONS: dict[UpdateStatus, set[UpdateStatus]] = {
     UpdateStatus.initiated: {UpdateStatus.config_loaded, UpdateStatus.failed},
-    UpdateStatus.config_loaded: {UpdateStatus.worktree_verified, UpdateStatus.failed},
+    UpdateStatus.config_loaded: {
+        UpdateStatus.worktree_verified,
+        UpdateStatus.up_to_date,
+        UpdateStatus.failed,
+    },
     UpdateStatus.worktree_verified: {
         UpdateStatus.branch_created,
         UpdateStatus.update_executed,
@@ -96,6 +101,7 @@ VALID_UPDATE_TRANSITIONS: dict[UpdateStatus, set[UpdateStatus]] = {
     },
     UpdateStatus.post_update_run: {UpdateStatus.complete, UpdateStatus.failed},
     UpdateStatus.complete: set(),  # terminal
+    UpdateStatus.up_to_date: set(),  # terminal (success: nothing to do)
     UpdateStatus.failed: set(),  # terminal
 }
 

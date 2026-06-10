@@ -500,11 +500,11 @@ class TestCrossSpecInvariants:
 
     def test_project_commands_only_in_project_mode(self) -> None:
         """
-        Project commands (new, update) only dispatch in project mode.
-        inspect and status are deferred to v0.3.0.
+        Project commands (update, inspect, status) only dispatch in project mode.
+        (`new` is a bootstrap command — it bypasses mode dispatch entirely.)
         """
         workshop_commands = {"registry", "render", "test", "golden", "release-check", "update-test"}
-        project_commands = {"new", "update"}
+        project_commands = {"update", "inspect", "status"}
         for cmd in project_commands:
             assert cmd not in workshop_commands
 
@@ -515,15 +515,15 @@ class TestCrossSpecInvariants:
             assert result == SessionStatus.command_failed, \
                 f"Project command '{cmd}' should fail in workshop mode"
 
-    def test_project_creation_requires_project_mode(self) -> None:
-        """CreateProject is a project command; must dispatch in project mode only."""
-        # 'new' maps to project mode in COMMAND_MODE_MAP
-        assert COMMAND_MODE_MAP["new"] == CLIMode.project
+    def test_project_creation_is_bootstrap(self) -> None:
+        """CreateProject (`new`) is a bootstrap command (P1-1): it runs in an
+        unmanaged repo to *create* a project, so it bypasses mode dispatch
+        rather than being gated on project markers."""
+        from copyroom.session.model import BOOTSTRAP_COMMANDS
 
-        # Verify dispatch in workshop mode fails
-        session = CLISession(status=SessionStatus.mode_detected, mode=CLIMode.workshop)
-        result = dispatch("new", session)
-        assert result == SessionStatus.command_failed
+        assert "new" in BOOTSTRAP_COMMANDS
+        # It is therefore not mode-gated.
+        assert "new" not in COMMAND_MODE_MAP
 
     def test_template_update_requires_project_mode(self) -> None:
         """UpdateTemplate is a project command; must dispatch in project mode only."""

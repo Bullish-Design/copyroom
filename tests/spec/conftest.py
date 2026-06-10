@@ -139,17 +139,19 @@ class UpdateStatus(StrEnum):
     update_executed = "update_executed"
     post_update_run = "post_update_run"
     complete = "complete"
+    up_to_date = "up_to_date"
     failed = "failed"
 
 
 VALID_UPDATE_TRANSITIONS: dict[UpdateStatus, set[UpdateStatus]] = {
     UpdateStatus.initiated: {UpdateStatus.config_loaded, UpdateStatus.failed},
-    UpdateStatus.config_loaded: {UpdateStatus.worktree_verified, UpdateStatus.failed},
+    UpdateStatus.config_loaded: {UpdateStatus.worktree_verified, UpdateStatus.up_to_date, UpdateStatus.failed},
     UpdateStatus.worktree_verified: {UpdateStatus.branch_created, UpdateStatus.update_executed, UpdateStatus.failed},
     UpdateStatus.branch_created: {UpdateStatus.update_executed, UpdateStatus.failed},
     UpdateStatus.update_executed: {UpdateStatus.post_update_run, UpdateStatus.complete, UpdateStatus.failed},
     UpdateStatus.post_update_run: {UpdateStatus.complete, UpdateStatus.failed},
     UpdateStatus.complete: set(),    # terminal
+    UpdateStatus.up_to_date: set(),  # terminal (success: nothing to do)
     UpdateStatus.failed: set(),      # terminal
 }
 

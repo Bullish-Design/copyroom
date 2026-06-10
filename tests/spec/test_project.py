@@ -65,10 +65,13 @@ class TestTemplateUpdateEntity:
     """copyroom-project.allium L41-L72: TemplateUpdate entity."""
 
     def test_all_status_values_exist(self) -> None:
-        """All 8 status values from the declaration must be representable."""
+        """All status values from the declaration must be representable.
+
+        ``up_to_date`` is the no-op success terminal added for P1-2.
+        """
         expected = {"initiated", "config_loaded", "worktree_verified",
                      "branch_created", "update_executed", "post_update_run",
-                     "complete", "failed"}
+                     "complete", "up_to_date", "failed"}
         assert {s.value for s in UpdateStatus} == expected
 
     def test_previous_ref_is_optional_string(self) -> None:
@@ -205,7 +208,12 @@ class TestUpdateTransitions:
 
     def test_terminal_states(self) -> None:
         assert VALID_UPDATE_TRANSITIONS[UpdateStatus.complete] == set()
+        assert VALID_UPDATE_TRANSITIONS[UpdateStatus.up_to_date] == set()
         assert VALID_UPDATE_TRANSITIONS[UpdateStatus.failed] == set()
+
+    def test_config_loaded_to_up_to_date_valid(self) -> None:
+        """P1-2: a no-op update (already at target) is a success terminal."""
+        assert UpdateStatus.up_to_date in VALID_UPDATE_TRANSITIONS[UpdateStatus.config_loaded]
 
     def test_every_non_terminal_has_outbound(self) -> None:
         non_terminal = [

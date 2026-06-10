@@ -132,7 +132,7 @@ say "generated 'project' and vice-versa."
 
 step "0a. An empty directory has no CopyRoom context"
 mkdir -p "$ROOT/empty"
-run_fail --in "$ROOT/empty" copyroom new gh:org/some-template
+run_fail --in "$ROOT/empty" copyroom update
 ok "Unknown mode → a clear diagnostic and a non-zero exit, never a silent fallback"
 pause
 
@@ -222,9 +222,9 @@ package_name: aurora
 description: A starlight-fast task runner.
 author: Ada Lovelace
 YML
-say "Non-interactive: we feed answers from a YAML file. We pass --mode project"
-say "so 'new' doesn't need an existing project marker in the working directory."
-run copyroom --mode project new "$TPL" "$ROOT/aurora" --answers "$ROOT/answers.yml" \
+say "Non-interactive: we feed answers from a YAML file. 'new' is a bootstrap"
+say "command — it runs anywhere, no project marker (or --mode) needed."
+run copyroom new "$TPL" "$ROOT/aurora" --answers "$ROOT/answers.yml" \
   || die "copyroom new failed"
 ok "Project rendered — templated file names and \${{ ... }} substitutions resolved:"
 tree_of "$ROOT/aurora"
