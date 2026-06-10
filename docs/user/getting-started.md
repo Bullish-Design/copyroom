@@ -38,7 +38,7 @@ CopyRoom is a standard `uv`-installable Python package (entry point
 uv tool install copyroom        # once published
 # or, from a checkout:
 uv tool install /path/to/copyroom
-copyroom --version              # → copyroom 0.3.0
+copyroom --version              # → copyroom 0.4.0
 ```
 
 ### As a devenv module
@@ -62,7 +62,7 @@ supply your own build.
 ## 3. Verify
 
 ```bash
-copyroom --version     # copyroom 0.3.0
+copyroom --version     # copyroom 0.4.0
 copyroom --help        # the full command list, grouped by mode
 ```
 

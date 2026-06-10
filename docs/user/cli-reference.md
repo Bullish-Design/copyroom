@@ -1,6 +1,6 @@
 # CLI Reference
 
-The complete command surface of CopyRoom 0.3.0. Commands are grouped by the
+The complete command surface of CopyRoom 0.4.0. Commands are grouped by the
 [mode](concepts.md) they run in. For task-oriented guides see
 [projects](projects.md), [template editing](template-editing.md),
 [workshop](workshop.md), and [adoption](adoption.md).

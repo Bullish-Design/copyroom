@@ -7,7 +7,7 @@ pattern these modules share.
 
 ```
 src/copyroom/
-├── __init__.py          # __version__ = "0.3.0"
+├── __init__.py          # __version__ = "0.4.0"
 ├── __main__.py          # `python -m copyroom` → cli.main()
 ├── cli.py               # argparse front end, dispatch, output, exit codes
 ├── session/             # mode detection + command gating
