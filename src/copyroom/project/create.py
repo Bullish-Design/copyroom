@@ -19,7 +19,7 @@ from .._compat.copier import copier_copy
 from .._compat.errors import CopyRoomError
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
-from .config import load_project_config
+from .config import load_hook_commands
 from .model import (
     VALID_CREATION_TRANSITIONS,
     CreationStatus,
@@ -213,17 +213,11 @@ def detect_post_create_commands(creation: ProjectCreation) -> CreationStatus:
     """
     project_yml = Path(creation.target_dir).resolve() / "copyroom.project.yml"
 
-    if not project_yml.is_file():
-        # Short-circuit: no post-create commands
-        creation.status = _creation_sm.transition(
-            CreationStatus.copy_executed,
-            CreationStatus.complete,
-        )
-        _populate_completion_suggestions(creation)
-        return creation.status
-
     try:
-        config = load_project_config(project_yml)
+        # Resilient read: a schema-divergent but readable config (e.g. a newer
+        # template's project.kind) must not block generation — only truly
+        # unusable YAML raises here.
+        commands = load_hook_commands(project_yml, "post_project_create")
     except CopyRoomError:
         creation.status = _creation_sm.transition(
             CreationStatus.copy_executed,
@@ -234,7 +228,6 @@ def detect_post_create_commands(creation: ProjectCreation) -> CreationStatus:
         ]
         return creation.status
 
-    commands = config.commands.get("post_project_create", [])
     if not commands:
         # No post-create commands configured — short-circuit to complete
         creation.status = _creation_sm.transition(
@@ -268,7 +261,7 @@ def run_post_create_commands(
     project_yml = Path(creation.target_dir).resolve() / "copyroom.project.yml"
 
     try:
-        config = load_project_config(project_yml)
+        commands = load_hook_commands(project_yml, "post_project_create")
     except CopyRoomError:
         creation.status = _creation_sm.transition(
             CreationStatus.post_create_run,
@@ -279,7 +272,6 @@ def run_post_create_commands(
         ]
         return creation.status
 
-    commands = config.commands.get("post_project_create", [])
     target = Path(creation.target_dir).resolve()
     run_hook_commands(commands, target, trust=trust, label="post-create")
 

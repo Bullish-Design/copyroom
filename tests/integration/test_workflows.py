@@ -302,3 +302,87 @@ def test_update_project_rejects_dirty_worktree(template_repo: Path, tmp_path: Pa
     update = update_project(project_root=proj, target_ref="v2.0.0")
 
     assert update.status == UpdateStatus.failed
+
+
+def test_update_project_post_tag_commit_is_clean_noop(
+    template_repo: Path, tmp_path: Path
+) -> None:
+    """#P1-2: a project generated at a *post-tag* commit records a describe-form
+    `_commit` (vX.Y.Z-N-gsha). A no-arg update to that same latest tag must read
+    as a clean no-op, not re-run copier against the version it's already on."""
+    from copyroom._compat.copier import copier_copy
+
+    # Add a commit AFTER v1.0.0 (no new tag), so HEAD describes as v1.0.0-1-gsha.
+    (template_repo / "EXTRA.md").write_text("post-tag commit\n")
+    _git("add", "-A", cwd=template_repo)
+    _git("commit", "-qm", "post-tag", cwd=template_repo)
+
+    # Generate from that post-tag commit (vcs_ref=HEAD), not the bare tag.
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj, vcs_ref="HEAD").returncode == 0
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    answers = (proj / ".copier-answers.yml").read_text()
+    assert "v1.0.0-1-g" in answers, answers  # sanity: it really is describe-form
+
+    update = update_project(project_root=proj, target_ref=None)
+
+    assert update.status == UpdateStatus.failed  # no-op
+    assert update.target_ref == "v1.0.0"
+    assert update.resolved_latest is True
+
+
+def test_update_project_divergent_config_still_runs_hooks(
+    template_repo: Path, tmp_path: Path
+) -> None:
+    """#P1-1/#P2-7: a copyroom.project.yml with an invalid *known* field (a future
+    `kind`) must not abort the update, and its configured post-update hook must
+    still run (not be silently skipped)."""
+    from copyroom._compat.copier import copier_copy
+
+    proj = tmp_path / "proj"
+    assert copier_copy(str(template_repo), proj).returncode == 0
+
+    # A schema-divergent but readable config, plus a real post-update hook.
+    (proj / "copyroom.project.yml").write_text(
+        "project:\n"
+        "  kind: library\n"            # not a value this CLI's old enum knew
+        "commands:\n"
+        "  post_template_update:\n"
+        "    - touch HOOK_RAN\n"
+    )
+    _git("init", cwd=proj)
+    _git("add", "-A", cwd=proj)
+    _git("commit", "-qm", "generated", cwd=proj)
+
+    tag_v2(template_repo)
+    update = update_project(project_root=proj, target_ref="v2.0.0", trust=True)
+
+    assert update.status == UpdateStatus.complete, update.status
+    assert (proj / "CHANGELOG.md").is_file()       # the update actually ran
+    assert (proj / "HOOK_RAN").is_file()            # the hook was NOT skipped
+
+
+def test_resolve_latest_ref_no_src_path_transitions_failed(tmp_path: Path) -> None:
+    """#P2-8: when latest-ref resolution can't proceed (no recorded _src_path),
+    the entity must be transitioned to `failed` before the CopyRoomError is
+    raised — so a non-CLI caller never sees a non-terminal entity for a run that
+    didn't complete."""
+    from copyroom.project.model import TemplateUpdate, UpdateStatus
+    from copyroom.project.update import resolve_latest_ref
+
+    update = TemplateUpdate(
+        project_root=tmp_path,
+        template_id="demo",
+        previous_ref="v1.0.0",
+        target_ref=None,            # no-arg update -> must resolve
+        status=UpdateStatus.config_loaded,
+    )
+    update.template_source = None   # nothing for the resolver to read
+
+    with pytest.raises(CopyRoomError):
+        resolve_latest_ref(update)
+
+    assert update.status == UpdateStatus.failed

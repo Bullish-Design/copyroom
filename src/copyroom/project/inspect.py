@@ -19,6 +19,7 @@ from pathlib import Path
 
 from .._compat import gitutil
 from .._compat.errors import CopyRoomError
+from .._compat.refs import same_version
 from ..session.detector import detect_mode
 from ..template.workspace import read_answers, resolve_project_root
 from .config import load_project_config
@@ -98,14 +99,6 @@ def _template_id(answers: dict, cfg_template_id: str | None) -> str | None:
     return str(raw) if raw is not None else None
 
 
-def _worktree_clean(project_root: Path) -> bool | None:
-    """Return clean/dirty, or ``None`` when *project_root* isn't a git repo."""
-    if not gitutil.is_git_repo(project_root):
-        return None
-    result = gitutil.run_git("status", "--porcelain", cwd=project_root)
-    if result is None or result.returncode != 0:
-        return None
-    return not result.stdout.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -159,7 +152,7 @@ def project_status(project_root: str | Path | None = None) -> StatusReport:
     template_source = str(src) if src is not None else None
 
     latest_ref = gitutil.resolve_latest_ref(template_source) if template_source else None
-    update_available = latest_ref is not None and latest_ref != current_ref
+    update_available = latest_ref is not None and not same_version(current_ref, latest_ref)
 
     mode = detect_mode(root)
 
@@ -171,5 +164,5 @@ def project_status(project_root: str | Path | None = None) -> StatusReport:
         current_ref=current_ref,
         latest_ref=latest_ref,
         update_available=update_available,
-        worktree_clean=_worktree_clean(root),
+        worktree_clean=gitutil.worktree_clean(root),
     )

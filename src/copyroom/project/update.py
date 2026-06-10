@@ -19,9 +19,10 @@ import yaml
 from .._compat import gitutil
 from .._compat.copier import copier_update
 from .._compat.errors import CopyRoomError
+from .._compat.refs import same_version
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
-from .config import load_project_config
+from .config import load_hook_commands
 from .model import (
     VALID_UPDATE_TRANSITIONS,
     TemplateUpdate,
@@ -136,6 +137,10 @@ def resolve_latest_ref(update: TemplateUpdate) -> None:
         return
 
     if not update.template_source:
+        update.status = _update_sm.transition(
+            UpdateStatus.config_loaded,
+            UpdateStatus.failed,
+        )
         raise CopyRoomError(
             "Cannot resolve the latest template version: no _src_path recorded "
             "in .copier-answers.yml. Pass an explicit ref: copyroom update <ref>",
@@ -144,6 +149,10 @@ def resolve_latest_ref(update: TemplateUpdate) -> None:
 
     latest = gitutil.resolve_latest_ref(update.template_source)
     if latest is None:
+        update.status = _update_sm.transition(
+            UpdateStatus.config_loaded,
+            UpdateStatus.failed,
+        )
         raise CopyRoomError(
             f"Could not resolve the latest version of template "
             f"'{update.template_source}'. The source may be unreachable or have "
@@ -163,10 +172,12 @@ def resolve_latest_ref(update: TemplateUpdate) -> None:
 def no_update_available(update: TemplateUpdate) -> UpdateStatus:
     """Check if the update is a no-op.
 
-    When ``previous_ref == target_ref``, the update is already at the
-    target — transition to ``failed`` with a clear message.
+    The recorded ``previous_ref`` (Copier's ``_commit``) may be a bare tag, a
+    ``git describe`` string (``vX.Y.Z-N-gsha``), or a SHA, so this compares
+    *versions* via :func:`same_version` rather than raw strings — a project
+    generated at a post-tag commit of the target version is still a no-op.
     """
-    if update.previous_ref == update.target_ref:
+    if same_version(update.previous_ref, update.target_ref):
         update.status = _update_sm.transition(
             UpdateStatus.config_loaded,
             UpdateStatus.failed,
@@ -186,36 +197,16 @@ def no_update_available(update: TemplateUpdate) -> UpdateStatus:
 def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
     """Verify that the git worktree is clean.
 
-    Runs ``git status --porcelain`` in the project root.
+    Reads ``git status --porcelain`` via :func:`gitutil.worktree_status` (so it
+    inherits the shared 120s git timeout and fail-soft behavior). A non-repo or
+    missing git (``None``) is treated as clean.
+
     On clean: transitions to ``worktree_verified``.
     On dirty: transitions to ``failed`` with remediation guidance.
     """
-    try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=str(update.project_root),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except FileNotFoundError:
-        # Not a git repository or git not installed — treat as clean
-        update.status = _update_sm.transition(
-            UpdateStatus.config_loaded,
-            UpdateStatus.worktree_verified,
-        )
-        return update.status
+    dirty = gitutil.worktree_status(update.project_root)
 
-    if result.returncode != 0:
-        # Not a git repository — treat as clean
-        update.status = _update_sm.transition(
-            UpdateStatus.config_loaded,
-            UpdateStatus.worktree_verified,
-        )
-        return update.status
-
-    if result.stdout.strip():
-        # Worktree is dirty
+    if dirty:
         update.status = _update_sm.transition(
             UpdateStatus.config_loaded,
             UpdateStatus.failed,
@@ -225,11 +216,11 @@ def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
             file=sys.stderr,
         )
         print("Dirty files:", file=sys.stderr)
-        for line in result.stdout.strip().splitlines():
+        for line in dirty:
             print(f"  {line}", file=sys.stderr)
         return update.status
 
-    # Worktree is clean
+    # Clean, not a git repo, or git unavailable — all treated as clean.
     update.status = _update_sm.transition(
         UpdateStatus.config_loaded,
         UpdateStatus.worktree_verified,
@@ -357,18 +348,24 @@ def capture_conflicts(update: TemplateUpdate) -> UpdateStatus:
     if rej_files:
         update.rejects.update(str(f.relative_to(update.project_root)) for f in rej_files)
 
-    # Check for post-update commands
+    # Check for post-update commands. Read through the resilient accessor so a
+    # schema-divergent (but readable) config never silently drops configured
+    # hooks — both this reader and run_post_update_commands now agree.
     project_yml = update.project_root / "copyroom.project.yml"
-    has_post_commands = False
+    try:
+        commands = load_hook_commands(project_yml, "post_template_update")
+    except CopyRoomError:
+        update.status = _update_sm.transition(
+            UpdateStatus.update_executed,
+            UpdateStatus.failed,
+        )
+        print(
+            "Failed to parse copyroom.project.yml for post-update commands.",
+            file=sys.stderr,
+        )
+        return update.status
 
-    if project_yml.is_file():
-        try:
-            config = load_project_config(project_yml)
-            has_post_commands = bool(config.commands.get("post_template_update", []))
-        except CopyRoomError:
-            pass
-
-    if not has_post_commands:
+    if not commands:
         # Short-circuit to complete
         update.status = _update_sm.transition(
             UpdateStatus.update_executed,
@@ -400,7 +397,7 @@ def run_post_update_commands(
     project_yml = update.project_root / "copyroom.project.yml"
 
     try:
-        config = load_project_config(project_yml)
+        commands = load_hook_commands(project_yml, "post_template_update")
     except CopyRoomError:
         update.status = _update_sm.transition(
             UpdateStatus.post_update_run,
@@ -408,7 +405,6 @@ def run_post_update_commands(
         )
         return update.status
 
-    commands = config.commands.get("post_template_update", [])
     run_hook_commands(commands, update.project_root, trust=trust, label="post-update")
 
     update.status = _update_sm.transition(
