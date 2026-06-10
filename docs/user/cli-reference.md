@@ -180,6 +180,23 @@ upstream and run `copyroom update <ref>`.
 
 ---
 
+## `copyroom template-discard`
+
+Discard the edit worktree/branch and reset the edit loop.
+
+```
+copyroom template-discard
+```
+
+**Behavior:** removes the edit worktree and deletes the scratch branch
+`copyroom/edit/<slug>`, so the next `template-checkout` starts fresh from the
+base. Touches nothing in your real project tree; a friendly no-op when there is
+no worktree to discard. `template-checkout` warns when it reuses a branch that
+still carries commits from an abandoned prior session — `template-discard` is how
+you clear them.
+
+---
+
 # Bootstrap commands
 
 Run in an **unmanaged** repo (no markers). These bypass mode detection. Full

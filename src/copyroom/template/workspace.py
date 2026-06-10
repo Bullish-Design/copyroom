@@ -24,7 +24,13 @@ from .model import (
     TemplateCheckout,
 )
 
-__all__ = ["CopyRoomError", "checkout_template", "read_answers", "resolve_project_root"]
+__all__ = [
+    "CopyRoomError",
+    "checkout_template",
+    "discard_template_edit",
+    "read_answers",
+    "resolve_project_root",
+]
 
 _checkout_sm = StateMachine(VALID_CHECKOUT_TRANSITIONS, entity_name="TemplateCheckout")
 
@@ -94,6 +100,20 @@ def _project_slug(project_root: Path) -> str:
     return digest
 
 
+def _edit_paths(project_root: Path, source: str) -> tuple[Path, str, Path]:
+    """Compute the (cache_dir, branch, worktree_dir) for *project_root*'s edit.
+
+    The single definition of where the edit worktree/branch live, shared by
+    :func:`checkout_template` and :func:`discard_template_edit` so they always
+    agree on the slug-derived names.
+    """
+    cache_dir = _template_cache_dir(source)
+    slug = _project_slug(project_root)
+    branch = f"copyroom/edit/{slug}"
+    worktree_dir = cache_dir / f"wt-{slug}"
+    return cache_dir, branch, worktree_dir
+
+
 def _ensure_local_repo(source: str, cache_dir: Path) -> Path:
     """Return a local git repo for *source*, cloning remote sources into cache."""
     if gitutil.looks_remote(source):
@@ -159,26 +179,28 @@ def checkout_template(
         CheckoutStatus.initiated, CheckoutStatus.source_resolved,
     )
 
-    cache_dir = _template_cache_dir(str(source))
+    cache_dir, branch, worktree_dir = _edit_paths(root, str(source))
     repo = _ensure_local_repo(str(source), cache_dir)
     checkout.repo_dir = repo
 
     base = from_ref or gitutil.default_branch(repo) or "HEAD"
     checkout.base_ref = base
 
-    slug = _project_slug(root)
-    branch = f"copyroom/edit/{slug}"
-    worktree_dir = cache_dir / f"wt-{slug}"
-
-    if not (worktree_dir.is_dir() and gitutil.is_git_repo(worktree_dir)):
-        if not gitutil.worktree_add(repo, worktree_dir, branch, base):
-            checkout.status = _checkout_sm.transition(
-                CheckoutStatus.source_resolved, CheckoutStatus.failed,
-            )
-            raise CopyRoomError(
-                f"Failed to create an editable worktree for {source}.",
-                state="source_resolved",
-            )
+    if worktree_dir.is_dir() and gitutil.is_git_repo(worktree_dir):
+        # Reusing a worktree from a prior session — surface any commits left on
+        # the edit branch beyond its base so an abandoned edit doesn't silently
+        # resurface. `template-discard` resets it.
+        ahead = gitutil.commits_ahead(repo, branch, base)
+        if ahead:
+            checkout.reused_commits = ahead
+    elif not gitutil.worktree_add(repo, worktree_dir, branch, base):
+        checkout.status = _checkout_sm.transition(
+            CheckoutStatus.source_resolved, CheckoutStatus.failed,
+        )
+        raise CopyRoomError(
+            f"Failed to create an editable worktree for {source}.",
+            state="source_resolved",
+        )
 
     checkout.worktree_dir = worktree_dir
     checkout.branch = branch
@@ -186,3 +208,41 @@ def checkout_template(
         CheckoutStatus.source_resolved, CheckoutStatus.worktree_ready,
     )
     return checkout
+
+
+def discard_template_edit(project_root: str | Path | None = None) -> Path | None:
+    """Remove this project's edit worktree + branch, resetting the edit loop.
+
+    Resolves the same worktree/branch :func:`checkout_template` would and removes
+    them (``git worktree remove --force`` + ``git branch -D``) so a subsequent
+    ``template-checkout`` starts fresh from the base. A missing worktree is a
+    friendly no-op (returns ``None``); otherwise returns the removed worktree
+    path. Nothing in the real project tree is touched.
+    """
+    root = resolve_project_root(project_root)
+
+    answers = read_answers(root)
+    source = answers.get("_src_path")
+    if not source:
+        raise CopyRoomError(
+            "No _src_path in .copier-answers.yml; cannot locate the template.",
+            state="not_started",
+        )
+
+    cache_dir, branch, worktree_dir = _edit_paths(root, str(source))
+
+    # Resolve the repo the worktree/branch live in (local source = the path
+    # itself; remote = the cache clone). If neither the repo nor the worktree
+    # exists, there is nothing to discard.
+    if gitutil.looks_remote(str(source)):
+        repo = cache_dir / "repo"
+    else:
+        repo = Path(str(source)).expanduser().resolve()
+
+    if not (worktree_dir.is_dir() or gitutil.branch_exists(repo, branch)):
+        return None
+
+    if worktree_dir.is_dir():
+        gitutil.worktree_remove(repo, worktree_dir)
+    gitutil.delete_branch(repo, branch)
+    return worktree_dir

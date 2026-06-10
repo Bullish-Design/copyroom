@@ -42,7 +42,7 @@ from .template.model import PreviewStatus
 from .template.preview import CopyRoomError as TemplateError
 from .template.preview import run_preview
 from .template.validate import validate_template
-from .template.workspace import checkout_template
+from .template.workspace import checkout_template, discard_template_edit
 from .workshop.golden import CopyRoomError as GoldenError
 from .workshop.golden import golden_diff, refresh_golden
 from .workshop.model import GoldenStatus, RenderStatus, SimStatus
@@ -80,6 +80,7 @@ Project commands (in a project directory):
                                Render-test the edited template with this project's answers
   template-preview  [--from REF]
                                Preview the update this project would receive from the edit
+  template-discard             Discard the edit worktree/branch and reset the edit loop
 
 Bootstrap commands (in an unmanaged repo — no markers needed):
   new       <source> [target] [--answers FILE]
@@ -323,6 +324,14 @@ def _cmd_template_checkout(args: argparse.Namespace) -> None:
     print(f"  Worktree: {checkout.worktree_dir}")
     print(f"  Branch:   {checkout.branch}")
     print(f"  Source:   {checkout.template_source}")
+    if checkout.reused_commits:
+        n = checkout.reused_commits
+        plural = "s" if n != 1 else ""
+        print(
+            f"  ⚠️  Reusing an existing edit branch with {n} pending commit{plural} "
+            "from a prior session.",
+        )
+        print("      Run 'copyroom template-discard' to start fresh.")
     print()
     print("Edit files under the worktree, then run:")
     print("  copyroom template-test       # confirm it still renders")
@@ -381,6 +390,21 @@ def _cmd_template_preview(args: argparse.Namespace) -> None:
     print()
     print("Nothing was applied to your project. Review the patch, then once the")
     print("template change is committed/tagged, apply it with: copyroom update <ref>")
+
+
+def _cmd_template_discard(args: argparse.Namespace) -> None:
+    """``copyroom template-discard`` — reset the edit worktree/branch."""
+    try:
+        worktree = discard_template_edit(project_root=None)
+    except TemplateError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    if worktree is None:
+        print("No edit worktree to discard — nothing to do.")
+        return
+    print(f"Discarded the edit worktree and branch ({worktree}).")
+    print("The next 'copyroom template-checkout' will start fresh from the base.")
 
 
 def _cmd_templatize(args: argparse.Namespace) -> None:
@@ -742,6 +766,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p_tprev.add_argument("--from", dest="from_ref", default=None,
                          help="Base ref for the edit branch")
 
+    subparsers.add_parser(
+        "template-discard",
+        help="Discard the edit worktree/branch and reset the edit loop",
+    )
+
     # --- Bootstrap commands (unmanaged repo) ---
     p_templatize = subparsers.add_parser(
         "templatize",
@@ -839,6 +868,7 @@ COMMAND_FN: dict[str, Callable[..., None]] = {
     "template-checkout": _cmd_template_checkout,
     "template-test": _cmd_template_test,
     "template-preview": _cmd_template_preview,
+    "template-discard": _cmd_template_discard,
     "registry": _cmd_registry,
     "render": _cmd_render,
     "test": _cmd_test,

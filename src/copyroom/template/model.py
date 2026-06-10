@@ -89,6 +89,9 @@ class TemplateCheckout:
     repo_dir: Path | None = None
     worktree_dir: Path | None = None
     branch: str | None = None
+    # Number of commits already on a *reused* edit branch beyond its base — a
+    # leftover from an abandoned prior edit session. 0 on a fresh worktree.
+    reused_commits: int = 0
     status: CheckoutStatus = CheckoutStatus.initiated
 
 

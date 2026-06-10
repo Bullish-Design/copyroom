@@ -17,7 +17,11 @@ from copyroom._compat.copier import copier_copy
 from copyroom.template.model import CheckoutStatus, PreviewStatus
 from copyroom.template.preview import run_preview
 from copyroom.template.validate import validate_template
-from copyroom.template.workspace import CopyRoomError, checkout_template
+from copyroom.template.workspace import (
+    CopyRoomError,
+    checkout_template,
+    discard_template_edit,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -61,6 +65,43 @@ def test_checkout_is_idempotent(template_repo: Path, tmp_path: Path) -> None:
     second = checkout_template(project_root=proj)
     assert second.worktree_dir == first.worktree_dir
     assert (second.worktree_dir / "MARKER").is_file()
+
+
+def test_checkout_warns_on_reused_branch_with_commits(
+    template_repo: Path, tmp_path: Path
+) -> None:
+    """#P2-4: a second checkout after a committed edit surfaces the pending commits."""
+    proj = _project(template_repo, tmp_path / "proj")
+    first = checkout_template(project_root=proj)
+    assert first.reused_commits == 0  # fresh branch
+    # Commit an edit onto the edit branch, then check out again.
+    (first.worktree_dir / "NEWFILE").write_text("leftover\n")
+    assert gitutil.commit_all(first.worktree_dir, "abandoned edit")
+
+    second = checkout_template(project_root=proj)
+    assert second.reused_commits >= 1
+
+
+def test_discard_resets_edit_branch(template_repo: Path, tmp_path: Path) -> None:
+    """#P2-4: template-discard removes the worktree + branch; the next checkout is fresh."""
+    proj = _project(template_repo, tmp_path / "proj")
+    first = checkout_template(project_root=proj)
+    (first.worktree_dir / "NEWFILE").write_text("leftover\n")
+    assert gitutil.commit_all(first.worktree_dir, "abandoned edit")
+
+    worktree = discard_template_edit(project_root=proj)
+    assert worktree is not None
+    assert not worktree.is_dir()  # worktree removed
+
+    # A subsequent checkout starts fresh from the base (0 commits ahead).
+    third = checkout_template(project_root=proj)
+    assert third.reused_commits == 0
+
+
+def test_discard_missing_worktree_is_noop(template_repo: Path, tmp_path: Path) -> None:
+    """Discarding when nothing has been checked out is a friendly no-op."""
+    proj = _project(template_repo, tmp_path / "proj")
+    assert discard_template_edit(project_root=proj) is None
 
 
 def test_checkout_clones_remote_source(template_repo: Path, tmp_path: Path) -> None:

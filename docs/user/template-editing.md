@@ -44,6 +44,7 @@ copyroom template-checkout            # 1. template → editable worktree
 # …edit files under the printed worktree path…   2. make the change
 copyroom template-test                # 3. confirm it still renders
 copyroom template-preview             # 4. see what your project would receive
+copyroom template-discard             # (optional) throw the edit away, start over
 ```
 
 All three are **project-mode** commands; run them from the project directory or
@@ -159,6 +160,20 @@ it:
   where the template change would clash with your local edits.
 - **The commands are idempotent.** Re-running `template-checkout` reuses the same
   worktree/branch, so you can iterate edit → test → preview freely.
+- **Reusing a branch with leftover commits is flagged.** Because the worktree is
+  reused across sessions, commits from an *abandoned* prior edit persist on
+  `copyroom/edit/<slug>` and would resurface in the next preview. When that
+  happens, `template-checkout` warns:
+
+  ```
+  ⚠️  Reusing an existing edit branch with 2 pending commits from a prior session.
+      Run 'copyroom template-discard' to start fresh.
+  ```
+
+- **`template-discard` resets the loop.** It removes the edit worktree and deletes
+  the scratch branch, so the next `template-checkout` starts fresh from the base.
+  It touches nothing in your real project tree, and is a friendly no-op if there
+  is no worktree to discard. Use it to abandon an edit and start over.
 - **Remote vs local templates.** Remote sources are cloned (full clone) into
   `$XDG_CACHE_HOME/copyroom` (override with `$COPYROOM_CACHE_DIR`). Local sources
   must already be git repositories.
