@@ -207,13 +207,21 @@ rule ResolveLatestRef {
     when: update: TemplateUpdate.status becomes config_loaded
     requires: update.target_ref = null
     ensures: update.target_ref = "highest semver tag of update.template_source"
+    ensures:
+        if cannot_resolve_latest:
+            update.status = failed
     @guidance
         -- Runs only on the no-arg update path, after the source is known.
-        -- Local sources are read with `git tag`; remote sources with
-        -- `git ls-remote --tags` (fetch-class — may need the network or a warm
-        -- cache). The concrete tag is then passed to `copier update --vcs-ref`
-        -- for determinism, accurate reporting, and real no-op detection.
-        -- A source that can't be read or has no semver tags is a clear error.
+        -- Local sources are read with `git tag` (the source path is
+        -- expanduser()'d first, so a `~/...` source resolves); remote sources
+        -- with `git ls-remote --tags` (fetch-class — may need the network or a
+        -- warm cache). The concrete tag is then passed to `copier update
+        -- --vcs-ref` for determinism, accurate reporting, and real no-op
+        -- detection.
+        -- A source that can't be read or has no semver tags is a clear error:
+        -- the entity transitions config_loaded -> failed (a legal edge) before
+        -- the CopyRoomError is raised, so the entity always reflects the
+        -- outcome even for non-CLI callers.
 }
 
 rule NoUpdateAvailable {
@@ -222,6 +230,11 @@ rule NoUpdateAvailable {
     ensures: update.status = failed
     @guidance
         -- Already at the target version. Nothing to do.
+        -- The recorded previous_ref (Copier's _commit) is a `git describe`
+        -- string — a bare tag, `tag-N-gsha`, or a SHA — so the comparison is by
+        -- *version* (strip the describe suffix to its base tag), not raw string
+        -- equality. A project generated at a post-tag commit of the target
+        -- version still reads as a no-op.
 }
 
 rule VerifyCleanWorktree {

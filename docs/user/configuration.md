@@ -58,11 +58,11 @@ copyroom:
   version: 1
 
 project:
-  kind: generated-project          # generated-project | template-repo | shared-tooling
+  kind: generated-project          # recommended: generated-project | template-repo | shared-tooling (free-form)
   name: demo-cli
   template_id: python-cli-template
   template_source: git@github.com:example/python-cli-template.git
-  template_ref_policy: tagged      # tagged | branch | commit | unknown
+  template_ref_policy: tagged      # recommended: tagged | branch | commit | unknown (free-form)
   answers_file: .copier-answers.yml
 
 git:
@@ -99,11 +99,11 @@ commands:
 | Section | Field | Default | Meaning |
 |---------|-------|---------|---------|
 | (top) | `copyroom.version` | `1` | Config schema version. |
-| `project` | `kind` | `generated-project` | One of `generated-project`, `template-repo`, `shared-tooling`. |
+| `project` | `kind` | `generated-project` | Free-form string; recommended `generated-project`, `template-repo`, or `shared-tooling`. A value this CLI doesn't recognize still loads (see note below). |
 | `project` | `name` | `null` | Human project name. |
 | `project` | `template_id` | `null` | The template's registry id. |
 | `project` | `template_source` | `null` | Where the template came from (advisory; `.copier-answers.yml` is authoritative). |
-| `project` | `template_ref_policy` | `unknown` | `tagged`, `branch`, `commit`, or `unknown`. |
+| `project` | `template_ref_policy` | `unknown` | Free-form string; recommended `tagged`, `branch`, `commit`, or `unknown`. Unknown values load (see note below). |
 | `project` | `answers_file` | `.copier-answers.yml` | Path to the Copier answers file. |
 | `git` | `default_branch` | `main` | Branch updates land on. |
 | `git` | `update_branch_prefix` | `template-update/` | Prefix for `--branch` isolation branches. |
@@ -118,6 +118,14 @@ commands:
 **Every field is optional and defaulted** — a missing file (or any missing key)
 behaves exactly like the all-defaults config, and **unknown fields are ignored**,
 so a newer template's config keeps working on an older CLI (additive evolution).
+
+The same forward-compat rule applies to **values**, not just fields: `kind` and
+`template_ref_policy` are free-form strings, so a value a newer template emits
+that this CLI doesn't recognize is tolerated rather than fatal. A
+schema-divergent but readable config **never blocks `new`/`update`** — configured
+hooks are still read and run — so version skew between a template and the CLI
+can't break generation. Only genuinely unusable input (unparseable YAML, or a
+document that isn't a mapping) is an error.
 
 ### Hooks
 
