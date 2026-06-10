@@ -37,7 +37,12 @@ class UpdateSimulationResult:
 
     conflicts: set[str] = field(default_factory=set)
     rejects: set[str] = field(default_factory=set)
-    check_passed: bool = False
+    check_passed: bool = True  # checks "pass" until one actually fails
+
+    @property
+    def clean(self) -> bool:
+        """The update applied with no conflicts, no rejects, and all checks green."""
+        return self.check_passed and not self.conflicts and not self.rejects
 
 
 # ===========================================================================

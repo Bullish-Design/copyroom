@@ -272,32 +272,21 @@ def run_checks(
     # Load checks from registry
     checks = load_checks(workshop_root, sim.template_id)
 
-    if not checks:
-        # No checks configured — transition to checks_run anyway
-        sim.status = _sim_sm.transition(
-            SimStatus.update_applied,
-            SimStatus.checks_run,
-        )
-        # No checks ran, so nothing failed: the update itself succeeded.
-        # (apply_update already created sim.result via reject capture, whose
-        # default check_passed is False — flip it here so a clean, conflict-free
-        # update isn't reported as "had issues".)
-        if sim.result is None:
-            sim.result = UpdateSimulationResult()
-        sim.result.check_passed = True
-        # Complete immediately
-        return _complete(sim, workshop_root)
+    # apply_update already created sim.result while capturing conflicts/rejects;
+    # check_passed defaults to True (checks pass until one fails), so there is
+    # nothing to flip here. A missing result (no conflicts/rejects scanned)
+    # simply means a clean update.
+    if sim.result is None:
+        sim.result = UpdateSimulationResult()
 
     sim.status = _sim_sm.transition(
         SimStatus.update_applied,
         SimStatus.checks_run,
     )
 
-    sim.result = UpdateSimulationResult(
-        conflicts=sim.result.conflicts if sim.result else set(),
-        rejects=sim.result.rejects if sim.result else set(),
-        check_passed=True,
-    )
+    if not checks:
+        # No checks configured — nothing to run, the update itself succeeded.
+        return _complete(sim, workshop_root)
 
     for cmd in checks:
         try:
@@ -333,21 +322,15 @@ def run_checks(
 
 
 def _complete(sim: UpdateSimulation, workshop_root: Path) -> SimStatus:
-    """Complete the simulation, producing the final result.
+    """Complete the simulation, finalizing ``sim.result``.
 
-    Sets ``sim.result`` with conflicts, rejects, and check_passed.
+    Re-scans for rejects (a check may have produced one) on the single
+    ``sim.result`` built during conflict/reject capture — no rebuilding.
     """
     work_dir = workshop_root / _work_dir_name / sim.template_id / sim.scenario_id
 
-    # Re-scan for rejects (may have been created during checks)
+    # Re-scan for rejects (may have been created during checks).
     _capture_rejects(sim, work_dir)
-
-    # Build final result
-    sim.result = UpdateSimulationResult(
-        conflicts=sim.result.conflicts if sim.result else set(),
-        rejects=sim.result.rejects if sim.result else set(),
-        check_passed=sim.result.check_passed if sim.result else True,
-    )
 
     sim.status = _sim_sm.transition(
         SimStatus.checks_run,

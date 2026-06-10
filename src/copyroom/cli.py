@@ -650,7 +650,7 @@ def _cmd_update_test(args: argparse.Namespace) -> None:
             f"({sim.old_version} → {sim.new_version})"
         )
         result = sim.result
-        if result and result.check_passed:
+        if result and result.clean:
             print("  ✅ Update applied cleanly — no conflicts")
         elif result:
             print("  ⚠️  Update had issues:")
@@ -658,6 +658,8 @@ def _cmd_update_test(args: argparse.Namespace) -> None:
                 print(f"  Conflicts: {sorted(result.conflicts)}")
             if result.rejects:
                 print(f"  Rejects:   {sorted(result.rejects)}")
+            if not result.check_passed:
+                print("  Checks:    failed")
         print(f"  Status: {sim.status.value}")
 
 

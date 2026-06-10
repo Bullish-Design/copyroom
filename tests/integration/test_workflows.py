@@ -111,6 +111,17 @@ def test_update_test_without_checks_reports_pass(workshop: Path, template_repo: 
     assert sim.result.rejects == set()
 
 
+def test_update_simulation_result_clean_property() -> None:
+    """#P2-3: `clean` is False whenever conflicts/rejects exist or a check failed,
+    even though `check_passed` defaults to True."""
+    from copyroom.workshop.model import UpdateSimulationResult
+
+    assert UpdateSimulationResult().clean is True
+    assert UpdateSimulationResult(conflicts={"a"}).clean is False
+    assert UpdateSimulationResult(rejects={"a.rej"}).clean is False
+    assert UpdateSimulationResult(check_passed=False).clean is False
+
+
 def test_update_test_with_edits(workshop: Path, template_repo: Path) -> None:
     """#2: the user_edited branch with a real edits file."""
     tag_v2(template_repo)
