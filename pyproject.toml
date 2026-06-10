@@ -1,6 +1,6 @@
 [project]
 name = "copyroom"
-version = "0.3.0"
+version = "0.3.1"
 description = "Mode-aware CLI for template-driven project workflows, built on Copier."
 readme = "README.md"
 requires-python = ">=3.13"
