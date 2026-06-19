@@ -38,7 +38,7 @@ CopyRoom is a standard `uv`-installable Python package (entry point
 uv tool install copyroom        # once published
 # or, from a checkout:
 uv tool install /path/to/copyroom
-copyroom --version              # → copyroom 0.4.0
+copyroom --version              # → copyroom 0.5.0
 ```
 
 ### As a devenv module
@@ -62,12 +62,15 @@ supply your own build.
 ## 3. Verify
 
 ```bash
-copyroom --version     # copyroom 0.4.0
+copyroom --version     # copyroom 0.5.0
 copyroom --help        # the full command list, grouped by mode
+copyroom doctor        # check the environment (Copier, git, cache) is ready
 ```
 
-Run `copyroom` in an empty directory and it will tell you it found no mode — that
-is the expected, designed behavior (see [concepts](concepts.md)).
+Run `copyroom` in an empty directory and it prints help (it needs a command);
+run a *mode-bound* command like `copyroom status` there and it will tell you it
+found no mode — that is the expected, designed behavior (see
+[concepts](concepts.md)).
 
 ---
 

@@ -36,6 +36,7 @@ Full documentation lives in [`docs/`](docs/README.md), in three tracks:
 devenv shell
 uv sync
 copyroom --help
+copyroom doctor   # verify the environment (Copier, git, cache) is ready
 ```
 
 ## Demo

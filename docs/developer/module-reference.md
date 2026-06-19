@@ -7,9 +7,10 @@ pattern these modules share.
 
 ```
 src/copyroom/
-├── __init__.py          # __version__ = "0.4.0"
+├── __init__.py          # __version__ = "0.5.0"
 ├── __main__.py          # `python -m copyroom` → cli.main()
-├── cli.py               # argparse front end, dispatch, output, exit codes
+├── cli.py               # Typer front end, dispatch, output, exit codes
+├── doctor.py            # environment precondition checks (`copyroom doctor`)
 ├── session/             # mode detection + command gating
 ├── project/             # new / update
 ├── template/            # template-checkout / template-test / template-preview
@@ -24,18 +25,32 @@ src/copyroom/
 ## Top level
 
 ### `cli.py`
-The only argparse code in the project. Key pieces:
+The [Typer](https://typer.tiangolo.com/) front end. Key pieces:
 - `COPYROOM_DESCRIPTION` / `NO_MODE_FOUND_MESSAGE` — grouped help and the
   unknown-mode diagnostic.
-- `_build_parser()` — the full subparser tree; the single source of truth for
-  flags.
+- `app` — the `typer.Typer` application; `_root` is its callback (handles
+  `--mode`/`--version`, and shows help on a bare invocation).
+- `_typer_*` functions — one per command; each builds a `SimpleNamespace`
+  attribute-bag and delegates to the matching `_cmd_*` (the bridge that keeps the
+  handlers callable from tests). Mode-bound commands call `_require_mode` first;
+  bootstrap commands and `doctor` run anywhere.
+- `_require_mode(command)` — resolves mode and gates the command, reusing
+  `session/` (`_detect_and_report` → `dispatch`); prints + exits on failure.
 - `_detect_and_report(mode_override)` — resolves mode (honoring `--mode`) into a
   `CLISession`; prints the diagnostic and exits on unknown mode.
 - `_cmd_*` functions — one thin handler per command: unpack args → call the domain
   workflow → format output → set exit code.
-- `COMMAND_FN` — maps command name → handler.
-- `main(argv)` — orchestrates parse → bootstrap shortcut → detect → dispatch →
-  run, advancing the `CLISession` through its lifecycle.
+- `COMMAND_FN` — maps command name → handler (retained for reference/tests).
+- `main(argv)` — calls `app(args=argv)`; the console script and `python -m
+  copyroom` both route through it.
+
+### `doctor.py`
+Environment precondition checks behind `copyroom doctor` — runs in any directory,
+no managed project required. `run_doctor()` returns a `DoctorReport` of three
+`DoctorCheck`s (`copier` importable at a supported version, `git` on `PATH`, the
+template cache writable via `template/workspace._cache_root`).
+`format_doctor_report()` renders it as plain text. Exit 0 when all pass, 2 when
+any fails.
 
 ### `__main__.py`
 Enables `python -m copyroom`; just calls `cli.main()`.

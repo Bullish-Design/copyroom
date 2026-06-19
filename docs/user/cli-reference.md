@@ -1,9 +1,13 @@
 # CLI Reference
 
-The complete command surface of CopyRoom 0.4.0. Commands are grouped by the
+The complete command surface of CopyRoom 0.5.0. Commands are grouped by the
 [mode](concepts.md) they run in. For task-oriented guides see
 [projects](projects.md), [template editing](template-editing.md),
 [workshop](workshop.md), and [adoption](adoption.md).
+
+The CLI frontend is built on [Typer](https://typer.tiangolo.com/) (the command
+surface, messages, and exit codes are unchanged; `--help` is now grouped by
+sub-command).
 
 ```
 copyroom [--mode {workshop,project}] [--version] <command> [args…]
@@ -22,13 +26,42 @@ Running `copyroom` with **no command** prints help and exits 0.
 ## Exit codes & output conventions
 
 - **0** — success.
-- **1** — any failure: unknown mode, out-of-mode command, unknown command, a
-  workflow that ended in a `failed` state, or a non-zero from the underlying
-  Copier/git call.
+- **1** — any failure: unknown mode, out-of-mode command, a workflow that ended
+  in a `failed` state, or a non-zero from the underlying Copier/git call.
+- **2** — a usage error (unknown command, missing/invalid argument): Typer/Click
+  reports these with its own message. `copyroom doctor` also returns **2** when an
+  environment check fails (infra/config problem).
 - Diagnostics and the underlying tool's stderr go to **stderr**; primary results
   go to **stdout**.
 - CopyRoom **never auto-rolls-back**. On failure it reports what happened and
   where state was left; a clean worktree is your manual escape hatch.
+
+---
+
+# Environment commands
+
+These run **anywhere** — no project or workshop markers, no `--mode`.
+
+## `copyroom doctor`
+
+Check that the environment can run CopyRoom at all: Copier is importable at a
+supported version, `git` is on `PATH`, and the template cache is writable.
+
+```
+copyroom doctor [--json]
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--json` | Emit the report as JSON (`{"checks": [{"name", "ok", "detail"}, …]}`). |
+
+**Behavior:** runs three environment checks (`copier`, `git`, `cache`) and prints
+one line each (`OK` / `✗` plus a detail). Unlike `inspect`/`status` it needs no
+managed project — it answers "is this machine set up?", which is why RepoMan's
+conductor can drive it uniformly. **Exit 0** when every check passes, **exit 2**
+when any fails (an infra/config problem, never a domain decision). The cache
+check honours `COPYROOM_CACHE_DIR` / `XDG_CACHE_HOME`, so it agrees with the real
+cache location.
 
 ---
 

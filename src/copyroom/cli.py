@@ -14,6 +14,9 @@ import argparse
 import json
 import sys
 from collections.abc import Callable, Sequence
+from types import SimpleNamespace
+
+import typer
 
 from .manage import CopyRoomError as ManageError
 from .manage import adopt as _adopt
@@ -31,7 +34,6 @@ from .release.check import run_release_check as _run_release_check
 from .session.detector import detect_mode
 from .session.dispatcher import COMMAND_MODE_MAP, dispatch
 from .session.model import (
-    BOOTSTRAP_COMMANDS,
     PROJECT_COMMANDS,
     WORKSHOP_COMMANDS,
     CLIMode,
@@ -690,175 +692,6 @@ def _cmd_update_test(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Argument parser setup
-# ---------------------------------------------------------------------------
-
-
-def _build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser with all subcommands."""
-    parser = argparse.ArgumentParser(
-        prog="copyroom",
-        description=COPYROOM_DESCRIPTION,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "--mode",
-        choices=["workshop", "project"],
-        default=None,
-        help="Force a mode instead of auto-detecting from directory markers",
-    )
-    parser.add_argument(
-        "--version",
-        action="store_true",
-        help="Print version and exit",
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # --- Project commands ---
-    p_new = subparsers.add_parser("new", help="Create a new project from a template")
-    p_new.add_argument("source", help="Template source (local path or git URL)")
-    p_new.add_argument("target", nargs="?", default=".", help="Target directory")
-    p_new.add_argument("--answers", dest="answers_file", default=None,
-                       help="Path to YAML answers file")
-    p_new.add_argument("--trust", action="store_true",
-                       help="Execute the template's post-create hook commands")
-
-    p_update = subparsers.add_parser("update", help="Update an existing project")
-    p_update.add_argument("target_ref", nargs="?", default=None,
-                          help="Target version ref (tag or branch)")
-    p_update.add_argument("--branch", action="store_true",
-                          help="Create an isolation branch for the update")
-    p_update.add_argument("--trust", action="store_true",
-                          help="Execute the template's post-update hook commands")
-
-    p_inspect = subparsers.add_parser(
-        "inspect", help="Full read-only report on this project and its template link",
-    )
-    p_inspect.add_argument("--json", action="store_true",
-                           help="Emit the report as JSON")
-
-    p_status = subparsers.add_parser(
-        "status", help="Terse project status (mode, ref, worktree, update available)",
-    )
-    p_status.add_argument("--json", action="store_true",
-                          help="Emit the status as JSON")
-
-    # --- Template-edit commands (project mode) ---
-    p_tco = subparsers.add_parser(
-        "template-checkout",
-        help="Resolve this project's template into an editable worktree",
-    )
-    p_tco.add_argument("--from", dest="from_ref", default=None,
-                       help="Base ref for the edit branch (default: template's default branch)")
-
-    p_ttest = subparsers.add_parser(
-        "template-test",
-        help="Render-test the edited template with this project's answers",
-    )
-    p_ttest.add_argument("--from", dest="from_ref", default=None,
-                         help="Base ref for the edit branch")
-    p_ttest.add_argument("--check", default=None,
-                         help="Shell command to run against the rendered output")
-
-    p_tprev = subparsers.add_parser(
-        "template-preview",
-        help="Preview the update this project would receive from the edited template",
-    )
-    p_tprev.add_argument("--from", dest="from_ref", default=None,
-                         help="Base ref for the edit branch")
-
-    subparsers.add_parser(
-        "template-discard",
-        help="Discard the edit worktree/branch and reset the edit loop",
-    )
-
-    # --- Bootstrap commands (unmanaged repo) ---
-    p_templatize = subparsers.add_parser(
-        "templatize",
-        help="Scaffold a template repo from the current (unmanaged) repo",
-    )
-    p_templatize.add_argument(
-        "--into", default=None,
-        help="Where to create the template repo (default: <repo>-template sibling)",
-    )
-    p_templatize.add_argument(
-        "--name", default=None,
-        help="Project name to record as the template default (default: repo name)",
-    )
-    p_templatize.add_argument(
-        "--id", default=None,
-        help="Workshop/registry template id (default: slug of --name)",
-    )
-
-    p_adopt = subparsers.add_parser(
-        "adopt",
-        help="Link this repo to a template and report drift",
-    )
-    p_adopt.add_argument("template", help="Template source (local path or git URL)")
-    p_adopt.add_argument(
-        "--ref", default=None,
-        help="Template VCS ref to render (tag/branch/commit)",
-    )
-    p_adopt.add_argument(
-        "--answers", dest="answers_file", default=None,
-        help="Path to the YAML answers file inferred for this repo",
-    )
-    p_adopt.add_argument(
-        "--write", action="store_true",
-        help="Write .copier-answers.yml into the repo (otherwise report-only)",
-    )
-    p_adopt.add_argument(
-        "--force", action="store_true",
-        help="Re-adopt even if the repo already has .copier-answers.yml",
-    )
-
-    # --- Workshop commands ---
-    p_registry = subparsers.add_parser(
-        "registry", help="Inspect the template registry (list/show/validate/add)",
-    )
-    p_registry.add_argument("action", help="Registry action: list, show, validate, add")
-    p_registry.add_argument("args", nargs="*", help="Template id (for show/add)")
-    p_registry.add_argument("--source", default=None,
-                            help="Template source for 'add' (local path or git URL)")
-    p_registry.add_argument("--scaffold", action="store_true",
-                            help="With 'add', also scaffold a scenarios/<id>/ skeleton")
-
-    p_render = subparsers.add_parser("render", help="Render a template scenario")
-    p_render.add_argument("template_id", help="Template identifier")
-    p_render.add_argument("scenario_id", help="Scenario identifier")
-
-    p_test = subparsers.add_parser(
-        "test", help="Run configured checks on a fresh render (not golden)",
-    )
-    p_test.add_argument("template_id", help="Template identifier")
-    p_test.add_argument("scenario_id", help="Scenario identifier")
-
-    p_golden = subparsers.add_parser("golden", help="Golden test a scenario")
-    p_golden.add_argument("template_id", help="Template identifier")
-    p_golden.add_argument("scenario_id", help="Scenario identifier")
-    p_golden.add_argument(
-        "--refresh", action="store_true",
-        help="Refresh (overwrite) the golden snapshot with current output",
-    )
-
-    p_release = subparsers.add_parser(
-        "release-check", help="Run release readiness checks",
-    )
-    p_release.add_argument("template_id", help="Template identifier")
-
-    p_update_test = subparsers.add_parser(
-        "update-test", help="Simulate a template update",
-    )
-    p_update_test.add_argument("template_id", help="Template identifier")
-    p_update_test.add_argument("scenario_id", help="Scenario identifier")
-    p_update_test.add_argument("old_version", help="Old template version")
-    p_update_test.add_argument("new_version", help="New template version")
-
-    return parser
-
-
-# ---------------------------------------------------------------------------
 # Command dispatch map
 # ---------------------------------------------------------------------------
 
@@ -883,6 +716,267 @@ COMMAND_FN: dict[str, Callable[..., None]] = {
 
 
 # ---------------------------------------------------------------------------
+# Typer frontend
+# ---------------------------------------------------------------------------
+
+app = typer.Typer(
+    name="copyroom",
+    help=COPYROOM_DESCRIPTION,
+    add_completion=False,
+    rich_markup_mode=None,         # keep help text verbatim (no Rich markup)
+)
+
+# Module-global the gating helper reads; set by the root callback before any
+# command body runs (Typer/Click invokes the callback first).
+_MODE_OVERRIDE: str | None = None
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        from . import __version__
+        typer.echo(f"copyroom {__version__}")
+        raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
+def _root(
+    ctx: typer.Context,
+    mode: str | None = typer.Option(
+        None, "--mode",
+        help="Force a mode instead of auto-detecting from directory markers",
+    ),
+    version: bool = typer.Option(
+        False, "--version", callback=_version_callback, is_eager=True,
+        help="Print version and exit",
+    ),
+) -> None:
+    global _MODE_OVERRIDE
+    if mode is not None and mode not in ("workshop", "project"):
+        typer.echo("Error: --mode must be 'workshop' or 'project'.", err=True)
+        raise typer.Exit(code=2)
+    _MODE_OVERRIDE = mode
+    # No command given → show help and exit 0 (parity with the old frontend).
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(code=0)
+
+
+def _require_mode(command: str) -> None:
+    """Detect/resolve mode and gate *command*; print + exit on failure.
+
+    Parity with the old ``main()`` dispatch loop — reuses ``session/`` verbatim.
+    Bootstrap commands (``new``/``adopt``/``templatize``) and ``doctor`` do not
+    call this: they run in any directory.
+    """
+    session = _detect_and_report(mode_override=_MODE_OVERRIDE)  # exits on unknown mode
+    result = dispatch(command, session)
+    if result == SessionStatus.command_failed:
+        session.advance(SessionStatus.command_failed)
+        if session.mode and command in COMMAND_MODE_MAP:
+            _print_out_of_mode_error(command, session)   # exits 1
+        else:
+            _print_unknown_command_error(command)        # exits 1
+        # unreachable — both helpers sys.exit(1)
+    session.advance(SessionStatus.command_running)
+
+
+# --- Project commands ---
+
+
+@app.command("update")
+def _typer_update(
+    target_ref: str | None = typer.Argument(None, help="Target version ref (tag or branch)"),
+    branch: bool = typer.Option(False, "--branch", help="Create an isolation branch for the update"),
+    trust: bool = typer.Option(False, "--trust", help="Execute the template's post-update hook commands"),
+) -> None:
+    _require_mode("update")
+    _cmd_update(SimpleNamespace(target_ref=target_ref, branch=branch, trust=trust))
+
+
+@app.command("inspect")
+def _typer_inspect(
+    json_output: bool = typer.Option(False, "--json", help="Emit the report as JSON"),
+) -> None:
+    _require_mode("inspect")
+    _cmd_inspect(SimpleNamespace(json=json_output))
+
+
+@app.command("status")
+def _typer_status(
+    json_output: bool = typer.Option(False, "--json", help="Emit the status as JSON"),
+) -> None:
+    _require_mode("status")
+    _cmd_status(SimpleNamespace(json=json_output))
+
+
+@app.command("template-checkout")
+def _typer_template_checkout(
+    from_ref: str | None = typer.Option(
+        None, "--from",
+        help="Base ref for the edit branch (default: template's default branch)",
+    ),
+) -> None:
+    _require_mode("template-checkout")
+    _cmd_template_checkout(SimpleNamespace(from_ref=from_ref))
+
+
+@app.command("template-test")
+def _typer_template_test(
+    from_ref: str | None = typer.Option(None, "--from", help="Base ref for the edit branch"),
+    check: str | None = typer.Option(None, "--check", help="Shell command to run against the rendered output"),
+) -> None:
+    _require_mode("template-test")
+    _cmd_template_test(SimpleNamespace(from_ref=from_ref, check=check))
+
+
+@app.command("template-preview")
+def _typer_template_preview(
+    from_ref: str | None = typer.Option(None, "--from", help="Base ref for the edit branch"),
+) -> None:
+    _require_mode("template-preview")
+    _cmd_template_preview(SimpleNamespace(from_ref=from_ref))
+
+
+@app.command("template-discard")
+def _typer_template_discard() -> None:
+    _require_mode("template-discard")
+    _cmd_template_discard(SimpleNamespace())
+
+
+# --- Bootstrap commands (unmanaged repo — no mode gating) ---
+
+
+@app.command("new")
+def _typer_new(
+    source: str = typer.Argument(..., help="Template source (local path or git URL)"),
+    target: str = typer.Argument(".", help="Target directory"),
+    answers_file: str | None = typer.Option(None, "--answers", help="Path to YAML answers file"),
+    trust: bool = typer.Option(False, "--trust", help="Execute the template's post-create hook commands"),
+) -> None:
+    _cmd_new(SimpleNamespace(source=source, target=target, answers_file=answers_file, trust=trust))
+
+
+@app.command("templatize")
+def _typer_templatize(
+    into: str | None = typer.Option(
+        None, "--into",
+        help="Where to create the template repo (default: <repo>-template sibling)",
+    ),
+    name: str | None = typer.Option(
+        None, "--name",
+        help="Project name to record as the template default (default: repo name)",
+    ),
+    id: str | None = typer.Option(
+        None, "--id",
+        help="Workshop/registry template id (default: slug of --name)",
+    ),
+) -> None:
+    _cmd_templatize(SimpleNamespace(into=into, name=name, id=id))
+
+
+@app.command("adopt")
+def _typer_adopt(
+    template: str = typer.Argument(..., help="Template source (local path or git URL)"),
+    ref: str | None = typer.Option(None, "--ref", help="Template VCS ref to render (tag/branch/commit)"),
+    answers_file: str | None = typer.Option(
+        None, "--answers", help="Path to the YAML answers file inferred for this repo",
+    ),
+    write: bool = typer.Option(
+        False, "--write", help="Write .copier-answers.yml into the repo (otherwise report-only)",
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Re-adopt even if the repo already has .copier-answers.yml",
+    ),
+) -> None:
+    _cmd_adopt(SimpleNamespace(template=template, ref=ref, answers_file=answers_file, write=write, force=force))
+
+
+# --- Workshop commands ---
+
+
+@app.command("registry")
+def _typer_registry(
+    action: str = typer.Argument(..., help="Registry action: list, show, validate, add"),
+    args: list[str] | None = typer.Argument(None, help="Template id (for show/add)"),
+    source: str | None = typer.Option(None, "--source", help="Template source for 'add' (local path or git URL)"),
+    scaffold: bool = typer.Option(False, "--scaffold", help="With 'add', also scaffold a scenarios/<id>/ skeleton"),
+) -> None:
+    _require_mode("registry")
+    _cmd_registry(SimpleNamespace(action=action, args=args or [], source=source, scaffold=scaffold))
+
+
+@app.command("render")
+def _typer_render(
+    template_id: str = typer.Argument(..., help="Template identifier"),
+    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
+) -> None:
+    _require_mode("render")
+    _cmd_render(SimpleNamespace(template_id=template_id, scenario_id=scenario_id))
+
+
+@app.command("test")
+def _typer_test(
+    template_id: str = typer.Argument(..., help="Template identifier"),
+    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
+) -> None:
+    _require_mode("test")
+    _cmd_test(SimpleNamespace(template_id=template_id, scenario_id=scenario_id))
+
+
+@app.command("golden")
+def _typer_golden(
+    template_id: str = typer.Argument(..., help="Template identifier"),
+    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
+    refresh: bool = typer.Option(
+        False, "--refresh", help="Refresh (overwrite) the golden snapshot with current output",
+    ),
+) -> None:
+    _require_mode("golden")
+    _cmd_golden(SimpleNamespace(template_id=template_id, scenario_id=scenario_id, refresh=refresh))
+
+
+@app.command("release-check")
+def _typer_release_check(
+    template_id: str = typer.Argument(..., help="Template identifier"),
+) -> None:
+    _require_mode("release-check")
+    _cmd_release_check(SimpleNamespace(template_id=template_id))
+
+
+@app.command("update-test")
+def _typer_update_test(
+    template_id: str = typer.Argument(..., help="Template identifier"),
+    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
+    old_version: str = typer.Argument(..., help="Old template version"),
+    new_version: str = typer.Argument(..., help="New template version"),
+) -> None:
+    _require_mode("update-test")
+    _cmd_update_test(
+        SimpleNamespace(
+            template_id=template_id, scenario_id=scenario_id,
+            old_version=old_version, new_version=new_version,
+        )
+    )
+
+
+# --- Environment precondition check (runs anywhere, like bootstrap) ---
+
+
+@app.command("doctor")
+def _typer_doctor(
+    json_output: bool = typer.Option(False, "--json", help="Emit the report as JSON"),
+) -> None:
+    """Check the CopyRoom environment (Copier, git, cache). Runs anywhere."""
+    from .doctor import format_doctor_report, run_doctor
+    report = run_doctor()
+    if json_output:
+        typer.echo(json.dumps(report.to_dict(), indent=2))
+    else:
+        typer.echo(format_doctor_report(report))
+    raise typer.Exit(code=0 if report.ok else 2)   # 0 ok · 2 infra/config
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -895,50 +989,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     argv:
         Command-line arguments. Defaults to ``sys.argv[1:]``.
     """
-    parser = _build_parser()
-    args = parser.parse_args(argv)
-
-    # --version handling
-    if args.version:
-        from . import __version__
-        print(f"copyroom {__version__}")
-        sys.exit(0)
-
-    # No command given → show help
-    if args.command is None:
-        parser.print_help()
-        sys.exit(0)
-
-    cmd = args.command
-
-    # --- Bootstrap commands run in an unmanaged repo: skip mode detection and
-    # dispatch entirely; they resolve their own context from the repo/args. ---
-    if cmd in BOOTSTRAP_COMMANDS:
-        COMMAND_FN[cmd](args)
-        return
-
-    # --- Mode detection ---
-    session = _detect_and_report(mode_override=args.mode)
-
-    # --- Dispatch ---
-    # _detect_and_report already exited on an unknown mode, so the session is in
-    # mode_detected here; a command_failed result is therefore out-of-mode or an
-    # unknown command, both of which the helpers below report and exit on.
-    result = dispatch(cmd, session)
-
-    if result == SessionStatus.command_failed:
-        session.advance(SessionStatus.command_failed)
-        if session.mode and cmd in COMMAND_MODE_MAP:
-            _print_out_of_mode_error(cmd, session)
-        else:
-            _print_unknown_command_error(cmd)
-        # unreachable — both helpers sys.exit(1)
-
-    # --- Run the command --- (dispatch returning command_running proves cmd is in
-    # COMMAND_MODE_MAP, every member of which has a COMMAND_FN entry.)
-    session.advance(SessionStatus.command_running)
-    COMMAND_FN[cmd](args)
-    session.advance(SessionStatus.command_complete)
+    app(args=argv)   # Typer/Click reads sys.argv when argv is None
 
 
 if __name__ == "__main__":
