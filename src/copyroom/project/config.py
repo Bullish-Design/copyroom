@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .._compat.errors import CopyRoomError
 
 __all__ = [
+    "AgentConfig",
     "ContextConfig",
     "CopyRoomError",
     "CopyRoomProjectConfig",
@@ -89,6 +90,21 @@ class DevenvConfig(BaseModel):
     shell_command: str = "devenv shell"
 
 
+class AgentConfig(BaseModel):
+    """The agent-files convention preferences (see docs/user/agent-files.md).
+
+    All fields are defaulted and unknown fields are ignored, matching the
+    additive-config contract. ``overlay`` names the skills this repo
+    permanently diverges on: ``copyroom update`` maps them to Copier
+    ``--exclude`` patterns so the template stops managing them.
+    """
+
+    skills_dir: Path = Path(".agents/skills")
+    instructions: Path = Path("AGENTS.md")
+    claude_symlink: bool = True  # CLAUDE.md -> AGENTS.md
+    overlay: list[str] = Field(default_factory=list)
+
+
 class CopyRoomProjectConfig(BaseModel):
     """The full, validated ``copyroom.project.yml`` model.
 
@@ -103,6 +119,7 @@ class CopyRoomProjectConfig(BaseModel):
     git: GitPolicy = Field(default_factory=GitPolicy)
     context: ContextConfig = Field(default_factory=ContextConfig)
     devenv: DevenvConfig = Field(default_factory=DevenvConfig)
+    agent: AgentConfig = Field(default_factory=AgentConfig)
     commands: dict[str, list[str]] = Field(default_factory=dict)
 
     @field_validator("commands", mode="before")
@@ -146,7 +163,7 @@ def load_project_config(path: str | Path) -> CopyRoomProjectConfig:
 
     data: dict[str, object] = {
         key: raw[key]
-        for key in ("project", "git", "context", "devenv", "commands")
+        for key in ("project", "git", "context", "devenv", "agent", "commands")
         if key in raw
     }
     meta = raw.get("copyroom")

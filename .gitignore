@@ -11,13 +11,21 @@ __pycache__/
 devenv.lock
 uv.lock
 .devenv.flake.nix
-.agents/**
 .pi/**
 .loci/**
 secretspec.toml
 devenv.local.yaml
 
-
+# Agent-files convention (docs/user/agent-files.md): `.agents/skills/` is the
+# tool-agnostic skill location and IS tracked, as are AGENTS.md and CLAUDE.md.
+# The rest of `.agents/` (e.g. `.agents/pi/`, node_modules of a pi package)
+# is platform/tool runtime state and stays ignored. The .agents/ directory is
+# dual-use on purpose — convention files up top, tool state below.
+.agents/**
+!.agents/skills/
+!.agents/skills/**
+!AGENTS.md
+!CLAUDE.md
 
 # C extensions
 *.so
@@ -221,3 +229,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Nix build output
+/result
+/result-*

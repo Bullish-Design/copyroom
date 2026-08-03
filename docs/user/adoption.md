@@ -182,4 +182,5 @@ git status            # the only addition is .copier-answers.yml (+ .copyroom/ s
 
 - [The workshop](workshop.md) — `templatize` scaffolds one; here's how to drive it.
 - [Copier overview](../copier/overview.md#24-_subdirectory--separating-template-source-from-template-repo) — why `_subdirectory: template` and the `.jinja` rule make this work.
-- The `copyroom-adopt` agent skill (`.agents/skills/copyroom-adopt/`).
+- The `copyroom-adopt` agent skill (`.agents/skills/copyroom-adopt/SKILL.md`).
+- [Agent files](agent-files.md) — the `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention.
