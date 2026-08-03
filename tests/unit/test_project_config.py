@@ -135,6 +135,56 @@ def test_future_ref_policy_value_loads(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# agent: — the agent-files convention section (defaults + additive contract)
+# ---------------------------------------------------------------------------
+
+
+def test_agent_section_defaults(tmp_path: Path) -> None:
+    cfg = load_project_config(_write(tmp_path, "copyroom:\n  version: 1\n"))
+    assert cfg.agent.skills_dir == Path(".agents/skills")
+    assert cfg.agent.instructions == Path("AGENTS.md")
+    assert cfg.agent.claude_symlink is True
+    assert cfg.agent.overlay == []
+
+
+def test_agent_section_parses(tmp_path: Path) -> None:
+    cfg = load_project_config(
+        _write(
+            tmp_path,
+            "agent:\n"
+            "  skills_dir: skills\n"
+            "  instructions: INSTRUCTIONS.md\n"
+            "  claude_symlink: false\n"
+            "  overlay:\n"
+            "    - copyroom-adopt\n",
+        )
+    )
+    assert cfg.agent.skills_dir == Path("skills")
+    assert cfg.agent.instructions == Path("INSTRUCTIONS.md")
+    assert cfg.agent.claude_symlink is False
+    assert cfg.agent.overlay == ["copyroom-adopt"]
+
+
+def test_agent_section_unknown_fields_ignored(tmp_path: Path) -> None:
+    """A newer template's unknown agent keys load (additive evolution)."""
+    cfg = load_project_config(
+        _write(
+            tmp_path,
+            "agent:\n"
+            "  skills_dir: .agents/skills\n"
+            "  future_key: 42\n",
+        )
+    )
+    assert cfg.agent.skills_dir == Path(".agents/skills")
+
+
+def test_agent_section_absent_file_defaults(tmp_path: Path) -> None:
+    cfg = load_project_config(tmp_path / "nope.yml")
+    assert cfg.agent.skills_dir == Path(".agents/skills")
+    assert cfg.agent.overlay == []
+
+
+# ---------------------------------------------------------------------------
 # load_hook_commands — resilient hook accessor (P1-1 / P2-7)
 # ---------------------------------------------------------------------------
 

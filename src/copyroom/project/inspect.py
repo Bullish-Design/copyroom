@@ -43,6 +43,7 @@ class InspectReport:
     answers_file: str
     has_project_config: bool
     hooks: dict[str, list[str]]
+    agent: dict  # the validated ``agent:`` section (skills_dir, instructions, claude_symlink, overlay)
 
     def to_dict(self) -> dict:
         """Stable ``--json`` shape (tagged with the producing command)."""
@@ -55,6 +56,7 @@ class InspectReport:
             "answers_file": self.answers_file,
             "has_project_config": self.has_project_config,
             "hooks": self.hooks,
+            "agent": self.agent,
         }
 
 
@@ -70,6 +72,7 @@ class StatusReport:
     latest_ref: str | None
     update_available: bool
     worktree_clean: bool | None  # None → not a git repository
+    agent: dict  # the validated ``agent:`` section (advisory; round-trips)
 
     def to_dict(self) -> dict:
         """Stable ``--json`` shape (tagged with the producing command)."""
@@ -83,6 +86,7 @@ class StatusReport:
             "latest_ref": self.latest_ref,
             "update_available": self.update_available,
             "worktree_clean": self.worktree_clean,
+            "agent": self.agent,
         }
 
 
@@ -97,6 +101,17 @@ def _template_id(answers: dict, cfg_template_id: str | None) -> str | None:
         return cfg_template_id
     raw = answers.get("_template")
     return str(raw) if raw is not None else None
+
+
+def _agent_dict(cfg) -> dict:
+    """The validated ``agent:`` section as a stable dict (round-trips through JSON)."""
+    agent = cfg.agent
+    return {
+        "skills_dir": str(agent.skills_dir),
+        "instructions": str(agent.instructions),
+        "claude_symlink": agent.claude_symlink,
+        "overlay": list(agent.overlay),
+    }
 
 
 
@@ -130,6 +145,7 @@ def inspect_project(project_root: str | Path | None = None) -> InspectReport:
         answers_file=str(root / ".copier-answers.yml"),
         has_project_config=project_yml.is_file(),
         hooks=dict(cfg.commands),
+        agent=_agent_dict(cfg),
     )
 
 
@@ -165,4 +181,5 @@ def project_status(project_root: str | Path | None = None) -> StatusReport:
         latest_ref=latest_ref,
         update_available=update_available,
         worktree_clean=gitutil.worktree_clean(root),
+        agent=_agent_dict(cfg),
     )

@@ -29,9 +29,14 @@ def _git(*args: str, cwd: Path) -> None:
 
 @pytest.fixture
 def template_repo(tmp_path: Path) -> Path:
-    """A git repo holding the fixture template, tagged ``v1.0.0``."""
+    """A git repo holding the fixture template, tagged ``v1.0.0``.
+
+    ``copytree`` runs with ``symlinks=True`` so the fixture's
+    ``CLAUDE.md -> AGENTS.md`` symlink survives into the git repo (mode
+    ``120000``) exactly as a real template repo would ship it.
+    """
     dst = tmp_path / "template"
-    shutil.copytree(FIXTURES / "template", dst)
+    shutil.copytree(FIXTURES / "template", dst, symlinks=True)
     _git("init", cwd=dst)
     _git("add", "-A", cwd=dst)
     _git("commit", "-qm", "v1", cwd=dst)

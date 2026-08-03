@@ -11,6 +11,7 @@ src/copyroom/
 ├── __main__.py          # `python -m copyroom` → cli.main()
 ├── cli.py               # Typer front end, dispatch, output, exit codes
 ├── doctor.py            # environment precondition checks (`copyroom doctor`)
+├── agent/               # the agent-files convention (assets + export/check)
 ├── session/             # mode detection + command gating
 ├── project/             # new / update
 ├── template/            # template-checkout / template-test / template-preview
@@ -46,11 +47,25 @@ The [Typer](https://typer.tiangolo.com/) front end. Key pieces:
 
 ### `doctor.py`
 Environment precondition checks behind `copyroom doctor` — runs in any directory,
-no managed project required. `run_doctor()` returns a `DoctorReport` of three
+no managed project required. `run_doctor()` returns a `DoctorReport` of four
 `DoctorCheck`s (`copier` importable at a supported version, `git` on `PATH`, the
-template cache writable via `template/workspace._cache_root`).
-`format_doctor_report()` renders it as plain text. Exit 0 when all pass, 2 when
-any fails.
+template cache writable via `template/workspace._cache_root`, and the
+warn-level `agent-files` convention check reusing `agent/files.check_agent_files`).
+`DoctorCheck.warn_only` marks advisory checks: a failed warn-only check prints
+`WARN` but never fails the report — flipping it to fail is a later decision.
+`format_doctor_report()` renders it as plain text. Exit 0 when all non-warn-only
+checks pass, 2 when any fails.
+
+### `agent/` — the agent-files convention (`agent-files export` / `check`)
+- `assets/skills/{copyroom,copyroom-adopt,copyroom-template-edit}/SKILL.md` — the
+  canonical skill set, shipped as package data (CopyRoom owns these; the repo's
+  own `.agents/skills/` is materialized from them).
+- `files.py` — `resolve_target()` (--target → git root → `DEVENV_ROOT` → cwd);
+  `export_agent_files()` (idempotent skills + blueprint `AGENTS.md` only if
+  absent + `CLAUDE.md` symlink, never replacing a regular file);
+  `check_agent_files()` (warn-level conformance report); `format_*_report()`.
+  Honors the project config's `agent:` section (`skills_dir`, `instructions`,
+  `claude_symlink`, `overlay`).
 
 ### `__main__.py`
 Enables `python -m copyroom`; just calls `cli.main()`.

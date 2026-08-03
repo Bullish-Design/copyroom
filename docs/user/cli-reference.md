@@ -63,6 +63,37 @@ when any fails (an infra/config problem, never a domain decision). The cache
 check honours `COPYROOM_CACHE_DIR` / `XDG_CACHE_HOME`, so it agrees with the real
 cache location.
 
+A fourth, **warn-level** check (`agent-files`) reports whether the cwd's repo
+conforms to the agent-files convention (see [agent files](agent-files.md)). It is
+non-fatal: a non-conformant repo prints `WARN agent-files` but never changes the
+exit code — flipping it to fail is a deliberate later decision.
+
+## `copyroom agent-files`
+
+Materialize or verify the **agent-files convention**: the canonical skills under
+`.agents/skills/`, the root `AGENTS.md`, and the `CLAUDE.md` symlink to it. These
+run anywhere (no mode gating) and operate on `--target`, defaulting to the
+nearest git repo root → `$DEVENV_ROOT` → the cwd.
+
+```
+copyroom agent-files export [--target DIR]
+copyroom agent-files check   [--target DIR]
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--target DIR` | Operate on `DIR` instead of the resolved default. |
+
+**`export`** idempotently copies the canonical skills (package assets — CopyRoom
+owns them) into `<target>/.agents/skills/`, writes a blueprint `AGENTS.md` only
+if absent (never clobbers), and ensures `CLAUDE.md` is a symlink to `AGENTS.md`
+(never replaces a regular file). **`check`** prints a warn-level conformance
+report: `AGENTS.md` present, `CLAUDE.md` symlink correct, canonical skills
+present + current, and any extra skills listed as present (template-shipped or
+overlay). Both honor a `copyroom.project.yml` `agent:` section (`skills_dir`,
+`instructions`, `claude_symlink`, `overlay`). **Exit 0** on success; **exit 1**
+on a hard failure. Full story: [agent files](agent-files.md).
+
 ---
 
 # Project commands

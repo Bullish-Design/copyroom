@@ -52,6 +52,7 @@ def copier_copy(
 def copier_update(
     destination: Path,
     vcs_ref: str | None = None,
+    exclude: list[str] | None = None,
     timeout: int = _COPIER_TIMEOUT,
 ) -> subprocess.CompletedProcess[str]:
     """Run ``copier update`` and return the result.
@@ -62,11 +63,17 @@ def copier_update(
         Project directory to update.
     vcs_ref:
         Optional VCS ref (tag / branch) to update to.
+    exclude:
+        Optional shell-style patterns of files/folders the template must stop
+        managing (mapped from ``agent.overlay`` — the permanently-diverge
+        contract). Each is passed as a ``-x/--exclude`` flag.
     timeout:
         Seconds to wait before raising ``subprocess.TimeoutExpired``.
     """
     cmd = ["copier", "update", "--defaults"]
     if vcs_ref is not None:
         cmd.extend(["--vcs-ref", vcs_ref])
+    for pattern in exclude or []:
+        cmd.extend(["--exclude", pattern])
     cmd.append(str(destination))
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)

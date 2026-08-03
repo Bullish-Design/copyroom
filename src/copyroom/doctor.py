@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 from importlib.metadata import version as _pkg_version
+from pathlib import Path
 
 from pydantic import BaseModel
 
@@ -20,11 +21,17 @@ from .template.workspace import _cache_root  # reuse the real cache resolver
 
 
 class DoctorCheck(BaseModel):
-    """A single environment check and its outcome."""
+    """A single environment check and its outcome.
+
+    ``warn_only`` marks advisory checks (e.g. the ``agent-files`` convention
+    check): a failed warn-only check is reported but does **not** fail the
+    aggregate report — flipping it to fail is a deliberate later decision.
+    """
 
     name: str
     ok: bool
     detail: str = ""
+    warn_only: bool = False
 
 
 class DoctorReport(BaseModel):
@@ -34,7 +41,8 @@ class DoctorReport(BaseModel):
 
     @property
     def ok(self) -> bool:
-        return all(c.ok for c in self.checks)
+        """True when every non-warn-only check passes."""
+        return all(c.ok for c in self.checks if not c.warn_only)
 
     def to_dict(self) -> dict:
         return self.model_dump()
@@ -74,15 +82,42 @@ def _check_cache() -> DoctorCheck:
         return DoctorCheck(name="cache", ok=False, detail=f"{root}: {exc}")
 
 
+def _check_agent_files(target: str | Path | None = None) -> DoctorCheck:
+    """Warn-level convention check: the cwd's agent-files conformance.
+
+    Reuses ``agent-files check`` and is deliberately ``warn_only``: a repo that
+    hasn't adopted the convention (or has drifted) is reported, never fatal.
+    """
+    from .agent.files import check_agent_files, resolve_target
+
+    report = check_agent_files(resolve_target(target))
+    summary = (
+        "conformant"
+        if report.ok
+        else "non-conformant — run 'copyroom agent-files check' for details"
+    )
+    return DoctorCheck(
+        name="agent-files",
+        ok=report.ok,
+        detail=summary,
+        warn_only=True,
+    )
+
+
 def run_doctor() -> DoctorReport:
     """Run every environment check and return the aggregate report."""
-    return DoctorReport(checks=[_check_copier(), _check_git(), _check_cache()])
+    return DoctorReport(
+        checks=[_check_copier(), _check_git(), _check_cache(), _check_agent_files()]
+    )
 
 
 def format_doctor_report(report: DoctorReport) -> str:
     """Render *report* as plain text (one line per check)."""
     lines = []
     for c in report.checks:
-        mark = "OK  " if c.ok else "✗   "
+        if c.warn_only:
+            mark = "WARN " if not c.ok else "OK  "
+        else:
+            mark = "OK  " if c.ok else "✗   "
         lines.append(f"{mark}{c.name}" + (f" — {c.detail}" if c.detail else ""))
     return "\n".join(lines)

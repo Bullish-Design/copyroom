@@ -160,7 +160,9 @@ Reopen this ADR when **any** of these is true:
    maps to the new grouped handler and prints a one-line deprecation notice. Hold
    the window for at least one minor release.
 4. **Consumers:** update the demo (`demo/walkthrough.sh`), the agent skills
-   (`.agents/skills/copyroom-*`), the docs (`docs/user/cli-reference.md` et al.),
+   (`.agents/skills/copyroom-*`, materialized from package assets by
+   `copyroom agent-files export` — see [agent files](../../user/agent-files.md)),
+   the docs (`docs/user/cli-reference.md` et al.),
    and the spec tests together.
 5. **Remove aliases** only at the next major bump.
 

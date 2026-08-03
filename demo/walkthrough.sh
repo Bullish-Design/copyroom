@@ -444,6 +444,37 @@ fi
 pause
 
 # ===========================================================================
+act "ACT 5 — Agent files:  export → check → doctor"
+# ===========================================================================
+say "The *man family convention: skills under .agents/skills/, an AGENTS.md"
+say "canonical file, and a CLAUDE.md symlink to it. CopyRoom is the reference"
+say "implementation — the canonical skills ship in the package and are"
+say "materialized by 'copyroom agent-files export' (works anywhere, no mode)."
+
+step "5a. Seed a template repo with the convention files — 'agent-files export'"
+run --in "$HOME_T" copyroom agent-files export || die "agent-files export failed"
+say "The template repo now carries AGENTS.md, CLAUDE.md (symlink), and the skills:"
+tree_of "$HOME_T" | grep -E "AGENTS|CLAUDE|skills" | sed 's/^/    /'
+if [ -L "$HOME_T/CLAUDE.md" ]; then
+  ok "CLAUDE.md is a real symlink -> $(readlink "$HOME_T/CLAUDE.md")"
+else
+  die "agent-files export should have created the CLAUDE.md symlink"
+fi
+pause
+
+step "5b. Conformance report — 'agent-files check'"
+run --in "$HOME_T" copyroom agent-files check || die "agent-files check failed"
+ok "AGENTS.md present · CLAUDE.md symlink ok · canonical skills present + current"
+pause
+
+step "5c. doctor surfaces the convention as a warn-level check"
+run --in "$REPO" copyroom doctor || die "doctor failed"
+say "In a repo that hasn't adopted the convention yet, doctor WARNS"
+say "(agent-files non-conformant) but still exits 0 — the convention check is"
+say "advisory; flipping it to fail is a later decision."
+pause
+
+# ===========================================================================
 act "RECAP — everything you just saw, for real"
 # ===========================================================================
 cat <<RECAP
@@ -454,9 +485,12 @@ cat <<RECAP
   ${GREEN}workshop${R}          render · golden snapshot · update-test · release-check gate
   ${GREEN}adoption${R}          templatize a hand-written repo, then adopt it — source
                     files untouched, only a .copier-answers.yml link added
+  ${GREEN}agent files${R}        export the canonical skills + AGENTS.md + CLAUDE.md symlink,
+                    then verify conformance (warn-level, in doctor too)
 
   Commands exercised: ${B}new update template-checkout template-test template-preview
-                      render test golden update-test release-check templatize adopt${R}
+                      render test golden update-test release-check templatize adopt
+                      agent-files export agent-files check doctor${R}
 
   Every step above ran the real CopyRoom CLI against real Copier renders.
 RECAP

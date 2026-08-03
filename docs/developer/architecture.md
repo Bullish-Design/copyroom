@@ -98,6 +98,7 @@ The packages:
 | `workshop/` | `ScenarioRender`, `GoldenDiff`, `UpdateSimulation` | `render`, `test`, `golden`, `update-test` |
 | `release/` | `ReleaseCheck` | `release-check` |
 | `manage/` | `Adoption`, `Templatization` | `adopt`, `templatize` |
+| `agent/` | `AgentFilesExport`, `AgentFilesCheck` | `agent-files export/check` |
 | `session/` | `CLISession` | (the dispatcher itself) |
 
 Why this uniformity? It makes the whole codebase **predictable**: once you've read

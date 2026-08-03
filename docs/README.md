@@ -20,6 +20,7 @@ This documentation is split into three tracks. Start wherever fits you.
 | [Editing a template from a project](user/template-editing.md) | The `template-checkout → test → preview` loop. |
 | [The workshop](user/workshop.md) | `render`, `golden`, `update-test`, `release-check`. |
 | [Adopting / templatizing a repo](user/adoption.md) | `templatize` and `adopt`. |
+| [Agent files](user/agent-files.md) | The `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention, how templates ship it, and the overlay contract. |
 | [Configuration files](user/configuration.md) | `copyroom.yml`, `copyroom.project.yml`, `.copier-answers.yml`. |
 | [Trust & safety model](user/trust-and-safety.md) | What runs, what's gated, what's guaranteed. |
 

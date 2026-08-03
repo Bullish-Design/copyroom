@@ -182,4 +182,5 @@ it:
 
 - [Projects: update](projects.md) — how the real `copyroom update` works.
 - [Copier overview](../copier/overview.md) — the three-way merge being simulated.
-- The `copyroom-template-edit` agent skill (`.agents/skills/copyroom-template-edit/`).
+- The `copyroom-template-edit` agent skill (`.agents/skills/copyroom-template-edit/SKILL.md`).
+- [Agent files](agent-files.md) — the `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention.
