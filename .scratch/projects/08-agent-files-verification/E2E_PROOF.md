@@ -85,10 +85,38 @@ exact command that produced it.
   `repoman.lock` to `pyproject.toml [dependency-groups] dev`; (b) the post-create
   hooks (`gitman init --colocate`, `gitman seed`) were never run — the project was
   generated without `--trust` and committed with plain git. Neither touches the
-  agent-files convention rows, all of which are OK.
+  agent-files convention rows, all of which are OK. **Both are now resolved in the
+  genome — see the re-verify below.**
 - `WARN lock:orphan` (per-repo `repoman.lock` obsolete) is the same project-12
   skew; the machine toolchain venv at `~/.local/share/repoman/venv` (bootstrapped
   by the user) satisfied the consumer-mode sync.
+
+## Post-proof re-verify — the project-12 skew, resolved (genome v0.1.6/v0.1.7)
+
+After the proof landed, the parallel project-12 work shipped the split-install
+genome (`template-py` v0.1.6: `repoman.lock.jinja` deleted, testee declared in
+`pyproject.toml [dependency-groups] dev`, vendomat dropped) and a copyroom 0.6.1
+release. Re-verified end-to-end from the published genome (all commands through
+`devenv shell --`):
+
+| # | Assertion | Result | Command |
+|---|-----------|--------|---------|
+| R1 | `copyroom new <template-py> /tmp/afx-e2e2/proj --answers …` renders **v0.1.6**; no `repoman.lock` shipped | ✓ | `grep _commit .copier-answers.yml` → `_commit: v0.1.6`; `ls repoman.lock` → absent |
+| R2 | `devenv shell -- repoman-sync` (consumer mode) succeeds with **no orphan-lock warning** | ✓ | build log: `repoman-sync: done` — no `ORPHAN` line |
+| R3 | `uv:test` **OK** (uv-declared) — the A5 skew is gone | ✓ | `repoman doctor` → `OK uv:test — uv-declared — [dependency-groups] dev` |
+| R4 | `devenv shell -- uv sync` then `installed:test` **OK** (the designed birth step) | ✓ | `uv sync` exit 0; doctor → `OK installed:test — testee` |
+| R5 | Full birth (`uv sync` + `gitman init --colocate --trunk main`) → **`repoman doctor` exit 0**, all rows OK | ✓ | doctor exit=0; `skill:tool-shipped` / `skill:genome-overlay` / `skill:entrypoint` / `agent-files — conformant` all OK |
+| R6 | **Conformance cleanup (v0.1.7):** the A4 overlay-test edit to the genome's `copyroom-adopt` (the "Answers are advisory" lines) made every new project report `copyroom-adopt: ⚠️ stale` — the genome must ship the canonical set byte-for-byte (two-writer rule), so the divergence was **reverted** in v0.1.7; fresh project now checks all `✓` | ✓ | `diff template/.agents/skills/copyroom-adopt/SKILL.md <copyroom asset>` → empty; `copyroom agent-files check --target /tmp/afx-e2e3/proj` → `copyroom-adopt: ✓ present, current`; `repoman doctor` → `agent-files — conformant` |
+
+Follow-up note: the "Answers are advisory" content (reverted out of the genome) is a
+candidate for a future copyroom asset update — copyroom owns the canonical
+`copyroom-adopt` content per the two-writer rule.
+
+Housekeeping after the re-verify: `template-py` v0.1.4 tag moved to the skill
+commit `b4cea3c` (it had pointed at the golden-refresh commit after the temporary
+A2 tag removal) — the tag now matches the E2E record; v0.1.6 and v0.1.7 tagged and
+pushed; `template-py`, `copyroom`, `gitman`, `testee`, `shellij`, and `repoman`
+main all pushed to origin.
 
 ## Findings & deviations recorded
 
