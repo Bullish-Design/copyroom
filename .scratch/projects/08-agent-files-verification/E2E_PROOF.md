@@ -115,6 +115,17 @@ exact command that produced it.
    `copyroom agent-files check` extras as "template-shipped or overlay — reported,
    not judged" — correct per the two-writer rule.
 
+## Decisions (C5 — recorded, not acted on)
+
+- **repoman `0.3.0 → 0.4.0` bump: deferred.** repoman `main` is mid-project-12 (4
+  commits ahead of origin, not pushed) — a feature release would be premature and
+  the kickoff gates releases on the user's call. Recorded here; the user can ask
+  for the bump once project 12 lands.
+- **`docs/user/agent-files.md` follow-up-status mention:** the doc never carried a
+  standalone follow-up-status line (the status lives in
+  `.scratch/projects/07-agent-files/README.md`, now marked completed) — nothing to
+  change.
+
 ## Conclusion
 
 All assertions `✓`. The agent-files rollout is proven end-to-end from the
