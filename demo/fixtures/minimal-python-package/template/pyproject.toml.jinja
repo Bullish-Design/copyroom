@@ -12,11 +12,15 @@ authors = [
 
 dependencies = []
 
-[project.optional-dependencies]
-dev = [
-  "pytest>=7.0",
-  "ruff>=0.5.0",
-]
+[dependency-groups]
+# testee is a per-repo uv dev dependency (project 12): its tools (pytest/ruff/ty)
+# run inside THIS codebase. The pure-CLI managers come from the system-wide
+# toolchain venv instead.
+dev = ["testee"]
+
+[tool.uv.sources]
+# fleet: testee = { git = "https://github.com/Bullish-Design/testee", ref = "vX.Y.Z" }
+testee = { path = "{{ testee_dev_root }}/testee" }
 
 [build-system]
 requires = ["hatchling>=1.18"]
