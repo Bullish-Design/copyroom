@@ -26,3 +26,8 @@ author_email:
 _version:
   type: str
   default: "0.1.0"
+
+testee_dev_root:
+  type: str
+  help: Absolute path to the dev checkouts root (parent of testee) for the path source in pyproject.toml
+  default: "/home/andrew/Documents/Projects"
