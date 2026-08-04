@@ -73,17 +73,20 @@ copyroom agent-files export
 _preserve_symlinks: true
 _copy_without_render:
   - ".agents/skills/**"
+  - ".agents/devenv/**"   # only if the template ships docs there (the genome does)
 ```
 
-1. **`_preserve_symlinks: true`** — without it, Copier dereferences the
+1. **`_preserve_symlinks: true`** — **required.** Without it, Copier dereferences the
    `CLAUDE.md` symlink into a regular file on both `new` and `update` (verified
    empirically, Copier 9.17 — see `.scratch/projects/07-agent-files/SPIKE.md`).
    With it, the symlink survives both, committed as a real symlink
    (`git ls-files -s` shows mode `120000`).
-2. **`_copy_without_render: [".agents/skills/**"]`** — skills contain literal
-   `{{ }}` examples. A `.jinja`-suffixed skill would be rendered (and could
-   clobber the plain `SKILL.md`); the carve-out keeps everything under
-   `.agents/skills/` byte-for-byte.
+2. **`_copy_without_render`** — **required for every tracked `.agents/` subtree.**
+   Skills contain literal `{{ }}` examples; a `.jinja`-suffixed skill would be
+   rendered (and could clobber the plain `SKILL.md`). Declare `".agents/skills/**"`
+   always, and add `".agents/devenv/**"` for templates that ship docs under
+   `.agents/devenv/` (template-py does both) — that carve-out keeps everything
+   under `.agents/` byte-for-byte.
 
 > **No CopyRoom finalize step is needed.** Because Copier preserves the symlink
 > when the template declares `_preserve_symlinks`, `copyroom new`/`update`/

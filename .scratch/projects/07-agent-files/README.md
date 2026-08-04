@@ -36,14 +36,24 @@ both `new` and `update`; with `_preserve_symlinks: true` it preserves them
 survives byte-for-byte. **Decision:** templates ship `CLAUDE.md` directly; no
 CopyRoom finalize step is needed.
 
-## Follow-ups (scoped out, now tracked separately)
+## Follow-ups (all completed — verified 2026-08-03, project 08)
 
-1. **Family decision doc** (repoman) — the one convention, `.agents/` dual-use.
-2. **template-py (the genome)** — embed the canonical set via
-   `copyroom agent-files export`, AGENTS.md blueprint, CLAUDE.md symlink,
-   `_copy_without_render` + `_preserve_symlinks`.
-3. **repoman** — `skillsDir` `.claude/skills` → `.agents/skills`; shrink
-   `install-skills` to the generated entrypoint router; doctor lints skill
-   ownership; retire `.devman-source`.
-4. **gitman / testee / docman / shellij** — self-adopt (AGENTS.md + CLAUDE.md
-   symlink + own skills).
+The rollout shipped to every family repo; each item landed on its repo's `main`:
+
+| # | Follow-up | Repo · main SHA |
+|---|-----------|-----------------|
+| 1 | **Family decision doc** — the one convention, `.agents/` dual-use | repoman `59d4b11` (`docs/AGENT-FILES.md`; repoman `main` has since advanced to `fa6d7f5`, project 12) |
+| 2 | **template-py (the genome)** — canonical set embedded, AGENTS.md blueprint, CLAUDE.md symlink, `_copy_without_render` + `_preserve_symlinks` | template-py `5c0bcc3` (embed `d52b077`; tag `v0.1.3`) |
+| 3 | **repoman** — `skillsDir` `.claude/skills` → `.agents/skills`; entrypoint-only install; doctor lints skill ownership; `.devman-source` retired | repoman `59d4b11` |
+| 4 | **gitman / testee / docman / shellij** — self-adopt (AGENTS.md + CLAUDE.md symlink + own skills) | gitman `99813da` · testee `5d5d1b6` · docman `cd4c615` · shellij `f439086` |
+
+**Verified end-to-end** (project 08, `E2E_PROOF.md`): a project generated from the
+published genome (v0.1.3) carries the full convention byte-for-byte, `copyroom update
+v0.1.4` converges a new genome skill with `{{ }}` intact, the `agent.overlay` contract
+keeps a diverging skill local through v0.1.5, and `repoman doctor` reports
+`skill:tool-shipped` / `skill:genome-overlay` OK in the generated project. The docman
+roundtrip (44 assertions) and the gitman / testee / shellij suites are green.
+
+Two post-rollout fixes from project 08's zero-dangling sweep: gitman `89b1d93` and
+testee `5b0c22e` now scaffold their `init` agent skills under `.agents/skills/`
+instead of `.claude/skills/`.
