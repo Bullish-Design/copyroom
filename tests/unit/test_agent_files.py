@@ -3,6 +3,11 @@
 Covers target resolution, idempotent export (never clobbering AGENTS.md), the
 CLAUDE.md symlink rules (recreate if missing; never replace a regular file), the
 overlay carve-out, and the conformance check's warn paths.
+
+Environment note: the fallback-order tests (DEVENV_ROOT, cwd) skip when the
+pytest tmp root sits inside a git repo (e.g. ``/tmp`` itself is a repo): the
+git-root scan then shadows the fallbacks *by design*, so that order cannot be
+exercised from such a location.
 """
 
 from __future__ import annotations
@@ -46,6 +51,15 @@ def test_canonical_skills_are_the_three_expected() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _git_ancestor_of(path: Path) -> Path | None:
+    """Nearest ancestor of *path* that is a git repo root, or None."""
+    resolved = path.resolve()
+    for parent in (resolved, *resolved.parents):
+        if (parent / ".git").exists():
+            return parent
+    return None
+
+
 def test_resolve_target_explicit_wins(tmp_path: Path) -> None:
     assert resolve_target(tmp_path) == tmp_path.resolve()
 
@@ -61,6 +75,11 @@ def test_resolve_target_git_root(tmp_path: Path, monkeypatch) -> None:
 def test_resolve_target_devenv_root(tmp_path: Path, monkeypatch) -> None:
     bare = tmp_path / "bare"
     bare.mkdir()
+    if _git_ancestor_of(bare) is not None:
+        pytest.skip(
+            "tmp dir sits inside a git repo root — the git-root scan wins over "
+            "DEVENV_ROOT by design, so this fallback cannot be exercised here"
+        )
     monkeypatch.chdir(bare)
     monkeypatch.setenv("DEVENV_ROOT", str(tmp_path / "devenv-root"))
     assert resolve_target(None) == (tmp_path / "devenv-root").resolve()
@@ -69,6 +88,11 @@ def test_resolve_target_devenv_root(tmp_path: Path, monkeypatch) -> None:
 def test_resolve_target_falls_back_to_cwd(tmp_path: Path, monkeypatch) -> None:
     bare = tmp_path / "bare"
     bare.mkdir()
+    if _git_ancestor_of(bare) is not None:
+        pytest.skip(
+            "tmp dir sits inside a git repo root — the git-root scan wins over "
+            "cwd by design, so this fallback cannot be exercised here"
+        )
     monkeypatch.chdir(bare)
     monkeypatch.delenv("DEVENV_ROOT", raising=False)
     assert resolve_target(None) == bare.resolve()

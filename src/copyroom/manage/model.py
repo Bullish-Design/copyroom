@@ -99,7 +99,8 @@ class Adoption:
         initiated -> template_resolved -> rendered -> drifted -> complete
 
     ``wrote_answers`` records whether ``.copier-answers.yml`` was written into
-    the repo (only under ``--write``); no other repo file is ever touched.
+    the repo (only under ``--write``); no existing repo file is ever modified —
+    report-only adds only the patch under ``.copyroom/adopt/``.
     """
 
     repo_root: Path

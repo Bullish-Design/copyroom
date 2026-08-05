@@ -304,7 +304,7 @@ copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force]
 |-----------------|---------|
 | `template` (required) | Template source (local path or git URL). |
 | `--ref REF` | Template VCS ref to render (tag/branch/commit). |
-| `--answers FILE` | YAML answers file that reproduces this repo. |
+| `--answers FILE` | YAML answers file that reproduces this repo (optional — unanswered questions fall back to template defaults). |
 | `--write` | Write `.copier-answers.yml` into the repo (otherwise report-only). |
 | `--force` | Re-adopt even if the repo already has `.copier-answers.yml`. |
 
