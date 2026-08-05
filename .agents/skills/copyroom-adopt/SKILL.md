@@ -10,7 +10,7 @@ auto_trigger:
 CopyRoom brings an existing, hand-written repo — one with no CopyRoom markers —
 under template management. Two paths; pick by whether a template exists:
 
-- **You already have a template** → `copyroom adopt <template> --ref <ref> --answers <file> [--write]`
+- **You already have a template** → `copyroom adopt <template> --ref <ref> [--answers <file>] [--write]`
 - **No template yet** → `copyroom templatize [--into PATH]` → parameterize
   (`copyroom golden` loop) → finalize (git init + tag) → `copyroom adopt`
 
@@ -19,14 +19,17 @@ fuzzy-match a registry.
 
 ## Rules
 
-- **Adoption is report-only unless `--write`.** The only file it can write into
-  the repo is `.copier-answers.yml`. Drift is information, not a problem to
-  auto-fix; there is no `--reconcile`.
+- **Adoption is report-only unless `--write`.** It never modifies an existing
+  repo file: report-only adds only the reviewable patch under
+  `.copyroom/adopt/`; `--write` additionally adds `.copier-answers.yml`. Drift
+  is information, not a problem to auto-fix; there is no `--reconcile`.
 - **The template source must be a git repository** (a ref must be renderable).
 - **`adopt` refuses an already-managed repo** (`.copier-answers.yml` present)
   unless `--force`.
 - **Author the `--answers` file yourself** from the template's `copier.yml`;
   `--write` only records the link once the drift report looks right.
+  (`--answers` is optional — questions it leaves out fall back to the
+  template's defaults — but authoring it explicitly is the reliable path.)
 
 The drift report has three parts: *Template adds* (files the template produces
 that the repo lacks), *Differs* (divergent content), and *Repo-only* (the repo's

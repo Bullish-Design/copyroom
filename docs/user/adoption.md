@@ -118,18 +118,22 @@ A tagged git repo is exactly what `adopt` needs (it renders a *ref*).
 
 ## Adopt
 
-Link the original repo to a template and report drift. **Report-only** — the only
-file it can write into the repo is `.copier-answers.yml`, and only with `--write`.
+Link the original repo to a template and report drift. **Report-only** — it never
+modifies an existing repo file: without `--write` the only thing it adds to the
+repo is the reviewable patch under `.copyroom/adopt/`; with `--write` it
+additionally adds `.copier-answers.yml`.
 
 ```bash
-copyroom adopt <template> [--ref REF] --answers FILE [--write] [--force]
+copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force]
 ```
 
 Run it from the **repo being adopted**:
 
 1. **Author the answers file yourself.** Read the template's `copier.yml` and
    write the `--answers` file that reproduces the repo. For an extracted template
-   that's just `project_name: <repo name>`; pass `--ref v0.1.0`.
+   that's just `project_name: <repo name>`; pass `--ref v0.1.0`. (`--answers` is
+   optional — questions it leaves out fall back to the template's defaults — but
+   authoring it explicitly is the reliable path.)
 2. **Run report-only first** (no `--write`) to see the drift:
 
    ```bash
@@ -175,8 +179,9 @@ git status            # the only addition is .copier-answers.yml (+ .copyroom/ s
   finalize step provides exactly that; a user-named local template must already be
   a git repo.
 - **`templatize` excludes scratch/VCS dirs** from both the verbatim copy and the
-  golden snapshot: `.git`, `.copyroom`, `generated`, `__pycache__`,
-  `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.venv`, `node_modules`.
+  golden snapshot: `.git`, `.copyroom`, `.copyroom_sim`, `generated`,
+  `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.venv`,
+  `node_modules` (plus `*.pyc` files).
 
 ## See also
 
