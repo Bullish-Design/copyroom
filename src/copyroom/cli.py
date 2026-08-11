@@ -30,13 +30,16 @@ from .agent.files import (
 from .manage import CopyRoomError as ManageError
 from .manage import adopt as _adopt
 from .manage import templatize as _templatize
+from .manage.layer import add_layer as _add_layer
+from .manage.layer import list_layers as _list_layers
 from .project.create import CopyRoomError as CreateError
 from .project.create import create_project
 from .project.inspect import CopyRoomError as InspectError
 from .project.inspect import inspect_project, project_status
+from .project.layers import BASE_LAYER
 from .project.model import CreationStatus, UpdateStatus
 from .project.update import CopyRoomError as UpdateError
-from .project.update import update_project
+from .project.update import update_all_layers, update_project
 from .release.check import CopyRoomError as ReleaseError
 from .release.check import ReleaseStatus
 from .release.check import run_release_check as _run_release_check
@@ -81,8 +84,10 @@ Modes are auto-detected from directory markers. The command set adapts
 to the detected mode.
 
 Project commands (in a project directory):
-  update    [target_ref] [--branch]
-                               Update an existing project (latest tag if no ref)
+  update    [target_ref] [--branch] [--layer NAME | --all-layers]
+                               Update an existing project (latest tag if no ref).
+                               A project may be managed by several template
+                               *layers*; --layer picks one, --all-layers does all.
   inspect   [--json]           Full report on this project + its template link
   status    [--json]           Terse status: mode, ref, worktree, update available
   template-checkout [--from REF]
@@ -98,8 +103,12 @@ Bootstrap commands (in an unmanaged repo — no markers needed):
                                Create a new project from a template (runs anywhere)
   templatize    [--into PATH] [--name NAME] [--id ID]
                                Scaffold a template repo from this repo
-  adopt         <template> [--ref REF] --answers FILE [--write] [--force]
+  adopt         <template> [--ref REF] --answers FILE [--write] [--force] [--layer NAME]
                                Link this repo to a template and report drift
+  layer         add <template> [--as NAME] [--ref REF] [--force]
+                               Apply a template to this repo as an extra layer
+                               (e.g. the personal layer: agent files everywhere)
+  layer         list [--json]  List the template layers managing this repo
 
 Runs anywhere (no markers needed):
   doctor        [--json]       Check the CopyRoom environment
@@ -233,13 +242,32 @@ def _cmd_new(args: argparse.Namespace) -> None:
 
 
 def _cmd_update(args: argparse.Namespace) -> None:
-    """``copyroom update [target_ref] [--branch]`` — Phase 2."""
+    """``copyroom update [target_ref] [--branch] [--layer N | --all-layers]``."""
+    all_layers = getattr(args, "all_layers", False)
+    layer = getattr(args, "layer", None) or BASE_LAYER
+
+    if all_layers:
+        if args.target_ref is not None:
+            print(
+                "--all-layers updates each layer to its own latest tag; a single "
+                "ref cannot apply across different templates. Drop the ref, or "
+                "update one layer at a time with --layer.",
+                file=sys.stderr,
+            )
+            sys.exit(3)
+        if getattr(args, "layer", None):
+            print("Pass either --layer or --all-layers, not both.", file=sys.stderr)
+            sys.exit(3)
+        _run_all_layer_updates(args)
+        return
+
     try:
         update = update_project(
             project_root=None,  # defaults to cwd
             target_ref=args.target_ref,
             use_branch=args.branch,
             trust=args.trust,
+            layer=layer,
         )
     except UpdateError as exc:
         print(str(exc), file=sys.stderr)
@@ -265,7 +293,8 @@ def _cmd_update(args: argparse.Namespace) -> None:
                 print(f"  {r}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Project updated to {update.target_ref}")
+    scope = "" if update.layer == BASE_LAYER else f" [layer: {update.layer}]"
+    print(f"Project updated to {update.target_ref}{scope}")
     if update.update_branch:
         print(f"  Isolation branch: {update.update_branch}")
     if update.conflicts:
@@ -276,6 +305,48 @@ def _cmd_update(args: argparse.Namespace) -> None:
         print("  Rejects captured:", file=sys.stderr)
         for r in update.rejects:
             print(f"    {r}", file=sys.stderr)
+
+
+def _run_all_layer_updates(args: argparse.Namespace) -> None:
+    """``copyroom update --all-layers`` — converge every layer, then report once.
+
+    Exits 1 if any layer failed; the per-layer lines say which. Layers already at
+    their latest tag are reported as up-to-date, not as errors (P1-2).
+    """
+    try:
+        results = update_all_layers(
+            project_root=None, use_branch=args.branch, trust=args.trust,
+        )
+    except UpdateError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Converged {len(results)} layer(s):")
+    failed = False
+    for result in results:
+        if result.status == UpdateStatus.up_to_date:
+            print(f"  {result.layer:<12} already at {result.target_ref}")
+        elif result.status == UpdateStatus.failed:
+            failed = True
+            print(f"  {result.layer:<12} FAILED at state {result.status.value}", file=sys.stderr)
+        else:
+            print(f"  {result.layer:<12} updated to {result.target_ref}")
+            for conflict in sorted(result.conflicts):
+                print(f"    conflict: {conflict}", file=sys.stderr)
+            for reject in sorted(result.rejects):
+                print(f"    reject:   {reject}", file=sys.stderr)
+
+    if failed:
+        print(
+            f"Stopped after {len(results)} layer(s): a failed update leaves the worktree "
+            "dirty, which Copier refuses for the next layer anyway. Undo the whole run "
+            "with 'git reset --hard' back to where you started.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if len(results) > 1:
+        print("  (each layer but the last was committed; review 'git log' and 'git status')")
 
 
 def _cmd_inspect(args: argparse.Namespace) -> None:
@@ -296,6 +367,9 @@ def _cmd_inspect(args: argparse.Namespace) -> None:
     print(f"  Recorded commit: {report.commit or '(none)'}")
     print(f"  Answers file:    {report.answers_file}")
     print(f"  Project config:  {'present' if report.has_project_config else 'absent'}")
+    print("  Layers:")
+    for layer in report.layers:
+        print(f"    {layer.name:<12} {layer.ref or '(no ref)':<24} {layer.template_source or '(no source)'}")
     agent = report.agent
     overlay = ", ".join(agent["overlay"]) if agent.get("overlay") else "(none)"
     print("  Agent files:")
@@ -338,6 +412,11 @@ def _cmd_status(args: argparse.Namespace) -> None:
     print(f"Worktree:         {worktree}")
     overlay = report.agent.get("overlay") or []
     print(f"Agent overlay:    {', '.join(overlay) if overlay else '(none)'}")
+    if len(report.layers) > 1:
+        print("Layers:")
+        for layer in report.layers:
+            flag = "update available" if layer["update_available"] else "up to date"
+            print(f"  {layer['name']:<12} {layer['ref'] or '(no ref)':<24} {flag}")
 
 
 def _cmd_template_checkout(args: argparse.Namespace) -> None:
@@ -469,6 +548,7 @@ def _cmd_adopt(args: argparse.Namespace) -> None:
 
     Link this repo to a template and report drift (report-only unless --write).
     """
+    layer = getattr(args, "layer", None) or BASE_LAYER
     try:
         adoption = _adopt(
             template=args.template,
@@ -477,13 +557,15 @@ def _cmd_adopt(args: argparse.Namespace) -> None:
             answers_file=args.answers_file,
             write=args.write,
             force=args.force,
+            layer=layer,
         )
     except ManageError as exc:
         print(str(exc), file=sys.stderr)
         sys.exit(1)
 
     result = adoption.result
-    print(f"Adoption drift (repo vs {args.template} rendered with your answers):")
+    scope = "" if layer == BASE_LAYER else f" [layer: {layer}]"
+    print(f"Adoption drift{scope} (repo vs {args.template} rendered with your answers):")
     if result is None or not result.has_drift:
         print("  No drift — the template reproduces this repo exactly.")
     else:
@@ -496,12 +578,70 @@ def _cmd_adopt(args: argparse.Namespace) -> None:
     if result and result.patch_path:
         print(f"  Patch: {result.patch_path}")
     print()
+    from .project.layers import answers_filename
+
+    answers_name = answers_filename(layer)
     if adoption.wrote_answers:
-        print("  Recorded .copier-answers.yml — this repo is now CopyRoom-managed.")
+        print(f"  Recorded {answers_name} — this repo is now CopyRoom-managed.")
         print("  No other repo file was modified. Verify with: git status")
     else:
         print("  Report-only: nothing was written. Re-run with --write to record")
-        print("  the link (.copier-answers.yml) once the answers look right.")
+        print(f"  the link ({answers_name}) once the answers look right.")
+
+
+def _cmd_layer_add(args: argparse.Namespace) -> None:
+    """``copyroom layer add <template> [--as NAME] [--ref REF] [--force]``.
+
+    Applies a template to this repo as an extra layer — the files land, and the
+    link is recorded in that layer's own answers file.
+    """
+    try:
+        result = _add_layer(
+            template=args.template,
+            repo_root=None,
+            layer=args.as_layer,
+            ref=args.ref,
+            force=args.force,
+        )
+    except ManageError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
+    verb = "Re-applied" if result.replaced else "Added"
+    print(f"{verb} layer '{result.layer}' → {result.repo_root}")
+    print(f"  Template:     {result.template_source}{f' @ {result.template_ref}' if result.template_ref else ''}")
+    print(f"  Answers file: {result.answers_file}")
+    if result.written:
+        print("  Wrote:")
+        for path in result.written:
+            print(f"    {path}")
+    else:
+        print("  Wrote: (nothing changed — already converged)")
+    print()
+    print(f"  Next: review with 'git status', then 'copyroom update --layer {result.layer}' to converge later.")
+
+
+def _cmd_layer_list(args: argparse.Namespace) -> None:
+    """``copyroom layer list [--json]`` — the template layers managing this repo."""
+    root, layers = _list_layers(repo_root=None)
+
+    if args.json:
+        print(json.dumps(
+            {"command": "layer-list", "repo_root": str(root),
+             "layers": [layer.to_dict() for layer in layers]},
+            indent=2,
+        ))
+        return
+
+    print(f"Template layers → {root}")
+    if not layers:
+        print("  (none — not a Copier-managed repo)")
+        print("  Add one: copyroom layer add <template>")
+        return
+    for layer in layers:
+        print(f"  {layer.name:<12} {layer.answers_file}")
+        print(f"    template: {layer.template_id or layer.template_source or '(unknown)'}")
+        print(f"    ref:      {layer.ref or '(none recorded)'}")
 
 
 def _cmd_agent_files_export(args: argparse.Namespace) -> None:
@@ -842,9 +982,21 @@ def _typer_update(
     target_ref: str | None = typer.Argument(None, help="Target version ref (tag or branch)"),
     branch: bool = typer.Option(False, "--branch", help="Create an isolation branch for the update"),
     trust: bool = typer.Option(False, "--trust", help="Execute the template's post-update hook commands"),
+    layer: str | None = typer.Option(
+        None, "--layer",
+        help="Which template layer to converge (default: base, this project's own template)",
+    ),
+    all_layers: bool = typer.Option(
+        False, "--all-layers",
+        help="Converge every layer to its own latest tag (no ref argument). "
+             "Commits each layer's result before the next runs — Copier refuses "
+             "a dirty destination. The last layer is left uncommitted for review.",
+    ),
 ) -> None:
     _require_mode("update")
-    _cmd_update(SimpleNamespace(target_ref=target_ref, branch=branch, trust=trust))
+    _cmd_update(SimpleNamespace(
+        target_ref=target_ref, branch=branch, trust=trust, layer=layer, all_layers=all_layers,
+    ))
 
 
 @app.command("inspect")
@@ -939,10 +1091,43 @@ def _typer_adopt(
         False, "--write", help="Write .copier-answers.yml into the repo (otherwise report-only)",
     ),
     force: bool = typer.Option(
-        False, "--force", help="Re-adopt even if the repo already has .copier-answers.yml",
+        False, "--force", help="Re-adopt even if this layer's answers file already exists",
+    ),
+    layer: str | None = typer.Option(
+        None, "--layer",
+        help="Record the link in this layer's answers file (default: base)",
     ),
 ) -> None:
-    _cmd_adopt(SimpleNamespace(template=template, ref=ref, answers_file=answers_file, write=write, force=force))
+    _cmd_adopt(SimpleNamespace(
+        template=template, ref=ref, answers_file=answers_file, write=write, force=force, layer=layer,
+    ))
+
+
+@app.command("layer")
+def _typer_layer(
+    action: str = typer.Argument(..., help="Action: add or list"),
+    template: str | None = typer.Argument(None, help="Template source (add only)"),
+    as_layer: str | None = typer.Option(
+        None, "--as",
+        help="Layer name (default: the template's own _answers_file declaration)",
+    ),
+    ref: str | None = typer.Option(None, "--ref", help="Template VCS ref to apply (tag/branch/commit)"),
+    force: bool = typer.Option(
+        False, "--force", help="Retarget an existing layer to a different template",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Emit the listing as JSON"),
+) -> None:
+    """Manage the template layers of this repo (runs anywhere, like agent-files)."""
+    if action == "add":
+        if template is None:
+            print("copyroom layer add requires a template source.", file=sys.stderr)
+            sys.exit(3)
+        _cmd_layer_add(SimpleNamespace(template=template, as_layer=as_layer, ref=ref, force=force))
+    elif action == "list":
+        _cmd_layer_list(SimpleNamespace(json=json_output))
+    else:
+        print(f"Unknown layer action '{action}'. Use 'add' or 'list'.", file=sys.stderr)
+        sys.exit(3)
 
 
 # --- Runs-anywhere commands (no mode gating, like doctor) ---

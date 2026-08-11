@@ -124,7 +124,7 @@ def render_old_version(
         result = copier_copy(
             source=template_source,
             destination=work_dir,
-            answers_file=scenario_yml,
+            data_file=scenario_yml,
         )
     except Exception as exc:
         sim.status = _sim_sm.transition(

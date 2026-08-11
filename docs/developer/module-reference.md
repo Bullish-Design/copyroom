@@ -13,11 +13,11 @@ src/copyroom/
 ├── doctor.py            # environment precondition checks (`copyroom doctor`)
 ├── agent/               # the agent-files convention (assets + export/check)
 ├── session/             # mode detection + command gating
-├── project/             # new / update
+├── project/             # new / update / layers
 ├── template/            # template-checkout / template-test / template-preview
 ├── workshop/            # render / test / golden / update-test
 ├── release/             # release-check
-├── manage/              # templatize / adopt (bootstrap)
+├── manage/              # templatize / adopt / layer add (bootstrap)
 └── _compat/             # subprocess boundary + shared primitives
 ```
 
@@ -99,7 +99,21 @@ Enables `python -m copyroom`; just calls `cli.main()`.
 
 ---
 
-## `project/` — `new` and `update`
+## `project/` — `new`, `update`, and layers
+
+### `project/layers.py`
+The **layer** model: a repo can be managed by more than one template, each
+recorded in its own Copier answers file (`.copier-answers.yml` → the reserved
+`base` layer; `.copier-answers.<name>.yml` → `<name>`).
+- `answers_filename` / `layer_name_from_answers_file` — the name↔filename
+  bijection, refusing a name that could escape the project root.
+- `Layer` dataclass + `discover_layers` — discovery is a **glob**, never
+  configuration, so it cannot drift from what Copier recorded. A malformed
+  answers file yields an empty-metadata layer rather than an exception: listing
+  must not fail because one layer is broken.
+- `resolve_layer` — the named layer, or an error naming the layers that exist.
+- `template_default_layer` — the layer name a template declares via
+  `_answers_file`, so `layer add` needs no `--as`.
 
 ### `project/model.py`
 - `CreationStatus` + `VALID_CREATION_TRANSITIONS` + `ProjectCreation` dataclass
@@ -118,12 +132,17 @@ Refuses non-empty targets; forwards Copier stderr on failure; runs post-create
 hooks only under `trust`.
 
 ### `project/update.py` (`copyroom update`)
-Rule functions `initiate` → `load_config` (the single reader of
-`.copier-answers.yml`, extracting `_template`/`_commit`) → `no_update_available`
+Rule functions `initiate` → `load_config` (the single reader of the **layer's**
+answers file, extracting `_template`/`_commit`) → `no_update_available`
 → `verify_worktree` (clean-tree gate) → `create_branch` (with `--branch`) →
 `execute_update` → `capture_conflicts` → `run_post_update_commands`, and the
-orchestrator `update_project(...)`. Captures inline conflict markers and `*.rej`
-rejects (deliberately in separate sets to avoid double-counting).
+orchestrator `update_project(..., layer="base")`. Captures inline conflict markers
+and `*.rej` rejects (deliberately in separate sets to avoid double-counting).
+
+`update_all_layers(...)` converges every recorded layer to its own latest tag.
+It checks the worktree once up front and commits each layer's result before the
+next runs — Copier refuses a dirty destination, so this is a requirement, not a
+convenience — stopping rather than committing a layer that left conflicts.
 
 ---
 
@@ -226,8 +245,17 @@ Implements the verbatim-then-parameterize strategy; leaves a plain (non-git) dir
 `adopt(...)` — resolve the template (reusing `template/workspace`'s
 clone/cache helpers), `copier copy` with inferred answers into a scratch dir,
 `tree_diff` against the repo, write a drift patch under `.copyroom/adopt/`, and
-(only with `--write`) copy the rendered `.copier-answers.yml` in. Refuses an
-already-managed repo without `--force`.
+(only with `--write`) copy the rendered answers file in. The already-managed
+refusal is **per layer**, and a non-base layer's drift drops the "repo-only" set
+(an overlay template is partial by construction).
+
+### `manage/layer.py` (`copyroom layer add` / `list`)
+`add_layer(...)` — the *other* way a repo comes under a template's management:
+where `adopt` records a link for files that are already there, this **puts the
+files there** (`copier copy --answers-file <layer>`). Derives the layer name from
+the template's own `_answers_file`, refuses to retarget an existing layer without
+`--force`, and reports every path that changed. Idempotence and file-level safety
+come from Copier (`_skip_if_exists`), not from this module.
 
 ---
 

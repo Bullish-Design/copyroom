@@ -37,7 +37,8 @@ def validate_template(
     rendered, then runs ``copier copy`` into a temp dir.
     """
     root = resolve_project_root(project_root)
-    answers_file = root / ".copier-answers.yml"
+    # The project's recorded answers, replayed *into* the render as data.
+    recorded_answers = root / ".copier-answers.yml"
 
     checkout = checkout_template(root, from_ref)
     assert (
@@ -57,7 +58,7 @@ def validate_template(
         rendered = copier_copy(
             source=str(checkout.repo_dir),
             destination=out,
-            answers_file=answers_file,
+            data_file=recorded_answers,
             vcs_ref=checkout.branch,
         )
     except Exception as exc:

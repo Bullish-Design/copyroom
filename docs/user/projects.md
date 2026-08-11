@@ -60,11 +60,16 @@ clean updates later.
 ## Updating a project — `copyroom update`
 
 ```bash
-copyroom update [target_ref] [--branch] [--trust]
+copyroom update [target_ref] [--branch] [--trust] [--layer NAME | --all-layers]
 ```
 
 Run from inside the project (or any descendant). `<target_ref>` is the template
 version to move to — a tag, branch, or commit.
+
+> **A repo can have more than one template.** `--layer NAME` converges an overlay
+> [layer](layers.md) (e.g. the personal layer) instead of the project's own
+> template; `--all-layers` converges every one. Without either flag, `update`
+> means what it always did: the base layer, `.copier-answers.yml`.
 
 > **Omit the ref to update to the latest.** With no `target_ref`, CopyRoom reads
 > the template source from `.copier-answers.yml` and resolves the **highest
@@ -185,5 +190,6 @@ one) and try again.
 ## See also
 
 - [CLI reference](cli-reference.md) — exact flags and exit codes.
+- [Template layers](layers.md) — updating a repo managed by more than one template.
 - [Copier overview](../copier/overview.md) — copy, update, and the merge model.
 - [Trust & safety](trust-and-safety.md) — the `--trust` gate for hook commands.

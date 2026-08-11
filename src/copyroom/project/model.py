@@ -124,6 +124,9 @@ class TemplateUpdate:
     target_ref: str | None = None
     use_branch: bool = False
     status: UpdateStatus = UpdateStatus.initiated
+    # Which template layer this update converges — ``base`` (the project's own
+    # ``.copier-answers.yml``) or a named overlay such as the personal layer.
+    layer: str = "base"
     update_branch: str | None = None
     conflicts: set[str] = field(default_factory=set)
     rejects: set[str] = field(default_factory=set)

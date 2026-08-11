@@ -69,7 +69,11 @@ PROJECT_COMMANDS: frozenset[str] = frozenset(
 # the repo and arguments. Kept out of COMMAND_MODE_MAP for that reason. `new`
 # belongs here: it is run to *create* a project, so the project markers it would
 # be gated on don't exist yet (its real guard is the empty-target check).
-BOOTSTRAP_COMMANDS: frozenset[str] = frozenset({"adopt", "templatize", "new"})
+# `layer` belongs here too: `layer add` applies a template to a repo that may
+# have no markers yet (the personal layer lands on unmanaged repos as readily as
+# on generated ones), and `layer list` is a read that must answer honestly
+# wherever it is run.
+BOOTSTRAP_COMMANDS: frozenset[str] = frozenset({"adopt", "templatize", "new", "layer"})
 
 _session_sm = StateMachine(VALID_SESSION_TRANSITIONS, entity_name="CLISession")
 

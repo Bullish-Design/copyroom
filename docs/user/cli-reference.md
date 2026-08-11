@@ -130,16 +130,25 @@ forwarded).
 Update an existing project to a new template version.
 
 ```
-copyroom update [target_ref] [--branch] [--trust]
+copyroom update [target_ref] [--branch] [--trust] [--layer NAME | --all-layers]
 ```
 
 | Argument / flag | Meaning |
 |-----------------|---------|
 | `target_ref` | Template version to update to (tag/branch/commit). **Optional** — omit it to update to the template's latest semver tag (see below). |
-| `--branch` | Perform the update on an isolation branch named `template-update/<template_id>-<target_ref>`. |
+| `--branch` | Perform the update on an isolation branch named `template-update/[<layer>/]<template_id>-<target_ref>`. |
 | `--trust` | Execute the template's `post_template_update` hooks. |
+| `--layer NAME` | Which template [layer](layers.md) to converge. Default `base` — the project's own `.copier-answers.yml`. |
+| `--all-layers` | Converge every recorded layer to its own latest tag. Takes no `target_ref`. |
 
-**Behavior:** loads `.copier-answers.yml` (reads `_src_path`, `_commit`) →
+**Layers.** A repo may be managed by several templates at once — a genome plus
+overlays such as the [personal layer](layers.md). `--layer` picks one;
+`--all-layers` does all, committing each layer's result before running the next
+(Copier refuses a dirty destination) and leaving the last uncommitted for review.
+The clean-worktree guard then runs once for the whole run. Exits `3` if
+`--all-layers` is combined with a `target_ref` or with `--layer`.
+
+**Behavior:** loads the layer's answers file (reads `_src_path`, `_commit`) →
 **resolves the ref** → if already at it, prints "Already at…" and **exits 0** (an
 idempotent no-op is a success, safe in a Makefile/CI loop) → otherwise **requires
 a clean git worktree**
@@ -147,7 +156,7 @@ a clean git worktree**
 `copier update --defaults --vcs-ref <ref>` → captures conflicts (inline markers)
 and rejects (`*.rej`) → runs trusted post-update hooks → reports the outcome.
 
-**Latest-ref resolution.** With no `target_ref`, CopyRoom reads `_src_path` and
+**Latest-ref resolution.** With no `target_ref`, CopyRoom reads the layer's `_src_path` and
 picks the **highest semver tag** (`vX.Y.Z`; the `v` is optional, non-semver and
 pre-release tags are ignored) — listing tags locally with `git tag` or, for a
 remote source, with `git ls-remote --tags`. The concrete tag (not Copier's
@@ -297,7 +306,7 @@ the parameterize loop.
 Link this repo to a template and report drift. **Report-only.**
 
 ```
-copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force]
+copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force] [--layer NAME]
 ```
 
 | Argument / flag | Meaning |
@@ -305,16 +314,49 @@ copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force]
 | `template` (required) | Template source (local path or git URL). |
 | `--ref REF` | Template VCS ref to render (tag/branch/commit). |
 | `--answers FILE` | YAML answers file that reproduces this repo (optional — unanswered questions fall back to template defaults). |
-| `--write` | Write `.copier-answers.yml` into the repo (otherwise report-only). |
-| `--force` | Re-adopt even if the repo already has `.copier-answers.yml`. |
+| `--write` | Write the layer's answers file into the repo (otherwise report-only). |
+| `--force` | Re-adopt even if this layer's answers file already exists. |
+| `--layer NAME` | Record the link in `.copier-answers.<NAME>.yml` instead of the base file. See [layers](layers.md). |
 
 **Behavior:** renders the template with your answers into a scratch dir, tree-diffs
 that against the repo, and prints drift: **Template adds** (files the template
 produces the repo lacks), **Differs** (content mismatch), **Repo-only**
 (legitimately-extra repo files). Writes a reviewable patch under
-`.copyroom/adopt/`. With `--write` it copies the rendered `.copier-answers.yml`
-into the repo — **the only repo file it ever modifies**. Refuses an
-already-managed repo unless `--force`.
+`.copyroom/adopt/`. With `--write` it copies the rendered answers file
+into the repo — **the only repo file it ever modifies**. The already-managed
+refusal is **per layer**, so adopting into `--layer my-ai` does not trip over the
+`.copier-answers.yml` a genome already wrote. For a non-base layer the
+**Repo-only** set is dropped: an overlay template is partial by construction, so
+every file it doesn't ship would otherwise read as drift.
+
+> Adopting *records a link*; it never puts the template's files in your repo. To
+> **apply** a template to a repo that doesn't have its files yet, use
+> `copyroom layer add` below.
+
+## `copyroom layer`
+
+Manage the template [layers](layers.md) of this repo. **Runs anywhere** (no mode
+gating), like `doctor` and `agent-files`.
+
+```
+copyroom layer add <template> [--as NAME] [--ref REF] [--force]
+copyroom layer list [--json]
+```
+
+| Argument / flag | Meaning |
+|-----------------|---------|
+| `add <template>` | Apply *template* to this repo as a layer: its files land **and** the link is recorded. |
+| `--as NAME` | Layer name. Default: the name the template declares via `_answers_file` in its `copier.yml`, so this is rarely needed. |
+| `--ref REF` | Template VCS ref to apply. |
+| `--force` | Retarget an existing layer to a different template. |
+| `list [--json]` | List every layer: name, answers file, template, recorded ref. |
+
+**Behavior (`add`):** resolves the template (cloning a remote source) → derives
+the layer name → refuses to retarget an existing layer without `--force` →
+`copier copy --answers-file .copier-answers.<name>.yml` → reports every path
+that changed. Idempotent: re-running re-lands the layer's files, and the
+template's `_skip_if_exists` protects the repo's own. Refuses `--as base` — the
+base layer is created by `new` or linked by `adopt`.
 
 ---
 

@@ -25,6 +25,7 @@ from .._compat.copier import copier_copy
 from .._compat.errors import CopyRoomError
 from .._compat.state_machine import StateMachine
 from .._compat.treediff import collect_files, tree_diff
+from ..project.layers import BASE_LAYER, answers_filename
 from ..template.workspace import _ensure_local_repo, _template_cache_dir, resolve_project_root
 from .model import (
     EXCLUDE_DIRS,
@@ -41,8 +42,6 @@ _adoption_sm = StateMachine(VALID_ADOPTION_TRANSITIONS, entity_name="Adoption")
 # Repo paths that must not leak into the sandbox used to build the drift patch.
 _SANDBOX_IGNORE = shutil.ignore_patterns(*EXCLUDE_DIRS, "*.pyc")
 
-_ANSWERS_FILENAME = ".copier-answers.yml"
-
 
 def adopt(
     template: str,
@@ -51,26 +50,36 @@ def adopt(
     answers_file: str | Path | None = None,
     write: bool = False,
     force: bool = False,
+    layer: str = BASE_LAYER,
 ) -> Adoption:
     """Adopt *repo_root* under *template*; report drift, optionally link it.
 
     Returns the ``Adoption`` in ``complete`` (``result`` populated; answers
     written iff *write*) or raises ``CopyRoomError`` on failure. The repo's
-    files are never modified except, under *write*, the added
-    ``.copier-answers.yml``.
+    files are never modified except, under *write*, the added answers file.
+
+    ``layer`` selects which answers file records the link. The refusal below is
+    **per layer**: adopting a repo into the ``my-ai`` layer must not trip over
+    the ``.copier-answers.yml`` its genome already wrote.
+
+    A non-base layer's template is *partial* by construction (it ships a slice of
+    a repo, not a whole one), so its drift report drops the "repo-only" set —
+    otherwise every file the overlay doesn't ship, i.e. the entire repo, would be
+    reported as drift.
     """
     root = resolve_project_root(repo_root)
     adoption = Adoption(repo_root=root, template_source=template, template_ref=ref)
+    layer_answers = answers_filename(layer)
 
     # Refuse an already-managed repo unless forced — adopting twice would
-    # silently retarget the project's template.
-    if (root / _ANSWERS_FILENAME).is_file() and not force:
+    # silently retarget this layer's template.
+    if (root / layer_answers).is_file() and not force:
         adoption.status = _adoption_sm.transition(
             AdoptionStatus.initiated, AdoptionStatus.failed,
         )
         raise CopyRoomError(
-            f"{root} already has {_ANSWERS_FILENAME} (already CopyRoom-managed). "
-            "Use --force to re-adopt.",
+            f"{root} already has {layer_answers} (the '{layer}' layer is already "
+            "CopyRoom-managed). Use --force to re-adopt.",
             state="initiated",
         )
 
@@ -104,8 +113,9 @@ def adopt(
             result = copier_copy(
                 source=str(repo_dir),
                 destination=rendered,
-                answers_file=answers_path,
+                data_file=answers_path,
                 vcs_ref=ref,
+                answers_file=layer_answers,
             )
         except Exception as exc:
             adoption.status = _adoption_sm.transition(
@@ -130,7 +140,10 @@ def adopt(
 
         # --- 3. drift: how the repo differs from the rendered template ---
         added, modified, removed = tree_diff(root, rendered, ignore_dirs=EXCLUDE_DIRS)
-        patch_path = _write_drift_patch(root, rendered, removed)
+        if layer != BASE_LAYER:
+            # A partial template says nothing about the files it doesn't ship.
+            removed = set()
+        patch_path = _write_drift_patch(root, rendered, removed, layer_answers)
         adoption.result = DriftResult(
             added=added, modified=modified, removed=removed,
             patch_path=str(patch_path) if patch_path else None,
@@ -141,17 +154,17 @@ def adopt(
 
         # --- 4. (optional) record the link — the only write into the repo ---
         if write:
-            rendered_answers = rendered / _ANSWERS_FILENAME
+            rendered_answers = rendered / layer_answers
             if not rendered_answers.is_file():
                 adoption.status = _adoption_sm.transition(
                     AdoptionStatus.drifted, AdoptionStatus.failed,
                 )
                 raise CopyRoomError(
-                    "Rendered template produced no .copier-answers.yml; the "
-                    "template must include a .copier-answers.yml.jinja.",
+                    f"Rendered template produced no {layer_answers}; the template "
+                    f"must include a {layer_answers}.jinja.",
                     state="drifted",
                 )
-            shutil.copyfile(rendered_answers, root / _ANSWERS_FILENAME)
+            shutil.copyfile(rendered_answers, root / layer_answers)
             adoption.wrote_answers = True
 
         adoption.status = _adoption_sm.transition(
@@ -168,7 +181,7 @@ def adopt(
 
 
 def _write_drift_patch(
-    repo_root: Path, rendered: Path, removed: set[str],
+    repo_root: Path, rendered: Path, removed: set[str], layer_answers: str,
 ) -> Path | None:
     """Write a reviewable ``repo → template`` patch under ``.copyroom/adopt/``.
 
@@ -182,7 +195,7 @@ def _write_drift_patch(
         shutil.copytree(repo_root, sandbox, ignore=_SANDBOX_IGNORE, dirs_exist_ok=True)
         # The repo's own answers file (if --force re-adopt) isn't part of the
         # comparison; drop it so it never appears in the patch.
-        (sandbox / _ANSWERS_FILENAME).unlink(missing_ok=True)
+        (sandbox / layer_answers).unlink(missing_ok=True)
 
         if not gitutil.snapshot(sandbox, "copyroom: repo baseline"):
             return None

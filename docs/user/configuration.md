@@ -7,6 +7,7 @@ situation.
 | File | Owner | Authority | Where it lives |
 |------|-------|-----------|----------------|
 | `.copier-answers.yml` | Copier | **Authoritative** for all Copier operations | every generated project |
+| `.copier-answers.<layer>.yml` | Copier | Same, for an extra template [layer](layers.md) | a repo with an overlay layer (optional) |
 | `copyroom.project.yml` | You / the template | **Advisory** workflow metadata | a generated project (optional) |
 | `copyroom.yml` | The workshop | Workshop registry | a workshop root |
 
@@ -36,7 +37,12 @@ package_name: aurora
 - **Never hand-edit it.** Copier regenerates it on every update; manual edits are
   lost and can corrupt the merge base.
 - Its presence is one of the two **project-mode** markers
-  ([concepts](concepts.md)).
+  ([concepts](concepts.md)). A `.copier-answers.<layer>.yml` counts too: a repo
+  managed only by an overlay layer is still a project.
+- **One file per template.** A repo managed by several templates has one answers
+  file per [layer](layers.md) — `.copier-answers.yml` for the genome,
+  `.copier-answers.<name>.yml` for each overlay. They are independent: converging
+  one never rewrites another.
 - CopyRoom excludes `.copier-answers*.yml` from every tree-diff (golden, preview,
   adopt) because its machine-specific fields would create spurious diffs.
 

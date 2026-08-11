@@ -31,10 +31,10 @@ The gate before any PR: `pytest` green, `ruff` clean, the walkthrough passes.
 ## Where things live
 
 - `src/copyroom/` — the package: `cli.py` (Typer frontend), `session/` (mode
-  detection + dispatch), `project/` (new/update/inspect/status), `template/`
-  (checkout/test/preview), `workshop/` (render/golden/update-test), `manage/`
-  (adopt/templatize), `agent/` (the agent-files convention + canonical skills),
-  `_compat/` (the only place that shells out to copier/git).
+  detection + dispatch), `project/` (new/update/inspect/status + `layers.py`),
+  `template/` (checkout/test/preview), `workshop/` (render/golden/update-test),
+  `manage/` (adopt/templatize/layer), `agent/` (the agent-files convention +
+  canonical skills), `_compat/` (the only place that shells out to copier/git).
 - `docs/` — three tracks: `docs/user/`, `docs/developer/`, `docs/copier/`.
   Docs are the detailed source of truth; skills link to them, never repeat them.
 - `.scratch/` — concepting and per-project implementation guides (numbered).
@@ -45,9 +45,18 @@ The gate before any PR: `pytest` green, `ruff` clean, the walkthrough passes.
 ## Modes
 
 CopyRoom detects which of four surfaces it is standing in from **markers**, never
-guessing: project (`.copier-answers.yml` / `copyroom.project.yml`), workshop
-(`copyroom.yml` + `registry/` + `scenarios/`), template repo, or unmanaged repo
-(bootstrap commands `new`/`adopt`/`templatize` run anywhere). `--mode` forces it.
+guessing: project (`.copier-answers.yml`, `.copier-answers.<layer>.yml`, or
+`copyroom.project.yml`), workshop (`copyroom.yml` + `registry/` + `scenarios/`),
+template repo, or unmanaged repo (bootstrap commands `new`/`adopt`/`templatize`/
+`layer` run anywhere). `--mode` forces it.
+
+## Layers
+
+A repo can be managed by **several templates at once** — the genome in
+`.copier-answers.yml`, plus overlays like the personal layer (`my-ai`) in
+`.copier-answers.my-ai.yml`. Layers are discovered by glob, never configured, and
+converge independently (`copyroom update --layer NAME`). Details:
+`docs/user/layers.md`.
 
 ## Agent-files convention
 

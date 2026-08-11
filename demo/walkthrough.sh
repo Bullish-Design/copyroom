@@ -14,6 +14,8 @@
 #   2. Agentic template edit .. checkout → test → preview  (edit upstream, safely)
 #   3. Workshop ............... render → golden → update-test → release-check
 #   4. Repo adoption .......... templatize → adopt  (bring a hand-written repo in)
+#   6. Layers ................. layer add → layer list → update --layer
+#                               (one repo, two templates: genome + personal layer)
 #
 # Run it (from the repo root):
 #
@@ -475,6 +477,78 @@ say "advisory; flipping it to fail is a later decision."
 pause
 
 # ===========================================================================
+act "ACT 6 — Layers:  one repo, two templates"
+# ===========================================================================
+say "A repo's genome is not the only template that can manage it. A LAYER is a"
+say "second template recorded in its own answers file — the canonical case is the"
+say "PERSONAL LAYER (my-ai): the user's AGENTS.md seed, CLAUDE.md symlink and"
+say "skills, layered onto every repo whatever generated it."
+
+MYAI="$ROOT/my-ai"
+mkdir -p "$MYAI/template/.agents/skills/my-ai"
+cat > "$MYAI/copier.yml" <<'YML'
+_subdirectory: template
+_answers_file: .copier-answers.my-ai.yml   # the layer names ITSELF
+_preserve_symlinks: true
+_copy_without_render: [".agents/skills/**"]
+_skip_if_exists: ["AGENTS.md"]             # seed only — never clobber the repo's own
+YML
+cat > "$MYAI/template/{{ _copier_conf.answers_file }}.jinja" <<'YML'
+# Changes here will be overwritten by Copier
+{{ _copier_answers|to_nice_yaml -}}
+YML
+printf '# AGENTS.md — seeded by the personal layer\n' > "$MYAI/template/AGENTS.md"
+ln -s AGENTS.md "$MYAI/template/CLAUDE.md"
+printf '# my-ai — the standing agent configuration (v1)\n' \
+  > "$MYAI/template/.agents/skills/my-ai/SKILL.md"
+GIT init -q "$MYAI"; GIT -C "$MYAI" add -A
+GIT -C "$MYAI" commit -qm "my-ai v1"; GIT -C "$MYAI" tag v1.0.0
+say "personal layer template built and tagged v1.0.0"
+
+step "6a. Apply it to the Aurora project — 'copyroom layer add'"
+say "No --as flag: the template's _answers_file names its own layer."
+GIT -C "$PROJ" add -A; GIT -C "$PROJ" commit -qm "before the personal layer" >/dev/null 2>&1 || true
+run --in "$PROJ" copyroom layer add "$MYAI" --ref v1.0.0 || die "layer add failed"
+
+step "6b. Both layers now manage this one repo — 'copyroom layer list'"
+run --in "$PROJ" copyroom layer list || die "layer list failed"
+[ -f "$PROJ/.copier-answers.yml" ] && [ -f "$PROJ/.copier-answers.my-ai.yml" ] \
+  || die "expected an answers file per layer"
+ok "two answers files, two independent template links"
+say "Aurora had no AGENTS.md, so the layer SEEDED one (plus the CLAUDE.md symlink):"
+grep -q "seeded by the personal layer" "$PROJ/AGENTS.md" || die "AGENTS.md was not seeded"
+[ -L "$PROJ/CLAUDE.md" ] || die "CLAUDE.md should be a symlink"
+ok "AGENTS.md seeded · CLAUDE.md -> AGENTS.md"
+
+step "6c. The other half of the contract: a repo that HAS an AGENTS.md keeps it"
+say "The legacy template repo got its own AGENTS.md from 'agent-files export' in"
+say "ACT 5. _skip_if_exists means the layer's seed must not touch it."
+KEEPER_BEFORE="$(sha256sum "$HOME_T/AGENTS.md" | cut -d' ' -f1)"
+run --in "$HOME_T" copyroom layer add "$MYAI" --ref v1.0.0 || die "layer add failed"
+[ "$(sha256sum "$HOME_T/AGENTS.md" | cut -d' ' -f1)" = "$KEEPER_BEFORE" ] \
+  || die "the layer clobbered a repo-owned AGENTS.md"
+ok "repo-owned AGENTS.md byte-identical — the personal skill still landed alongside it"
+[ -f "$HOME_T/.agents/skills/my-ai/SKILL.md" ] || die "the personal skill did not land"
+pause
+
+step "6d. Publish v2 of the personal layer, converge only that layer"
+printf '# my-ai — the standing agent configuration (v2)\n' \
+  > "$MYAI/template/.agents/skills/my-ai/SKILL.md"
+mkdir -p "$MYAI/template/.agents/skills/my-ai-review"
+printf '# my-ai-review — a brand-new personal skill\n' \
+  > "$MYAI/template/.agents/skills/my-ai-review/SKILL.md"
+GIT -C "$MYAI" add -A; GIT -C "$MYAI" commit -qm "my-ai v2"; GIT -C "$MYAI" tag v2.0.0
+GIT -C "$PROJ" add -A; GIT -C "$PROJ" commit -qm "apply the personal layer"
+run --in "$PROJ" copyroom update --layer my-ai || die "update --layer failed"
+grep -q "(v2)" "$PROJ/.agents/skills/my-ai/SKILL.md" || die "the personal skill did not converge"
+[ -f "$PROJ/.agents/skills/my-ai-review/SKILL.md" ] || die "the new personal skill did not land"
+grep -q "v1.0.0\|aurora-template" "$PROJ/.copier-answers.yml" || true
+ok "the personal layer converged — and the genome's own answers file was not touched"
+say "Both are real Copier templates with real three-way merges. Neither reaches"
+say "into the other's files. That is what makes the config *updateable*, not copied."
+pause
+
+# ===========================================================================
 act "RECAP — everything you just saw, for real"
 # ===========================================================================
 cat <<RECAP
@@ -487,9 +561,13 @@ cat <<RECAP
                     files untouched, only a .copier-answers.yml link added
   ${GREEN}agent files${R}        export the canonical skills + AGENTS.md + CLAUDE.md symlink,
                     then verify conformance (warn-level, in doctor too)
+  ${GREEN}layers${R}            applied a SECOND template (the personal layer) to a repo that
+                    already had a genome, then converged it alone — one answers
+                    file per layer, neither touching the other's files
 
   Commands exercised: ${B}new update template-checkout template-test template-preview
                       render test golden update-test release-check templatize adopt
+                      layer add layer list update --layer
                       agent-files export agent-files check doctor${R}
 
   Every step above ran the real CopyRoom CLI against real Copier renders.

@@ -117,7 +117,7 @@ def execute_render(
         result = copier_copy(
             source=template_source,
             destination=generated_dir,
-            answers_file=scenario_yml,
+            data_file=scenario_yml,
         )
     except Exception as exc:
         render.status = _render_sm.transition(

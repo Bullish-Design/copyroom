@@ -25,6 +25,20 @@ unmanaged repo R
 The template is **named or extracted, never guessed**. CopyRoom will not
 fuzzy-match a registry to pick a template for you.
 
+### Adopt or `layer add`?
+
+Both bring a repo under a template's management, but they answer different
+questions — and the difference is whether the files are already there:
+
+| | `adopt` | [`layer add`](layers.md) |
+|---|---|---|
+| Question | *"this repo already looks like the template — record the link"* | *"this repo doesn't have these files — put them here"* |
+| Writes repo files | **no** (report-only) | **yes** |
+| Output | a drift report + a reviewable patch | what landed |
+| Typical use | a repo you templatized, or one that matches a genome | an overlay such as the personal layer |
+
+If you find yourself wanting `adopt` to *place* files, you want `layer add`.
+
 ---
 
 ## Templatize
@@ -124,8 +138,13 @@ repo is the reviewable patch under `.copyroom/adopt/`; with `--write` it
 additionally adds `.copier-answers.yml`.
 
 ```bash
-copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force]
+copyroom adopt <template> [--ref REF] [--answers FILE] [--write] [--force] [--layer NAME]
 ```
+
+`--layer NAME` records the link in `.copier-answers.<NAME>.yml` instead of the
+base file, so a repo can be adopted into an overlay [layer](layers.md) without
+disturbing the genome that already manages it. The already-managed refusal is
+per layer for the same reason.
 
 Run it from the **repo being adopted**:
 
@@ -187,5 +206,6 @@ git status            # the only addition is .copier-answers.yml (+ .copyroom/ s
 
 - [The workshop](workshop.md) — `templatize` scaffolds one; here's how to drive it.
 - [Copier overview](../copier/overview.md#24-_subdirectory--separating-template-source-from-template-repo) — why `_subdirectory: template` and the `.jinja` rule make this work.
+- [Template layers](layers.md) — `layer add`, the other way a repo comes under a template's management.
 - The `copyroom-adopt` agent skill (`.agents/skills/copyroom-adopt/SKILL.md`).
 - [Agent files](agent-files.md) — the `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention.

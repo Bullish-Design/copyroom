@@ -23,13 +23,14 @@ from .._compat.refs import same_version
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
 from .config import load_hook_commands, load_project_config
+from .layers import BASE_LAYER, answers_filename, discover_layers
 from .model import (
     VALID_UPDATE_TRANSITIONS,
     TemplateUpdate,
     UpdateStatus,
 )
 
-__all__ = ["CopyRoomError", "update_project"]
+__all__ = ["CopyRoomError", "update_all_layers", "update_project"]
 
 # ---------------------------------------------------------------------------
 # State machine instance
@@ -50,13 +51,18 @@ def initiate(
     project_root: Path,
     target_ref: str | None,
     use_branch: bool = False,
+    layer: str = BASE_LAYER,
 ) -> TemplateUpdate:
     """Create a TemplateUpdate entity.
 
     ``target_ref`` may be ``None`` — :func:`resolve_latest_ref` fills it in from
     the template's latest semver tag (InitiateTemplateUpdate + ResolveLatestRef).
     ``template_id``, ``previous_ref``, and ``template_source`` are populated by
-    :func:`load_config`, the single reader of ``.copier-answers.yml``.
+    :func:`load_config`, the single reader of the layer's answers file.
+
+    ``layer`` selects **which template** to converge: ``base`` for the project's
+    own ``.copier-answers.yml``, or a named overlay (see
+    :mod:`copyroom.project.layers`).
     """
     return TemplateUpdate(
         project_root=project_root,
@@ -64,6 +70,7 @@ def initiate(
         previous_ref=None,
         target_ref=target_ref or None,
         use_branch=use_branch,
+        layer=layer,
     )
 
 
@@ -73,15 +80,17 @@ def initiate(
 
 
 def load_config(update: TemplateUpdate) -> UpdateStatus:
-    """Load configuration from ``.copier-answers.yml``.
+    """Load configuration from the layer's answers file.
 
     Captures the template source (``_src_path``) and recorded version
     (``_commit``), which feed :func:`resolve_latest_ref` and the no-op check.
+    Which file is read is decided by ``update.layer`` — ``.copier-answers.yml``
+    for the base layer, ``.copier-answers.<layer>.yml`` for an overlay.
 
     On success: transitions to ``config_loaded``.
     On failure: transitions to ``failed``.
     """
-    answers_file = update.project_root / ".copier-answers.yml"
+    answers_file = update.project_root / answers_filename(update.layer)
 
     if not answers_file.is_file():
         update.status = _update_sm.transition(
@@ -143,7 +152,8 @@ def resolve_latest_ref(update: TemplateUpdate) -> None:
         )
         raise CopyRoomError(
             "Cannot resolve the latest template version: no _src_path recorded "
-            "in .copier-answers.yml. Pass an explicit ref: copyroom update <ref>",
+            f"in {answers_filename(update.layer)}. Pass an explicit ref: "
+            "copyroom update <ref>",
             state="config_loaded",
         )
 
@@ -204,6 +214,10 @@ def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
     inherits the shared 120s git timeout and fail-soft behavior). A non-repo or
     missing git (``None``) is treated as clean.
 
+    This is not merely CopyRoom's caution: Copier itself refuses a dirty
+    destination, so an ``--all-layers`` run has to commit each layer's output
+    before the next layer runs (:func:`update_all_layers`).
+
     On clean: transitions to ``worktree_verified``.
     On dirty: transitions to ``failed`` with remediation guidance.
     """
@@ -242,14 +256,17 @@ def verify_worktree(update: TemplateUpdate) -> UpdateStatus:
 def create_branch(update: TemplateUpdate) -> UpdateStatus:
     """Create an isolation branch for the update.
 
-    Branch name pattern: ``template-update/<template_id>-<target_ref>``.
+    Branch name pattern: ``template-update/<template_id>-<target_ref>``, with
+    the layer name inserted for a non-base layer so two layers' updates never
+    collide on the same branch.
     Only executed when ``--branch`` was passed.
 
     On success: transitions to ``branch_created``.
     On failure: transitions to ``failed``.
     """
+    scope = "" if update.layer == BASE_LAYER else f"{update.layer}/"
     branch_name = (
-        f"template-update/{update.template_id}-{update.target_ref}"
+        f"template-update/{scope}{update.template_id}-{update.target_ref}"
     )
 
     result = gitutil.checkout_new_branch(update.project_root, branch_name)
@@ -293,7 +310,12 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
     Skills the project declares in ``copyroom.project.yml`` ``agent.overlay``
     are permanently diverged: each is mapped to a Copier ``--exclude`` pattern
     (``<skills_dir>/<name>/**``) so the template stops managing it and the
-    project's local version survives the update untouched.
+    project's local version survives the update untouched. The excludes apply to
+    **every** layer — an overlay declaration means "no template manages this",
+    not "the base template doesn't".
+
+    The update is scoped to ``update.layer``'s answers file, so converging one
+    layer never reads or rewrites another's (see :mod:`copyroom.project.layers`).
 
     On success: transitions to ``update_executed``.
     On failure: transitions to ``failed``.
@@ -307,6 +329,7 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
             destination=update.project_root,
             vcs_ref=update.target_ref,
             exclude=excludes,
+            answers_file=answers_filename(update.layer),
         )
     except Exception as exc:
         update.status = _update_sm.transition(
@@ -454,13 +477,17 @@ def update_project(
     target_ref: str | None = None,
     use_branch: bool = False,
     trust: bool = False,
+    layer: str = BASE_LAYER,
 ) -> TemplateUpdate:
-    """Run the full template update workflow.
+    """Run the full template update workflow for one layer.
 
     This is the top-level entry point called from the CLI.
 
     ``trust`` enables execution of the template's post-update hook commands;
     when ``False`` (the default) they are skipped with a warning.
+
+    ``layer`` names which template to converge; it defaults to ``base``, so a
+    single-template project behaves exactly as it always has.
 
     Returns the ``TemplateUpdate`` entity in its final state (``complete``
     or ``failed``).
@@ -473,7 +500,7 @@ def update_project(
         project_root = project_root.resolve()
 
     # 1. InitiateTemplateUpdate (target_ref may be None — resolved below)
-    update = initiate(project_root, target_ref, use_branch)
+    update = initiate(project_root, target_ref, use_branch, layer=layer)
 
     # 2. LoadUpdateConfig — reads _src_path / _commit
     status = load_config(update)
@@ -517,3 +544,93 @@ def update_project(
     # 8. RunPostUpdateCommands
     status = run_post_update_commands(update, trust=trust)
     return update
+
+
+def update_all_layers(
+    project_root: str | Path | None = None,
+    use_branch: bool = False,
+    trust: bool = False,
+) -> list[TemplateUpdate]:
+    """Converge **every** recorded layer to its own latest tag, base first.
+
+    Each layer resolves its own latest ref, so no ``target_ref`` is accepted
+    here — a single ref is meaningless across different templates.
+
+    **This commits between layers.** Copier refuses a dirty destination
+    ("Destination repository is dirty; cannot continue"), and the first layer's
+    update necessarily dirties the tree, so converging N layers in one pass is
+    only possible if each layer's result is committed before the next runs. That
+    is also the history you want: one reviewable commit per layer convergence.
+    The run therefore verifies the tree is clean **once, up front**, so
+    ``git reset --hard`` back to the starting commit is always the way out.
+
+    It stops rather than commits when a layer leaves conflicts or rejects —
+    committing conflict markers unreviewed would be the one genuinely
+    destructive outcome here.
+
+    Layers are independent (see :mod:`copyroom.project.layers`), so one layer
+    failing does not invalidate the layers already converged; the run stops at
+    the first failure and returns the results so far, so the caller can report
+    exactly how far it got.
+    """
+    root = resolve_project_root_for_update(project_root)
+    layers = discover_layers(root)
+    if not layers:
+        raise CopyRoomError(
+            f"No template layer here: {root} has no .copier-answers.yml and no "
+            ".copier-answers.<name>.yml. Nothing to update."
+        )
+
+    dirty = gitutil.worktree_status(root)
+    if dirty:
+        raise CopyRoomError(
+            "Worktree is not clean. Commit or stash changes before updating:\n"
+            + "\n".join(f"  {line}" for line in dirty)
+        )
+
+    results: list[TemplateUpdate] = []
+    for index, layer in enumerate(layers):
+        if index > 0 and not _commit_layer_result(root, results[-1]):
+            break
+        result = update_project(
+            project_root=root,
+            target_ref=None,
+            use_branch=use_branch,
+            trust=trust,
+            layer=layer.name,
+        )
+        results.append(result)
+        if result.status == UpdateStatus.failed:
+            break
+    return results
+
+
+def _commit_layer_result(root: Path, previous: TemplateUpdate) -> bool:
+    """Commit the previous layer's output so the next layer can run.
+
+    Returns ``False`` when the run must stop: the previous layer left conflicts
+    or rejects (never commit those unreviewed), or git is unavailable. A layer
+    that changed nothing leaves a clean tree and needs no commit.
+    """
+    if previous.conflicts or previous.rejects:
+        print(
+            f"Layer '{previous.layer}' left conflicts/rejects — stopping before the next layer. "
+            "Resolve and commit, then re-run.",
+            file=sys.stderr,
+        )
+        return False
+    if not gitutil.worktree_status(root):
+        return True  # nothing to commit
+    committed = gitutil.commit_all(
+        root, f"copyroom: update layer '{previous.layer}' to {previous.target_ref}",
+    )
+    if not committed:
+        print("git is unavailable — cannot commit between layers.", file=sys.stderr)
+    return committed
+
+
+def resolve_project_root_for_update(project_root: str | Path | None) -> Path:
+    """Resolve *project_root* the way :func:`update_project` does (cwd default)."""
+    if project_root is None:
+        return Path.cwd().resolve()
+    return Path(project_root).resolve()

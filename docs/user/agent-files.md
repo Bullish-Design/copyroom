@@ -131,11 +131,25 @@ its divergence is expected, not a warning.
 
 ## Ownership and the two-writer rule
 
-CopyRoom owns the **canonical set** — the skills under its package assets, plus
-the `agent-files` command. Everything else under `.agents/skills/` belongs to
-the template (fleet skills it ships and converges) or the repo (its overlay).
-CopyRoom never fights another writer: it materializes exactly its canonical set
-and reports, never rewrites, the rest.
+Every file under `.agents/skills/` has exactly one owner:
+
+| Owner | Which skills | Materialized by |
+|---|---|---|
+| **tool-shipped** | CopyRoom's canonical set (`copyroom`, `copyroom-adopt`, `copyroom-template-edit`) | `copyroom agent-files export` |
+| **genome / fleet** | the family's `devenv-*` literacy skills + `.agents/devenv/` docs | `copyroom update` (the base layer) |
+| **personal** | the user's cross-repo skills | `copyroom update --layer my-ai` — see [layers](layers.md) |
+| **repoman's router** | `.agents/skills/repoman/` — *generated* from the repo's manager roster | `repoman install-skills` |
+| **repo overlay** | anything else | the repo |
+
+CopyRoom owns only the canonical set — the skills under its package assets, plus
+the `agent-files` command. It never fights another writer: it materializes
+exactly its canonical set and reports, never rewrites, the rest.
+
+> The **personal layer** is why this table has a row that is neither the tool nor
+> the genome. Skills that belong to the *user* — true in every repo, versioned on
+> the user's own schedule — can't live in CopyRoom's package (wrong owner, wrong
+> release cadence) or in one genome (only reaches repos made from it). They ship
+> as their own Copier layer instead. See [layers](layers.md).
 
 > ⚠️ **`.agents/` is dual-use.** `.agents/skills/` is the convention and is
 > tracked. The rest of `.agents/` (e.g. `.agents/pi/`, a pi package's
@@ -160,6 +174,7 @@ It round-trips through `copyroom inspect` / `copyroom status` (text and `--json`
 
 ## See also
 
+- [Template layers](layers.md) — how the personal layer delivers these files to every repo, whatever generated it.
 - [Copier overview §5](../copier/overview.md#5-copier-update--the-three-way-merge) — the three-way merge `update` converges with.
 - [Configuration](configuration.md) — the config files and owners; `copyroom.project.yml` is advisory.
 - [Adoption](adoption.md) and [template editing](template-editing.md) — the two skills `copyroom-adopt` and `copyroom-template-edit` encode.
