@@ -212,8 +212,9 @@ on malformed files.
 ## `manage/` — bootstrap (templatize & adopt)
 
 ### `manage/model.py`
-- `EXCLUDE_DIRS` — dirs never copied/compared (`.git`, `.copyroom`, `generated`,
-  caches, `.venv`, `node_modules`, …), shared by both commands.
+- `EXCLUDE_DIRS` — dirs never copied/compared (`.git`, `.jj`, `.copyroom`,
+  `generated`, caches, `.venv`, `node_modules`, plus machine/tool state
+  `.devenv`/`.direnv`/`.gitman`/`.testee`, …), shared by both commands.
 - `DriftResult` (adopt) and `Adoption` / `Templatization` entities + statuses.
 
 ### `manage/templatize.py` (`copyroom templatize`)

@@ -94,6 +94,67 @@ def test_templatize_refuses_nonempty_target(tmp_path: Path) -> None:
         templatize(repo_root=repo, into=home)
 
 
+_MACHINE_STATE_DIRS = (".devenv", ".jj", ".gitman", ".testee", ".direnv")
+
+
+def _seed_machine_state(repo: Path) -> None:
+    """Devenv/jj/gitman/testee/direnv runtime state, incl. a binary file."""
+    for state_dir in _MACHINE_STATE_DIRS:
+        d = repo / state_dir
+        d.mkdir()
+        (d / "state.bin").write_bytes(b"\xd2\x00\xff binary state")
+        (d / "nested").mkdir()
+        (d / "nested" / "deep.txt").write_text("machine state\n")
+
+
+def test_templatize_excludes_machine_state_dirs(tmp_path: Path) -> None:
+    """Tool state must never be snapshotted into template/ or golden/."""
+    repo = _make_repo(tmp_path / "myrepo")
+    _seed_machine_state(repo)
+
+    home = tmp_path / "myrepo-template"
+    tz = templatize(repo_root=repo, into=home, name="myrepo")
+
+    assert tz.status == TemplatizationStatus.complete
+    for state_dir in _MACHINE_STATE_DIRS:
+        assert not (home / "template" / state_dir).exists(), state_dir
+        assert not (home / "golden" / "myrepo" / "default" / state_dir).exists(), state_dir
+    # State dirs are not repo content: the verbatim golden still converges.
+    diff = golden_diff("myrepo", "default", workshop_root=home)
+    assert diff.status == GoldenStatus.no_diffs
+
+
+def test_adopt_ignores_machine_state_dirs_in_drift(tmp_path: Path) -> None:
+    """Tool state is not drift — and its binaries cannot crash the diff."""
+    repo = _make_repo(tmp_path / "myrepo")
+    _git("init", cwd=repo)
+    _git("add", "-A", cwd=repo)
+    _git("commit", "-qm", "initial", cwd=repo)
+    _seed_machine_state(repo)
+
+    home = tmp_path / "myrepo-template"
+    templatize(repo_root=repo, into=home, name="myrepo")
+    (home / "template" / "README.md").unlink()
+    (home / "template" / "README.md.jinja").write_text(
+        "# {{ project_name }}\n\nHello from {{ project_name }}.\n"
+    )
+    _finalize_git(home)
+
+    answers = tmp_path / "answers.yml"
+    answers.write_text("project_name: myrepo\n")
+
+    adoption = adopt(
+        template=str(home), repo_root=repo, ref="v0.1.0",
+        answers_file=answers, write=True,
+    )
+
+    assert adoption.status == AdoptionStatus.complete
+    assert adoption.result is not None and not adoption.result.has_drift
+    # No state-dir path lands in the repo-only (removed) set.
+    removed = {p for p in adoption.result.removed if not p.startswith(".copier-answers")}
+    assert all(not p.startswith(s + "/") for p in removed for s in _MACHINE_STATE_DIRS)
+
+
 # ---------------------------------------------------------------------------
 # parameterize (the golden loop)
 # ---------------------------------------------------------------------------

@@ -19,14 +19,21 @@ from enum import StrEnum
 from pathlib import Path
 
 # Directory names never copied into a template/golden snapshot nor counted as
-# drift: VCS metadata, CopyRoom's own scratch, and common tool/build caches.
-# Shared by ``templatize`` (snapshot/copy) and ``adopt`` (drift comparison).
+# drift: VCS metadata, CopyRoom's own scratch, common tool/build caches, and
+# machine-local tool state (devenv / jj / gitman / testee / direnv — generated
+# at runtime, never repo content). Shared by ``templatize`` (snapshot/copy) and
+# ``adopt`` (drift comparison).
 EXCLUDE_DIRS: frozenset[str] = frozenset(
     {
         ".git",
+        ".jj",  # jujutsu colocated VCS state
         ".copyroom",
         ".copyroom_sim",
         "generated",
+        ".devenv",  # devenv state — nix-store copies; can be GBs of binaries
+        ".direnv",  # direnv state
+        ".gitman",  # gitman runtime state (last-undo, …)
+        ".testee",  # testee artifact dir
         "__pycache__",
         ".pytest_cache",
         ".mypy_cache",
