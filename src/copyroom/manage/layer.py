@@ -133,6 +133,11 @@ def add_layer(
             destination=root,
             vcs_ref=ref,
             answers_file=answers_rel,
+            # A layer lands in a repo that already has files, so Copier would
+            # otherwise prompt per conflict and fail outright when stdin isn't a
+            # terminal. The layer owns the files it ships; the ones it must not
+            # touch are the template's `_skip_if_exists`, which still wins.
+            overwrite=True,
         )
     except Exception as exc:
         raise CopyRoomError(f"Copier failed to apply layer '{name}': {exc}") from exc

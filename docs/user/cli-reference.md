@@ -353,10 +353,16 @@ copyroom layer list [--json]
 
 **Behavior (`add`):** resolves the template (cloning a remote source) → derives
 the layer name → refuses to retarget an existing layer without `--force` →
-`copier copy --answers-file .copier-answers.<name>.yml` → reports every path
-that changed. Idempotent: re-running re-lands the layer's files, and the
-template's `_skip_if_exists` protects the repo's own. Refuses `--as base` — the
-base layer is created by `new` or linked by `adopt`.
+`copier copy --answers-file .copier-answers.<name>.yml --overwrite` → reports
+every path that changed. Idempotent: re-running re-lands the layer's files, and
+the template's `_skip_if_exists` protects the repo's own. Refuses `--as base` —
+the base layer is created by `new` or linked by `adopt`.
+
+> `--overwrite` is not optional: a layer lands in a repo that already has files,
+> and without it Copier prompts per conflict and fails when stdin isn't a
+> terminal. So `add` **replaces** a repo-local edit to a layer-owned file. Use
+> `update --layer` thereafter — that three-way-merges instead. See
+> [layers](layers.md#layer-add--apply-a-template-as-a-layer).
 
 ---
 

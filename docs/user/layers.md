@@ -69,6 +69,16 @@ It is a `copier copy` scoped to that answers file, so it is idempotent —
 re-running re-lands the layer's files and `_skip_if_exists` protects the repo's
 own. Retargeting an existing layer to a *different* template needs `--force`.
 
+**`add` overwrites the files the layer ships.** It has to: a layer lands in a
+repo that already has files, and without `--overwrite` Copier prompts per
+conflict and then fails outright when stdin isn't a terminal — every agent and CI
+invocation. So a repo-local edit to a layer-owned file is replaced, not merged.
+That is the difference between *applying* a layer and *converging* it: after the
+first `add`, use `copyroom update --layer NAME`, which three-way-merges and
+surfaces a real collision as a conflict. Files the template declares in
+`_skip_if_exists` (e.g. `AGENTS.md`) are never overwritten by either path. Review
+`git status` after an `add`.
+
 `layer add` runs anywhere, including a repo with no template at all.
 
 ### `layer add` vs `adopt`

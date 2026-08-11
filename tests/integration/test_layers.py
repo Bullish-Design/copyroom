@@ -129,6 +129,24 @@ class TestLayerAdd:
         result = add_layer(str(personal_template), repo_root=layered_project, ref="v1.0.0")
         assert result.replaced is True
 
+    def test_lands_over_a_locally_diverged_copy_of_its_own_file(
+        self, tmp_path: Path, template_repo: Path, personal_template: Path,
+    ) -> None:
+        # The realistic rollout case: the repo already has a file the layer
+        # ships, with different content (hand-written, or left by an older
+        # distribution mechanism). Copier prompts per conflict and fails when
+        # stdin isn't a terminal, so `layer add` must pass --overwrite.
+        proj = tmp_path / "diverged"
+        assert copier_copy(str(template_repo), proj).returncode == 0
+        stale = proj / ".agents" / "skills" / "my-ai"
+        stale.mkdir(parents=True)
+        (stale / "SKILL.md").write_text("# my-ai — a stale hand-placed copy\n")
+        _git("init", cwd=proj)
+        _commit(proj, "with a stale personal skill")
+
+        add_layer(str(personal_template), repo_root=proj, ref="v1.0.0")
+        assert "personal law v1" in (stale / "SKILL.md").read_text()
+
     def test_retargeting_needs_force(
         self, layered_project: Path, tmp_path: Path, personal_template: Path,
     ) -> None:

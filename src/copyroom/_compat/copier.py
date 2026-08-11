@@ -32,6 +32,7 @@ def copier_copy(
     data_file: Path | None = None,
     vcs_ref: str | None = None,
     answers_file: str | Path | None = None,
+    overwrite: bool = False,
     timeout: int = _COPIER_TIMEOUT,
 ) -> subprocess.CompletedProcess[str]:
     """Run ``copier copy`` and return the result.
@@ -52,6 +53,14 @@ def copier_copy(
         Optional path (relative to *destination*) for the answers file Copier
         records, e.g. ``.copier-answers.my-ai.yml``. Omit for the template's own
         default — the base layer's ``.copier-answers.yml``.
+    overwrite:
+        Replace existing destination files without prompting. Required when
+        copying into a **non-empty** destination — otherwise Copier asks per
+        conflicting file and simply fails when stdin is not a terminal, which is
+        every agent and CI invocation. Only ``layer add`` needs it: ``new``
+        targets an empty dir and ``adopt`` renders into a scratch dir. The
+        template's ``_skip_if_exists`` still wins, so files a template declares
+        as repo-owned are never overwritten.
     timeout:
         Seconds to wait before raising ``subprocess.TimeoutExpired``.
     """
@@ -62,6 +71,8 @@ def copier_copy(
         cmd.extend(["--data-file", str(data_file)])
     if answers_file is not None:
         cmd.extend(["--answers-file", str(answers_file)])
+    if overwrite:
+        cmd.append("--overwrite")
     cmd.extend([source, str(destination)])
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
