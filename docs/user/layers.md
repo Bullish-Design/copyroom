@@ -135,6 +135,35 @@ Template layers → /home/andrew/Documents/Projects/gitman
 `--json`); `status` computes `update_available` per layer, and its top-level
 `update_available` means *any* layer is behind.
 
+## Rollout order matters when two layers ship the same file
+
+Layers don't fight over files they each own exclusively — that's most of them.
+But `AGENTS.md` is shipped by *both* the genome (template-py) and the personal
+layer, because either may be the one to seed a repo that has none. `_skip_if_exists`
+resolves that safely — **whoever gets there first wins, and nobody overwrites**.
+Which means the order you apply them in decides who seeds it.
+
+> **Bring the base layer current first, then add the personal layer.**
+>
+> ```bash
+> copyroom update                                     # genome first
+> git add -A && git commit                            # review, commit
+> copyroom layer add gh:Bullish-Design/my-ai          # then the personal layer
+> ```
+
+Do it the other way round on a repo that is *behind* on its genome and has no
+`AGENTS.md`, and you get one avoidable conflict: the personal layer seeds
+`AGENTS.md`, then the genome's update tries to add its own version and
+three-way-merges against a file it has never seen.
+
+Measured on a real repo (argentic, 6 genome versions behind, no `AGENTS.md`): the
+genome update conflicts on `devenv.nix`, `devenv.yaml`, `.gitignore`,
+`pyproject.toml` and the `.agents/devenv/` docs either way — that's its own
+catch-up drift — **plus `AGENTS.md`** only when the personal layer went first.
+
+For a repo already current on its genome, or one with no genome at all, order
+doesn't matter.
+
 ## Writing an overlay template
 
 An overlay template is an ordinary Copier template with three extra

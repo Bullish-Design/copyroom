@@ -35,7 +35,8 @@ remaining step is the user's to take (see [Handover](#handover)).
 | 5 | Stopped shipping copies of `copyroom*`, `gitman`, `repoman` skills (the two-writer fix) | ✅ |
 | 6 | `scripts/my-ai-sync.py` deleted; `devenv.nix` script + `enterShell` rewritten | ✅ |
 | 7 | `AGENTS.md` / `README.md` / `pyproject.toml` rewritten for the layer model | ✅ |
-| 8 | Commit + `v0.1.0` tag | ⏳ **the user's** — see Handover |
+| 8 | Commit + `v0.1.0` tag | ✅ `796107c`, tag `v0.1.0` |
+| 9 | my-ai applies its own layer to itself (dogfood) | ✅ `b071e36` |
 
 ## Verification
 
@@ -47,6 +48,8 @@ remaining step is the user's to take (see [Handover](#handover)).
 | No regression | `devenv shell -- uv run pytest -q` | **588 pass**, 2 skipped |
 | Lint | `devenv shell -- uv run ruff check src/ tests/` | clean |
 | End-to-end demo | `devenv shell -- bash demo/walkthrough.sh` | passes, ACT 6 included |
+| **The real two-layer case** | [`verify-two-real-layers.sh`](verify-two-real-layers.sh) — the real my-ai layer on a copy of **argentic**, whose base layer is the real genome (`gh:Bullish-Design/template-py` @ v0.1.2) | all PASS |
+| The new command is live machine-wide | `~/.local/share/repoman/venv/bin/copyroom layer --help` | works (editable install picked it up; no `repoman-sync` needed) |
 
 What `verify-my-ai-layer.sh` proves against a *real* repo (gitman, which has its
 own `AGENTS.md`, `CLAUDE.md`, and `.agents/skills/gitman/`):
@@ -60,6 +63,48 @@ own `AGENTS.md`, `CLAUDE.md`, and `.agents/skills/gitman/`):
 - a v0.2.0 bump converges: edited skill updated, new skill added, ref recorded;
 - on a repo with **no** `AGENTS.md`, the seed and symlink are created.
 
+## Two things dogfooding found that design and the first verification missed
+
+### 1. `layer add` must pass `--overwrite` (fixed — `4d727f3`)
+
+Applying the layer to my-ai itself failed outright:
+
+    Interactive session required: Consider using `--overwrite`
+
+A layer lands in a repo that already has files, so Copier prompts per conflicting
+file and then fails when stdin isn't a terminal — every agent and CI invocation.
+The first verification missed it because the conflict only arises when a
+layer-owned file already exists with **different** content; those targets either
+lacked the layer's skills entirely or had a byte-identical `CLAUDE.md`. my-ai
+already had a `.agents/skills/my-ai/SKILL.md`, which is exactly the shape of any
+repo an older distribution mechanism has touched.
+
+Fixed, regression-tested, and documented: `layer add` *applies* (a copy —
+replaces), `update --layer` *converges* (three-way merges).
+
+### 2. Rollout order matters, because two layers ship `AGENTS.md` (documented)
+
+Verifying against a real template-py repo (argentic, 6 genome versions behind, no
+`AGENTS.md`) showed the genome's own update conflicting on `AGENTS.md`. A control
+run without the personal layer isolated the cause:
+
+| Conflicts on `copyroom update` (v0.1.2 → v0.1.8) | control | with the layer |
+|---|---|---|
+| `devenv.nix`, `devenv.yaml`, `.gitignore`, `pyproject.toml`, `.agents/devenv/*` | yes | yes |
+| **`AGENTS.md`** | **no** | **yes** |
+
+template-py ships an `AGENTS.md` too. `_skip_if_exists` makes this safe — nobody
+overwrites — but it means **whoever seeds it first wins**, so applying the
+personal layer to a repo that is behind on its genome creates one avoidable
+merge. Not a code bug; a rollout-order fact. Fix is the order:
+
+    copyroom update && git add -A && git commit    # genome first
+    copyroom layer add <my-ai>                     # then the personal layer
+
+Documented in `docs/user/layers.md` §"Rollout order", my-ai's `AGENTS.md`, and
+its `README.md`. Irrelevant for a repo already current on its genome, or one with
+no genome.
+
 ## One design decision changed during implementation
 
 `update --all-layers` was designed to converge every layer in one pass with a
@@ -71,25 +116,24 @@ run; the last layer is left uncommitted; a layer that leaves conflicts stops the
 run instead of committing them. Covered by
 `test_all_layers_commits_between_layers`.
 
-## Handover
+## Shipped
 
-my-ai's changes are on disk and **uncommitted** — the commit and tag are the
-user's to make (my-ai is jj-colocated, and gitman owns VCS in this family). The
-template is not consumable until it is tagged: Copier resolves a template by tag.
+| Repo | State |
+|---|---|
+| copyroom | `main` @ `4d727f3`, tagged **v0.7.1** (v0.7.0 shipped `layer add` without `--overwrite`) |
+| my-ai | `main` @ `b071e36`, tagged **v0.1.0**; applies its own layer to itself |
+| machine toolchain | `copyroom layer` live — the venv installs copyroom editable from the main checkout, so merging to `main` was enough |
+
+Neither repo is pushed; both tags are local.
+
+## Rollout — not started
+
+No production repo has the layer yet. Per repo, in this order:
 
 ```bash
-cd ~/Documents/Projects/my-ai
-gitman status                       # review the change
-# commit via your normal lane, then:
-git tag v0.1.0                      # a Copier template is consumed BY TAG
-```
-
-Then roll out, per repo:
-
-```bash
-copyroom layer add ~/Documents/Projects/my-ai        # dev; gh:Bullish-Design/my-ai in fleet mode
-copyroom layer list                                  # confirm the layers
-git status                                           # review, then commit
+copyroom update && git add -A && git commit          # 1. genome first (see above)
+copyroom layer add ~/Documents/Projects/my-ai        # 2. dev; gh:Bullish-Design/my-ai in fleet mode
+copyroom layer list && git status                    #    review, then commit
 ```
 
 And thereafter:
@@ -98,6 +142,10 @@ And thereafter:
 copyroom update --layer my-ai                        # converge the personal layer
 copyroom update --all-layers                         # converge everything
 ```
+
+Most repos are several genome versions behind (argentic was 6), so step 1 will
+produce real conflicts from its own drift — unrelated to the personal layer, but
+worth doing one repo at a time rather than fanning out.
 
 ## Follow-ups for other repos (out of scope here)
 
