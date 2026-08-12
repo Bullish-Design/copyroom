@@ -22,6 +22,7 @@ can be managed by more than one template at once — the genome (`template-py`)
 | [`IMPLEMENTATION.md`](IMPLEMENTATION.md) | The work list, both dogfooding findings, and what shipped |
 | [`verify-my-ai-layer.sh`](verify-my-ai-layer.sh) | The real my-ai template applied to a real repo (gitman) |
 | [`verify-two-real-layers.sh`](verify-two-real-layers.sh) | Two *real* layers: my-ai on a repo generated from the real genome (argentic) |
+| [`ROLLOUT.md`](ROLLOUT.md) | Wave 1: which repos took the layer, and two things it surfaced |
 
 ## Status
 
@@ -35,5 +36,9 @@ Dogfooding caught two things the design and the first verification missed — a
 `AGENTS.md` (documented). Both are written up in
 [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
-**Rollout has not started** — no production repo carries the layer yet, and the
-order matters. Commands: [`IMPLEMENTATION.md`](IMPLEMENTATION.md#rollout--not-started).
+**Rollout wave 1 is done** — the 5 most recently committed repos (copyroom,
+pytuin, nix-meta, nix-terminal, nix-nvim) carry the layer, committed locally and
+unpushed. ~35 repos remain. See [`ROLLOUT.md`](ROLLOUT.md), which also records two
+pre-existing problems the rollout surfaced: pytuin's base layer points at a
+copyroom demo fixture, and none of these repos carry the `.agents/` gitignore
+carve-out.
