@@ -109,9 +109,48 @@ It still belongs in the genome for repos generated from it in future.
 
 Two commits each: the layer, then the `.gitignore` carve-out.
 
-## Remaining fleet
+## Wave 2 — the whole fleet
 
-~35 repos untouched.
+Decision: CopyRoom manages every repo. Driven by
+[`rollout-fleet.sh`](rollout-fleet.sh), which per repo runs `layer add` (or
+`update --layer` when the layer is already there), then `agent-files export`,
+then appends the `.agents/` carve-out, then commits.
+
+**42 repos converged, 0 failures.** Every one carries the personal layer at
+**v0.2.0**, CopyRoom's three canonical skills, a `CLAUDE.md` symlink, and the
+`.gitignore` carve-out — verified independently of the script's own report.
+
+Order inside the script matters: `layer add` seeds `AGENTS.md` first, so
+`agent-files export` never writes its blueprint over it. No repo's existing
+`AGENTS.md` changed.
+
+### my-ai v0.2.0 had to ship first
+
+The user added the Simplified Technical English rule to the personal law and
+tagged v0.2.0 — locally. The remote still had v0.1.0. Rolling out at that moment
+would have written the stale law into 42 repos, and each would have needed a
+second convergence pass. Published v0.2.0 first, then rolled out.
+
+Repos already carrying the layer at v0.1.0 are **converged, not skipped** — an
+early version of the script skipped them, which would have stranded six repos on
+the old law.
+
+### Eligibility, and what it excluded
+
+- **20 repos skipped, dirty worktree.** A layer commit in a dirty tree sweeps
+  the user's work-in-progress into it. These need a pass each once their work
+  lands: `allium-env argentic devman flora foreman forgelab fornix grail llgym
+  lodestar mypi-agent nixvim paloma-story-generation pytuin-desktop shellij
+  siteman talkee terminal-state testee zelligate`.
+- **Detached HEAD is handled, not skipped.** jj-colocated repos sit on a detached
+  git HEAD, so commits land off the branch — the trap my-ai hit. The script
+  fast-forwards the single local branch at HEAD afterwards. Six repos (eventic,
+  image-gen-pipeline, inferference, my-ai, nix-paseo, pydantree) were only
+  reachable because of this. Run any `jj` command in them to re-import the refs.
+
+## Remaining
+
+20 dirty repos, listed above.
 
 For repos that *are* current on a real genome and lack an `AGENTS.md`, do the
 genome update first (see [layers.md](../../../docs/user/layers.md) §"Rollout
