@@ -19,22 +19,23 @@ can be managed by more than one template at once — the genome (`template-py`)
 | [`SPIKE.md`](SPIKE.md) | Empirical proof that Copier supports per-layer answers files |
 | [`spike-layers.sh`](spike-layers.sh) | The runnable spike (5 questions, all PASS) |
 | [`DESIGN.md`](DESIGN.md) | The layer concept, the CLI surface, and my-ai's new shape |
-| [`IMPLEMENTATION.md`](IMPLEMENTATION.md) | The work list, both dogfooding findings, and what shipped |
+| [`IMPLEMENTATION.md`](IMPLEMENTATION.md) | The work list, all three dogfooding findings, and what shipped |
 | [`verify-my-ai-layer.sh`](verify-my-ai-layer.sh) | The real my-ai template applied to a real repo (gitman) |
 | [`verify-two-real-layers.sh`](verify-two-real-layers.sh) | Two *real* layers: my-ai on a repo generated from the real genome (argentic) |
 | [`ROLLOUT.md`](ROLLOUT.md) | Wave 1: which repos took the layer, and two things it surfaced |
 
 ## Status
 
-**Shipped.** copyroom `main` @ v0.7.1, my-ai `main` @ v0.1.0 (it applies its own
-layer to itself). `copyroom layer` is live machine-wide. 589 tests pass, `ruff`
-clean, the walkthrough passes with a new ACT 6, and both verify scripts pass
-against real repos.
+**Shipped and pushed.** copyroom `main` @ **v0.7.2**, my-ai `main` @ **v0.1.0**
+(it applies its own layer to itself). `copyroom layer` is live machine-wide.
+589 tests pass, `ruff` clean, the walkthrough passes with a new ACT 6, and both
+verify scripts pass against real repos.
 
-Dogfooding caught two things the design and the first verification missed — a
-`--overwrite` bug in `layer add` (fixed) and a rollout-order interaction on
-`AGENTS.md` (documented). Both are written up in
-[`IMPLEMENTATION.md`](IMPLEMENTATION.md).
+Dogfooding caught **three** things design and the first verification missed: a
+`--overwrite` bug in `layer add`, a rollout-order interaction on `AGENTS.md`, and
+`layer add` recording a machine-local cache path as `_src_path` — the last would
+have pinned every repo in the fleet to this machine. Two fixed, one documented;
+all three written up in [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
 **Rollout wave 1 is done** — the 5 most recently committed repos (copyroom,
 pytuin, nix-meta, nix-terminal, nix-nvim) carry the layer, committed locally and
