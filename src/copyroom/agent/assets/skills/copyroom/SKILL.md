@@ -24,9 +24,9 @@ at once — *layers* (`layer add`, `update --layer`). Full surface: the CLI refe
 - **Never hand-edit an answers file** (`.copier-answers.yml` or a layer's
   `.copier-answers.<name>.yml`). Copier regenerates it on every update; manual
   edits corrupt the merge base.
-- **Layers are independent.** `update` converges one layer (default `base`);
-  `--layer NAME` picks another. Never try to make one layer manage another's
-  files — check `copyroom layer list` before assuming which template owns a file.
+- **Layers are independent.** `update` converges one layer. The default is
+  `base`; `--layer NAME` selects another. Never make one layer manage another's
+  files. Run `copyroom layer list` to find which template owns a file.
 - **The template-edit loop is preview-only.** `template-preview` never applies
   anything to the project — apply later with `copyroom update <ref>`.
 - **Clean worktree before `update`.** Commit or stash first; the clean tree is
