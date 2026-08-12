@@ -57,26 +57,34 @@ It was generated from a throwaway fixture, not a genome. Because that path lives
 that looks authoritative. Running `copyroom update` there would try to converge
 pytuin onto a demo fixture.
 
-Fix is to re-adopt it onto the real genome, which is a deliberate per-repo
-decision, not part of this rollout:
+**The lying part is fixed** (copyroom v0.7.3). `git tag --list` walks up to the
+nearest enclosing repository, so `list_tags` on a path that is merely *inside* a
+repo reported that outer repo's tags as its own. It now checks
+`git rev-parse --show-toplevel` and returns nothing unless the path IS the repo
+root. pytuin's status went from a confident `Latest ref: v0.7.2` to an honest
+`Latest ref: unknown`. Regression tests in `tests/unit/test_layers.py`
+(`TestListTagsScoping`).
+
+The bogus base layer itself remains — re-adopting is a deliberate per-repo
+decision, not part of a rollout:
 
 ```bash
 cd ~/Documents/Projects/pytuin
 copyroom adopt gh:Bullish-Design/template-py --ref <tag> --answers <answers.yml> --force
 ```
 
-### 2. None of these repos carry the `.agents/` gitignore carve-out
+### 2. Four repos had no `.agents/` gitignore carve-out (added)
 
 `.agents/` is dual-use: `.agents/skills/` is tracked, the rest is tool runtime
-state. None of the five declare that, and four of them had no `.agents/`
-directory at all until this rollout created one. Nothing bad happened here — only
-`SKILL.md` was present, verified before committing — but the next tool that
-writes runtime state under `.agents/` (a pi package's `node_modules`, say) will
-land it straight into git.
+state. Only copyroom declared that (and its rules were verified adequate — skill
+tracked, `.agents/pi/node_modules` ignored). The other four had no `.agents/`
+directory at all until this rollout created one. Nothing bad landed — only
+`SKILL.md` was present, checked before committing — but the next tool to write
+runtime state under `.agents/` would have put it straight into git.
 
 The personal layer **cannot** fix this: Copier writes whole files, and a
-`.gitignore` shipped by the layer would clobber each repo's own. It belongs in
-the genome, or in a one-off per repo:
+`.gitignore` shipped by the layer would clobber each repo's own. **Added per repo
+instead** — appended to each of the four external repos' `.gitignore`:
 
 ```gitignore
 .agents/**
@@ -86,10 +94,24 @@ the genome, or in a one-off per repo:
 !CLAUDE.md
 ```
 
+Verified in each: `.agents/skills/**/SKILL.md` still tracked, a planted
+`.agents/pi/node_modules/junk.js` ignored, no already-tracked file dropped.
+It still belongs in the genome for repos generated from it in future.
+
+## Pushed
+
+| Repo | Commit |
+|---|---|
+| `pytuin` | `3e1abfe` |
+| `nix-meta` | `fab9907` |
+| `nix-terminal` | `4664e79` |
+| `nix-nvim` | `202e2fc` |
+
+Two commits each: the layer, then the `.gitignore` carve-out.
+
 ## Remaining fleet
 
-~35 repos untouched. Nothing is pushed — all five commits are local, so the whole
-wave reverts with `git reset --hard HEAD~1` per repo.
+~35 repos untouched.
 
 For repos that *are* current on a real genome and lack an `AGENTS.md`, do the
 genome update first (see [layers.md](../../../docs/user/layers.md) §"Rollout

@@ -110,3 +110,60 @@ class TestTemplateDefaultLayer:
         assert template_default_layer(tmp_path) is None
         (tmp_path / "copier.yml").write_text("project_name:\n  type: str\n")
         assert template_default_layer(tmp_path) is None
+
+
+class TestListTagsScoping:
+    """``list_tags`` must not report an enclosing repo's tags as a path's own.
+
+    Regression for a field failure: `pytuin` was generated from a fixture living
+    *inside* the CopyRoom checkout, so `copyroom status` resolved CopyRoom's own
+    latest release as pytuin's template version — confident, authoritative, and
+    wrong.
+    """
+
+    @staticmethod
+    def _repo(path: Path, tag: str) -> None:
+        import subprocess
+
+        def git(*args: str) -> None:
+            subprocess.run(
+                ["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
+                cwd=path, check=True, capture_output=True, text=True,
+            )
+
+        path.mkdir(parents=True, exist_ok=True)
+        (path / "README.md").write_text("# r\n")
+        git("init", "-q", "-b", "main")
+        git("add", "-A")
+        git("commit", "-qm", "init")
+        git("tag", tag)
+
+    def test_a_repo_root_reports_its_own_tags(self, tmp_path: Path) -> None:
+        from copyroom._compat.gitutil import list_tags
+
+        outer = tmp_path / "outer"
+        self._repo(outer, "v9.9.9")
+        assert list_tags(outer) == ["v9.9.9"]
+
+    def test_a_subdirectory_reports_nothing_not_the_outer_repos_tags(self, tmp_path: Path) -> None:
+        from copyroom._compat.gitutil import list_tags
+
+        outer = tmp_path / "outer"
+        self._repo(outer, "v9.9.9")
+        fixture = outer / "demo" / "fixtures" / "minimal"
+        fixture.mkdir(parents=True)
+        (fixture / "copier.yml").write_text("project_name:\n  type: str\n")
+
+        # The fixture is a template source but NOT a repo of its own.
+        assert list_tags(fixture) == []
+
+    def test_latest_ref_is_undeterminable_rather_than_wrong(self, tmp_path: Path) -> None:
+        from copyroom._compat.gitutil import resolve_latest_ref
+
+        outer = tmp_path / "outer"
+        self._repo(outer, "v9.9.9")
+        fixture = outer / "fixtures" / "tpl"
+        fixture.mkdir(parents=True)
+
+        assert resolve_latest_ref(str(fixture)) is None
+        assert resolve_latest_ref(str(outer)) == "v9.9.9"

@@ -281,9 +281,26 @@ def add_all_and_diff_cached(repo: Path) -> str:
 def list_tags(repo: Path) -> list[str]:
     """List the tags of a local *repo* via ``git tag --list``.
 
+    Only tags of the repo **rooted at** *repo* count. ``git tag`` walks up to the
+    nearest enclosing repository, so a path that is merely *inside* one — a
+    template kept in a subdirectory of another checkout — would otherwise report
+    that outer repo's tags as its own. That produced a confidently wrong answer
+    in the field: a project generated from a fixture under the CopyRoom checkout
+    had ``copyroom status`` report CopyRoom's latest release as its template's.
+    An honest "undeterminable" (empty) is far better than a plausible lie.
+
     Defensive: a missing ``git`` binary, a timeout, or a non-repo path yields an
     empty list rather than raising.
     """
+    toplevel = run_git("rev-parse", "--show-toplevel", cwd=repo)
+    if toplevel is None or toplevel.returncode != 0:
+        return []
+    try:
+        if Path(toplevel.stdout.strip()).resolve() != Path(repo).resolve():
+            return []  # inside a repo, but not its root — not this path's tags
+    except OSError:
+        return []
+
     result = run_git("tag", "--list", cwd=repo)
     if result is None or result.returncode != 0:
         return []
