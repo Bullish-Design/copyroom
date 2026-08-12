@@ -148,9 +148,19 @@ run instead of committing them. Covered by
 | my-ai | `main` @ `effb8e9`, tagged **v0.1.0**, **pushed** |
 | machine toolchain | `copyroom layer` live — the venv installs copyroom editable from the main checkout, so merging to `main` was enough |
 
-`v0.7.0` and `v0.7.1` are deliberately **not** published: v0.7.0 shipped
-`layer add` without `--overwrite`, v0.7.1 shipped it recording a machine-local
-`_src_path`. Only v0.7.2 is on the remote.
+Tag history, stated accurately:
+
+| Tag | Published | Status |
+|---|---|---|
+| v0.7.0 | no | `layer add` missing `--overwrite` — never left this machine |
+| v0.7.1 | **yes** | pushed before finding 3; `layer add` records a machine-local `_src_path` |
+| v0.7.2 | yes | **use this one** |
+
+v0.7.1 was pushed before the `_src_path` bug was found. It is left on the remote
+rather than deleted — rewriting a published tag is worse than a superseded one,
+and nothing consumes it (`repoman.lock` pins copyroom by `path:`). Consumers want
+**>= 0.7.2**; anything that applied a layer with 0.7.1 should check its
+`.copier-answers.<layer>.yml` for a `~/.cache/copyroom` path.
 
 **my-ai is jj-colocated with a detached git HEAD**, so the commits landed off the
 `main` branch and local `main` still pointed at the old tip. It was advanced with
