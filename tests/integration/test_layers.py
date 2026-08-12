@@ -123,6 +123,24 @@ class TestLayerAdd:
         assert str(result.answers_file) == ".copier-answers.my-ai.yml"
         assert ".agents/skills/my-ai/SKILL.md" in result.written
 
+    def test_records_the_source_the_caller_gave_not_the_local_clone(
+        self, tmp_path: Path, personal_template: Path,
+    ) -> None:
+        # `_src_path` is what every future `update --layer` resolves against.
+        # Recording the resolved clone would pin the repo to a machine-local
+        # cache path — unresolvable on another machine or in CI, and broken by
+        # a cache prune. It must be the string the caller passed.
+        proj = tmp_path / "srcpath"
+        proj.mkdir()
+        _git("init", cwd=proj)
+        (proj / "README.md").write_text("# x\n")
+        _commit(proj, "base")
+
+        add_layer(str(personal_template), repo_root=proj, ref="v1.0.0")
+        answers = (proj / ".copier-answers.my-ai.yml").read_text()
+        assert f"_src_path: {personal_template}" in answers, answers
+        assert "cache" not in answers
+
     def test_reapplying_the_same_template_is_allowed(
         self, layered_project: Path, personal_template: Path,
     ) -> None:

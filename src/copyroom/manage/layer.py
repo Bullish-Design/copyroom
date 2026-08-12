@@ -129,7 +129,15 @@ def add_layer(
     before = _snapshot(root)
     try:
         result = copier_copy(
-            source=str(repo_dir),
+            # The source string the CALLER gave us, not the local clone above.
+            # Copier records this verbatim as `_src_path`, and that recorded
+            # value is what every future `update --layer` resolves against —
+            # so handing it the cache directory would pin each repo to a
+            # machine-local path that no other machine (or CI) can resolve, and
+            # that pruning the cache would break. `copyroom new` has always
+            # passed the original string for the same reason. The clone above
+            # exists only to read the template's copier.yml.
+            source=template,
             destination=root,
             vcs_ref=ref,
             answers_file=answers_rel,
@@ -153,7 +161,7 @@ def add_layer(
         repo_root=root,
         layer=name,
         answers_file=answers_rel,
-        template_source=str(repo_dir),
+        template_source=template,
         template_ref=ref,
         replaced=existing is not None,
         written=written,
