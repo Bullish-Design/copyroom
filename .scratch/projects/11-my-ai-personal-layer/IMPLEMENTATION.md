@@ -63,7 +63,7 @@ own `AGENTS.md`, `CLAUDE.md`, and `.agents/skills/gitman/`):
 - a v0.2.0 bump converges: edited skill updated, new skill added, ref recorded;
 - on a repo with **no** `AGENTS.md`, the seed and symlink are created.
 
-## Two things dogfooding found that design and the first verification missed
+## Three things dogfooding found that design and the first verification missed
 
 ### 1. `layer add` must pass `--overwrite` (fixed — `4d727f3`)
 
@@ -105,6 +105,30 @@ Documented in `docs/user/layers.md` §"Rollout order", my-ai's `AGENTS.md`, and
 its `README.md`. Irrelevant for a repo already current on its genome, or one with
 no genome.
 
+### 3. `layer add` recorded the local clone as `_src_path` (fixed — `11a9a76`)
+
+Caught by running the `gh:` form against the **real published** template rather
+than assuming it behaved like the local-path case. `layer add` resolves the
+template to a local clone so it can read `copier.yml` and derive the layer name,
+then handed *that clone* to Copier as the source. Copier records its source
+verbatim, so the result was:
+
+    _src_path: /home/andrew/.cache/copyroom/templates/3f3c79a7e880b956/repo
+
+`_src_path` is what every future `update --layer` resolves against. Rolling out
+across the fleet would have pinned every repo to a machine-local cache directory
+— unresolvable on another machine or in CI, broken by a cache prune — and since
+answers files are never to be hand-edited, the fix would have been re-adopting
+each repo. (`eventic` already carries this shape on its *base* layer:
+`_src_path: /home/andrew/Documents/Projects/template-py`.)
+
+`copyroom new` has always passed the caller's original string, which is why
+generated repos correctly record `gh:Bullish-Design/template-py`. `layer add` now
+does the same; the clone stays, but only to read `copier.yml`. Verified against
+the published template:
+
+    _src_path: gh:Bullish-Design/my-ai
+
 ## One design decision changed during implementation
 
 `update --all-layers` was designed to converge every layer in one pass with a
@@ -120,11 +144,18 @@ run instead of committing them. Covered by
 
 | Repo | State |
 |---|---|
-| copyroom | `main` @ `4d727f3`, tagged **v0.7.1** (v0.7.0 shipped `layer add` without `--overwrite`) |
-| my-ai | `main` @ `b071e36`, tagged **v0.1.0**; applies its own layer to itself |
+| copyroom | `main` @ `11a9a76`, tagged **v0.7.2**, **pushed** |
+| my-ai | `main` @ `effb8e9`, tagged **v0.1.0**, **pushed** |
 | machine toolchain | `copyroom layer` live — the venv installs copyroom editable from the main checkout, so merging to `main` was enough |
 
-Neither repo is pushed; both tags are local.
+`v0.7.0` and `v0.7.1` are deliberately **not** published: v0.7.0 shipped
+`layer add` without `--overwrite`, v0.7.1 shipped it recording a machine-local
+`_src_path`. Only v0.7.2 is on the remote.
+
+**my-ai is jj-colocated with a detached git HEAD**, so the commits landed off the
+`main` branch and local `main` still pointed at the old tip. It was advanced with
+`git branch -f main` (verified a clean fast-forward first) before pushing. Run any
+`jj` command in that repo to re-import the refs into jj's view.
 
 ## Rollout — not started
 
@@ -132,7 +163,7 @@ No production repo has the layer yet. Per repo, in this order:
 
 ```bash
 copyroom update && git add -A && git commit          # 1. genome first (see above)
-copyroom layer add ~/Documents/Projects/my-ai        # 2. dev; gh:Bullish-Design/my-ai in fleet mode
+copyroom layer add gh:Bullish-Design/my-ai           # 2. the PORTABLE form — see finding 3
 copyroom layer list && git status                    #    review, then commit
 ```
 
