@@ -14,6 +14,12 @@ inputs:
   allium-env:
     url: github:Bullish-Design/allium-env?ref=v0.3.3
     flake: false
+  # shellij: durable Zellij workbenches. This repo does not import RepoMan's
+  # meta-module, so it imports shellij's devenv module directly — shellij/zellij/
+  # yazi packages, the guarded `shellij open` enterShell hook, and
+  # YAZI_CONFIG_HOME pointing at the packaged Yazi assets.
+  shellij:
+    url: path:/home/andrew/Documents/Projects/shellij
 
 imports:
   - allium-env
@@ -21,6 +27,7 @@ imports:
   # Development-only tooling (Python toolchain, etc.). Consumers that
   # `imports: - copyroom` only pull in the root devenv.nix module, never this.
   - ./dev
+  - shellij/modules
 
 # If you're using non-OSS software, you can set allowUnfree to true.
 # allowUnfree: true
