@@ -19,7 +19,7 @@ def test_run_doctor_all_ok_in_healthy_env() -> None:
     report = doctor.run_doctor()
     assert report.ok is True
     names = {c.name for c in report.checks}
-    assert names == {"copier", "git", "cache", "agent-files"}
+    assert names == {"copier", "git", "cache", "agent-files", "template-source"}
 
 
 def test_agent_files_check_is_warn_only(tmp_path: Path) -> None:
@@ -103,7 +103,60 @@ def test_doctor_cli_exits_zero_and_json_parses(tmp_path: Path) -> None:
     )
     assert js.returncode == 0, js.stderr
     payload = json.loads(js.stdout)
-    assert {c["name"] for c in payload["checks"]} == {"copier", "git", "cache", "agent-files"}
+    assert {c["name"] for c in payload["checks"]} == {
+        "copier",
+        "git",
+        "cache",
+        "agent-files",
+        "template-source",
+    }
     assert all("ok" in c for c in payload["checks"])
     af = next(c for c in payload["checks"] if c["name"] == "agent-files")
     assert af["warn_only"] is True
+
+
+# ---------------------------------------------------------------------------
+# template-source
+# ---------------------------------------------------------------------------
+
+
+def _answers(root: Path, src: str, name: str = ".copier-answers.yml") -> None:
+    (root / name).write_text(f"_commit: v1.0.0\n_src_path: {src}\n")
+
+
+def test_template_source_ok_for_a_resolvable_local_path(tmp_path: Path) -> None:
+    template = tmp_path / "template-nix"
+    template.mkdir()
+    project = tmp_path / "proj"
+    project.mkdir()
+    _answers(project, str(template))
+    check = doctor._check_template_source(project)
+    assert check.ok is True
+    assert "1 layer(s) resolve" in check.detail
+
+
+def test_template_source_flags_a_bare_directory_name(tmp_path: Path) -> None:
+    """The loci.nvim failure: a bare name resolves against the invocation dir."""
+    project = tmp_path / "proj"
+    project.mkdir()
+    (tmp_path / "template-nix").mkdir()  # a sibling, NOT under the project
+    _answers(project, "template-nix")
+    check = doctor._check_template_source(project)
+    assert check.ok is False
+    assert "unresolvable" in check.detail
+    assert "base" in check.detail
+
+
+def test_template_source_does_not_probe_remote_sources(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+    _answers(project, "gh:Bullish-Design/my-ai", ".copier-answers.my-ai.yml")
+    check = doctor._check_template_source(project)
+    assert check.ok is True
+
+
+def test_template_source_is_warn_only_and_quiet_when_unmanaged(tmp_path: Path) -> None:
+    check = doctor._check_template_source(tmp_path)
+    assert check.warn_only is True
+    assert check.ok is True
+    assert "no managed layers" in check.detail

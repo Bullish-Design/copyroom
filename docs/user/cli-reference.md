@@ -63,10 +63,22 @@ when any fails (an infra/config problem, never a domain decision). The cache
 check honours `COPYROOM_CACHE_DIR` / `XDG_CACHE_HOME`, so it agrees with the real
 cache location.
 
-A fourth, **warn-level** check (`agent-files`) reports whether the cwd's repo
-conforms to the agent-files convention (see [agent files](agent-files.md)). It is
-non-fatal: a non-conformant repo prints `WARN agent-files` but never changes the
-exit code — flipping it to fail is a deliberate later decision.
+Two further **warn-level** checks are non-fatal: they print `WARN` but never
+change the exit code — flipping either to fail is a deliberate later decision.
+
+| Check | Reports |
+|---|---|
+| `agent-files` | whether the cwd's repo conforms to the agent-files convention (see [agent files](agent-files.md)) |
+| `template-source` | whether every recorded layer's `_src_path` still resolves |
+
+`template-source` reads each layer's answers file and resolves its recorded
+source. A **local** path that no longer exists is reported as unresolvable —
+`update` cannot run until it is repointed. This catches a source recorded as a
+bare directory name (Copier resolves a relative source against the *invocation*
+directory, so `_src_path: template-nix` never finds a sibling checkout) and a
+template that has since moved. **Remote** sources (`gh:`, `git+`, `git@`, any
+`://` URL) are reported unchecked — validating them needs the network. A
+directory with no layers reports `no managed layers here`.
 
 ## `copyroom agent-files`
 
@@ -77,12 +89,20 @@ nearest git repo root → `$DEVENV_ROOT` → the cwd.
 
 ```
 copyroom agent-files export [--target DIR]
-copyroom agent-files check   [--target DIR]
+copyroom agent-files check   [--target DIR] [--strict]
 ```
 
 | Flag | Meaning |
 |------|---------|
 | `--target DIR` | Operate on `DIR` instead of the resolved default. |
+| `--strict` | `check` only: **exit 1** when the report is non-conformant. |
+
+> **Checking a template's shipped copy.** `--target` resolves to the *nearest git
+> repo root* by default, so running `check` from inside a template repo's
+> `template/` subdir reports the **template repo's own** files, not the ones it
+> ships. Point at the subtree explicitly — `--target template` — and add
+> `--strict` to gate a release on it. A template whose vendored skills fall
+> behind the installed CopyRoom silently regresses every repo it updates.
 
 **`export`** idempotently copies the canonical skills (package assets — CopyRoom
 owns them) into `<target>/.agents/skills/`, writes a blueprint `AGENTS.md` only

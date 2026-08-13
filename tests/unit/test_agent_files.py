@@ -201,6 +201,25 @@ def test_check_warns_on_regular_file_claude(tmp_path: Path) -> None:
     assert report.ok is False
 
 
+def test_check_reports_the_symlink_target_not_its_own_name(exported: Path) -> None:
+    """``claude_target`` is what the link POINTS AT (regression: it reported 'CLAUDE.md')."""
+    report = check_agent_files(exported)
+    assert report.claude_symlink == "ok"
+    assert report.claude_target == "AGENTS.md"
+
+
+def test_check_warns_on_symlink_to_the_wrong_file(tmp_path: Path) -> None:
+    export_agent_files(tmp_path)
+    (tmp_path / "OTHER.md").write_text("# not the instructions\n")
+    claude = tmp_path / "CLAUDE.md"
+    claude.unlink()
+    claude.symlink_to("OTHER.md")
+    report = check_agent_files(tmp_path)
+    assert report.claude_symlink == "warn-wrong-target"
+    assert report.claude_target == "OTHER.md"
+    assert report.ok is False
+
+
 def test_check_reports_extras_as_present(tmp_path: Path) -> None:
     export_agent_files(tmp_path)
     extra = tmp_path / ".agents" / "skills" / "repo-local"
@@ -253,6 +272,19 @@ def test_cli_check_reports_warnings(tmp_path: Path) -> None:
     r = _run("agent-files", "check", "--target", str(tmp_path), cwd=tmp_path)
     assert r.returncode == 0, r.stderr
     assert "⚠️  MISSING" in r.stdout
+
+
+def test_cli_check_strict_exits_one_on_a_finding(tmp_path: Path) -> None:
+    """``--strict`` opts a gate into the exit-code contract: 1 = finding."""
+    r = _run("agent-files", "check", "--target", str(tmp_path), "--strict", cwd=tmp_path)
+    assert r.returncode == 1, r.stderr
+    assert "⚠️  MISSING" in r.stdout
+
+
+def test_cli_check_strict_exits_zero_when_conformant(tmp_path: Path) -> None:
+    _run("agent-files", "export", "--target", str(tmp_path), cwd=tmp_path)
+    r = _run("agent-files", "check", "--target", str(tmp_path), "--strict", cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
 
 
 def test_cli_unknown_action_is_usage_error(tmp_path: Path) -> None:

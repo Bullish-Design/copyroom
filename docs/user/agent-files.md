@@ -60,12 +60,28 @@ template/
 └── copier.yml                             # declares _preserve_symlinks + _copy_without_render
 ```
 
-Seed it with a single command from the template repo root (or its `template/`
-subdir):
+Seed it by pointing `export` at the `template/` subtree:
 
 ```bash
-copyroom agent-files export
+copyroom agent-files export --target template
 ```
+
+> ⚠️ **Always pass `--target`.** The default target resolves to the nearest **git
+> repo root**, so a bare `copyroom agent-files export` run from inside
+> `template/` writes to the *template repo's own* files, not the ones it ships —
+> and a bare `check` reports the repo's copy as current while the shipped copy is
+> stale.
+
+**Re-seed on every CopyRoom upgrade, and gate the release on it:**
+
+```bash
+copyroom agent-files check --target template --strict   # exit 1 when stale
+```
+
+A template that ships skills older than the installed CopyRoom **regresses every
+repo it updates**: `copyroom update` faithfully converges the repo back to the
+template's stale copy, silently overwriting the newer version
+`agent-files export` had materialized there.
 
 ### The two `copier.yml` declarations (both required)
 

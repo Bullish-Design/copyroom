@@ -43,6 +43,7 @@ __all__ = [
     "discover_layers",
     "layer_name_from_answers_file",
     "resolve_layer",
+    "source_status",
     "template_default_layer",
 ]
 
@@ -140,6 +141,41 @@ def _read_layer(project_root: Path, name: str, answers_rel: Path) -> Layer:
         if value is not None:
             setattr(layer, attr, str(value))
     return layer
+
+
+#: Schemes and shorthands Copier resolves over the network. A remote source
+#: cannot be validated offline, so it is reported as ``remote``, never ``missing``.
+_REMOTE_PREFIXES = ("gh:", "gl:", "bb:", "git+", "git@")
+_REMOTE_SCHEMES = ("://",)
+
+
+def source_status(layer: Layer, project_root: str | Path) -> tuple[str, str]:
+    """Classify a layer's recorded ``_src_path``.
+
+    Returns ``(status, detail)`` where status is one of:
+
+    ``unset``
+        No ``_src_path`` recorded — Copier has never linked this layer.
+    ``remote``
+        A URL or forge shorthand. Not checked: resolving it needs the network.
+    ``ok``
+        A local path that resolves to a directory.
+    ``missing``
+        A local path that does not resolve. ``update`` cannot run until it is
+        repointed — the failure mode a bare directory name produces, because
+        Copier resolves a relative source against the invocation directory.
+    """
+    src = layer.template_source
+    if not src:
+        return "unset", "no _src_path recorded"
+    if src.startswith(_REMOTE_PREFIXES) or any(s in src for s in _REMOTE_SCHEMES):
+        return "remote", src
+    candidate = Path(src)
+    if not candidate.is_absolute():
+        candidate = Path(project_root) / candidate
+    if candidate.is_dir():
+        return "ok", str(candidate)
+    return "missing", f"{src} → {candidate} does not exist"
 
 
 def discover_layers(project_root: str | Path) -> list[Layer]:

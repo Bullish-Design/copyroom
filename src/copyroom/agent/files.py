@@ -297,8 +297,8 @@ class AgentFilesCheck:
     skills_dir: Path
     instructions: Path | None
     agents_md: bool
-    claude_symlink: str  # ok | warn-regular-file | missing
-    claude_target: str | None
+    claude_symlink: str  # ok | warn-wrong-target | warn-regular-file | missing
+    claude_target: str | None  # what the symlink points at, not the link's own name
     skills: list[SkillStatus] = field(default_factory=list)
     extras: list[str] = field(default_factory=list)
 
@@ -350,18 +350,17 @@ def check_agent_files(target: str | Path | None = None) -> AgentFilesCheck:
         claude_target=None,
     )
 
-    # CLAUDE.md symlink status (next to the instructions file).
+    # CLAUDE.md symlink status (next to the instructions file). ``claude_target``
+    # reports what the link POINTS AT, so a wrong target is legible in the report.
     claude = instructions.with_name("CLAUDE.md")
     if claude.is_symlink():
+        report.claude_target = os.readlink(claude)
         if claude.resolve() == instructions.resolve():
             report.claude_symlink = "ok"
-            report.claude_target = claude.name
         else:
-            report.claude_symlink = "warn-regular-file"
-            report.claude_target = claude.name
+            report.claude_symlink = "warn-wrong-target"
     elif claude.exists():
         report.claude_symlink = "warn-regular-file"
-        report.claude_target = claude.name
 
     # Canonical skills: present + current against the shipped assets.
     for name in canonical_skills():
@@ -423,6 +422,11 @@ def format_check_report(report: AgentFilesCheck) -> str:
     )
     if report.claude_symlink == "ok":
         lines.append(f"  {pad('CLAUDE.md')}: ✓ symlink → {report.claude_target}")
+    elif report.claude_symlink == "warn-wrong-target":
+        lines.append(
+            f"  {pad('CLAUDE.md')}: ⚠️  symlink → {report.claude_target}"
+            f" (expected {report.instructions.name if report.instructions else 'AGENTS.md'})"
+        )
     elif report.claude_symlink == "warn-regular-file":
         lines.append(f"  {pad('CLAUDE.md')}: ⚠️  regular file (not a symlink) — flagged, not fixed")
     else:

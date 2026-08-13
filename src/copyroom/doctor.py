@@ -104,10 +104,55 @@ def _check_agent_files(target: str | Path | None = None) -> DoctorCheck:
     )
 
 
+def _check_template_source(target: str | Path | None = None) -> DoctorCheck:
+    """Warn-level check: every recorded layer's ``_src_path`` still resolves.
+
+    A local template source that has moved (or was recorded as a bare directory
+    name, which Copier resolves against the invocation directory) makes
+    ``update`` impossible, and nothing else surfaces it until an update fails.
+    Remote sources are reported unchecked — validating them needs the network.
+
+    ``warn_only`` because ``doctor`` runs anywhere: an unmanaged directory has no
+    layers, and a moved template is a repair task, not a broken machine.
+    """
+    from .agent.files import resolve_target
+    from .project.layers import discover_layers, source_status
+
+    root = resolve_target(target)
+    layers = discover_layers(root)
+    if not layers:
+        return DoctorCheck(name="template-source", ok=True, detail="no managed layers here", warn_only=True)
+
+    broken = []
+    for layer in layers:
+        status, detail = source_status(layer, root)
+        if status == "missing":
+            broken.append(f"{layer.name}: {detail}")
+    if broken:
+        return DoctorCheck(
+            name="template-source",
+            ok=False,
+            detail="unresolvable: " + "; ".join(broken),
+            warn_only=True,
+        )
+    return DoctorCheck(
+        name="template-source",
+        ok=True,
+        detail=f"{len(layers)} layer(s) resolve",
+        warn_only=True,
+    )
+
+
 def run_doctor() -> DoctorReport:
     """Run every environment check and return the aggregate report."""
     return DoctorReport(
-        checks=[_check_copier(), _check_git(), _check_cache(), _check_agent_files()]
+        checks=[
+            _check_copier(),
+            _check_git(),
+            _check_cache(),
+            _check_agent_files(),
+            _check_template_source(),
+        ]
     )
 
 
