@@ -201,6 +201,25 @@ def test_check_warns_on_regular_file_claude(tmp_path: Path) -> None:
     assert report.ok is False
 
 
+def test_check_reports_the_symlink_target_not_its_own_name(exported: Path) -> None:
+    """``claude_target`` is what the link POINTS AT (regression: it reported 'CLAUDE.md')."""
+    report = check_agent_files(exported)
+    assert report.claude_symlink == "ok"
+    assert report.claude_target == "AGENTS.md"
+
+
+def test_check_warns_on_symlink_to_the_wrong_file(tmp_path: Path) -> None:
+    export_agent_files(tmp_path)
+    (tmp_path / "OTHER.md").write_text("# not the instructions\n")
+    claude = tmp_path / "CLAUDE.md"
+    claude.unlink()
+    claude.symlink_to("OTHER.md")
+    report = check_agent_files(tmp_path)
+    assert report.claude_symlink == "warn-wrong-target"
+    assert report.claude_target == "OTHER.md"
+    assert report.ok is False
+
+
 def test_check_reports_extras_as_present(tmp_path: Path) -> None:
     export_agent_files(tmp_path)
     extra = tmp_path / ".agents" / "skills" / "repo-local"
