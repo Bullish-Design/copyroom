@@ -89,12 +89,20 @@ nearest git repo root → `$DEVENV_ROOT` → the cwd.
 
 ```
 copyroom agent-files export [--target DIR]
-copyroom agent-files check   [--target DIR]
+copyroom agent-files check   [--target DIR] [--strict]
 ```
 
 | Flag | Meaning |
 |------|---------|
 | `--target DIR` | Operate on `DIR` instead of the resolved default. |
+| `--strict` | `check` only: **exit 1** when the report is non-conformant. |
+
+> **Checking a template's shipped copy.** `--target` resolves to the *nearest git
+> repo root* by default, so running `check` from inside a template repo's
+> `template/` subdir reports the **template repo's own** files, not the ones it
+> ships. Point at the subtree explicitly — `--target template` — and add
+> `--strict` to gate a release on it. A template whose vendored skills fall
+> behind the installed CopyRoom silently regresses every repo it updates.
 
 **`export`** idempotently copies the canonical skills (package assets — CopyRoom
 owns them) into `<target>/.agents/skills/`, writes a blueprint `AGENTS.md` only

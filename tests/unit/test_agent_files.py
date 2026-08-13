@@ -274,6 +274,19 @@ def test_cli_check_reports_warnings(tmp_path: Path) -> None:
     assert "⚠️  MISSING" in r.stdout
 
 
+def test_cli_check_strict_exits_one_on_a_finding(tmp_path: Path) -> None:
+    """``--strict`` opts a gate into the exit-code contract: 1 = finding."""
+    r = _run("agent-files", "check", "--target", str(tmp_path), "--strict", cwd=tmp_path)
+    assert r.returncode == 1, r.stderr
+    assert "⚠️  MISSING" in r.stdout
+
+
+def test_cli_check_strict_exits_zero_when_conformant(tmp_path: Path) -> None:
+    _run("agent-files", "export", "--target", str(tmp_path), cwd=tmp_path)
+    r = _run("agent-files", "check", "--target", str(tmp_path), "--strict", cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+
+
 def test_cli_unknown_action_is_usage_error(tmp_path: Path) -> None:
     r = _run("agent-files", "frobnicate", cwd=tmp_path)
     assert r.returncode != 0

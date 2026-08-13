@@ -114,8 +114,9 @@ Runs anywhere (no markers needed):
   doctor        [--json]       Check the CopyRoom environment
   agent-files   export [--target DIR]
                                Materialize the canonical skills + AGENTS.md + CLAUDE.md
-  agent-files   check [--target DIR]
+  agent-files   check [--target DIR] [--strict]
                                Report conformance with the agent-files convention
+                               (--strict exits 1 on a finding, for gates/CI)
 
 Workshop commands (in a workshop directory):
   registry      list | show <id> | validate | add <id> --source <src> [--scaffold]
@@ -660,10 +661,13 @@ def _cmd_agent_files_export(args: argparse.Namespace) -> None:
 
 
 def _cmd_agent_files_check(args: argparse.Namespace) -> None:
-    """``copyroom agent-files check [--target DIR]`` — conformance report.
+    """``copyroom agent-files check [--target DIR] [--strict]`` — conformance report.
 
-    Warn-level: reports findings (✓ / ⚠️) but exits 0 — flipping to fail is a
-    deliberate later decision. Runs anywhere (no mode gating).
+    Warn-level by default: reports findings (✓ / ⚠️) and exits 0, so an embedded
+    caller (``doctor``, RepoMan's conductor) never fails on a convention finding.
+    ``--strict`` opts in to the family exit-code contract — **exit 1** on a
+    finding — which is what a release gate or CI job wants. Runs anywhere (no
+    mode gating).
     """
     try:
         report = check_agent_files(target=args.target)
@@ -671,6 +675,8 @@ def _cmd_agent_files_check(args: argparse.Namespace) -> None:
         print(str(exc), file=sys.stderr)
         sys.exit(1)
     print(format_check_report(report))
+    if getattr(args, "strict", False) and not report.ok:
+        sys.exit(1)
 
 
 _REGISTRY_ACTIONS = ("list", "show", "validate", "add")
@@ -1139,13 +1145,16 @@ def _typer_agent_files(
     target: str | None = typer.Option(
         None, "--target", help="Target directory (default: repo root / DEVENV_ROOT / cwd)",
     ),
+    strict: bool = typer.Option(
+        False, "--strict", help="check: exit 1 when the report is non-conformant (for gates/CI)",
+    ),
 ) -> None:
     """Materialize or verify the agent-files convention (skills + AGENTS.md + CLAUDE.md)."""
     if action == "export":
         _cmd_agent_files_export(SimpleNamespace(target=target))
         return
     if action == "check":
-        _cmd_agent_files_check(SimpleNamespace(target=target))
+        _cmd_agent_files_check(SimpleNamespace(target=target, strict=strict))
         return
     typer.echo(f"Error: unknown agent-files action '{action}'. Supported: export, check.", err=True)
     raise typer.Exit(code=2)
