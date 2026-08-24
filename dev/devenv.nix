@@ -42,6 +42,30 @@
     echo hello from $GREET
   '';
 
+  # devman — the automation plane (CONCEPT.md §5). `base` alone: this repository
+  # ships no scheduled work and writes none of its own files. Lives here, in the
+  # dev-only layer, so consumers who `imports: - copyroom` never see it.
+  devman = {
+    enable = true;
+    project = "copyroom";
+    groups = [ "base" ];
+  };
+
+  # https://devenv.sh/tasks/
+  #
+  # The two task names the `base` group calls (groups/base/README.md). devenv
+  # owns each implementation; Dagu owns the composition (§6). `uv run` rather
+  # than bare names: the venv bin is on the interactive shell's PATH but not on
+  # the task runner's PATH (STAGE_7_LOG.md, wave 2b). `ruff check src` matches
+  # the repo's own `src = ["src"]` scope.
+  tasks = {
+    "copyroom:lint".exec = "uv run --extra dev ruff check src";
+    "copyroom:test".exec = "uv run --extra dev pytest";
+
+    "base:check".after = [ "copyroom:lint" ];
+    "base:test".after = [ "copyroom:test" ];
+  };
+
   enterShell = ''
     hello
     git --version
