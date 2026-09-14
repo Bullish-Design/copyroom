@@ -45,12 +45,6 @@
   # devman — the automation plane (CONCEPT.md §5). `base` alone: this repository
   # ships no scheduled work and writes none of its own files. Lives here, in the
   # dev-only layer, so consumers who `imports: - copyroom` never see it.
-  devman = {
-    enable = true;
-    project = "copyroom";
-    groups = [ "base" ];
-  };
-
   # https://devenv.sh/tasks/
   #
   # The two task names the `base` group calls (groups/base/README.md). devenv
