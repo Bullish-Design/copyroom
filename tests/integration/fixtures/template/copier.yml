@@ -1,7 +1,6 @@
 _answers_file: .copier-answers.yml
-# The agent-files convention: preserve the CLAUDE.md -> AGENTS.md symlink
-# through copy AND update, and never render skills (they contain literal
-# {{ }} examples) — see docs/user/agent-files.md.
+# Preserve symlinks through copy AND update, and never render the skills the
+# template ships (they contain literal {{ }} examples).
 _preserve_symlinks: true
 _copy_without_render:
   - ".agents/skills/**"

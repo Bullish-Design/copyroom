@@ -8,6 +8,7 @@ raising, so call sites can decide what a failure means.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -346,3 +347,31 @@ def resolve_latest_ref(source: str) -> str | None:
     else:
         tags = list_tags(local_path(source))
     return select_latest_semver(tags)
+
+
+def resolve_repo_root(target: str | Path | None = None) -> Path:
+    """Resolve the directory a repo-scoped command operates on.
+
+    Resolution order (first hit wins):
+
+    1. *target* when given;
+    2. the nearest ancestor of the cwd that is a git repo root (``.git``);
+    3. ``$DEVENV_ROOT`` when set;
+    4. the cwd itself.
+
+    This lets a repo-scoped command work from inside a project, a template
+    repo (including a ``template/`` subdir), or an unmanaged directory.
+    """
+    if target is not None:
+        return Path(target).expanduser().resolve()
+
+    cwd = Path.cwd().resolve()
+    for parent in (cwd, *cwd.parents):
+        if (parent / ".git").exists():
+            return parent
+
+    devenv_root = os.environ.get("DEVENV_ROOT")
+    if devenv_root:
+        return Path(devenv_root).expanduser().resolve()
+
+    return cwd

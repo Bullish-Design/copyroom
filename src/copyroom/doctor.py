@@ -23,7 +23,7 @@ from .template.workspace import _cache_root  # reuse the real cache resolver
 class DoctorCheck(BaseModel):
     """A single environment check and its outcome.
 
-    ``warn_only`` marks advisory checks (e.g. the ``agent-files`` convention
+    ``warn_only`` marks advisory checks (e.g. the template-source
     check): a failed warn-only check is reported but does **not** fail the
     aggregate report — flipping it to fail is a deliberate later decision.
     """
@@ -82,28 +82,6 @@ def _check_cache() -> DoctorCheck:
         return DoctorCheck(name="cache", ok=False, detail=f"{root}: {exc}")
 
 
-def _check_agent_files(target: str | Path | None = None) -> DoctorCheck:
-    """Warn-level convention check: the cwd's agent-files conformance.
-
-    Reuses ``agent-files check`` and is deliberately ``warn_only``: a repo that
-    hasn't adopted the convention (or has drifted) is reported, never fatal.
-    """
-    from .agent.files import check_agent_files, resolve_target
-
-    report = check_agent_files(resolve_target(target))
-    summary = (
-        "conformant"
-        if report.ok
-        else "non-conformant — run 'copyroom agent-files check' for details"
-    )
-    return DoctorCheck(
-        name="agent-files",
-        ok=report.ok,
-        detail=summary,
-        warn_only=True,
-    )
-
-
 def _check_template_source(target: str | Path | None = None) -> DoctorCheck:
     """Warn-level check: every recorded layer's ``_src_path`` still resolves.
 
@@ -115,10 +93,10 @@ def _check_template_source(target: str | Path | None = None) -> DoctorCheck:
     ``warn_only`` because ``doctor`` runs anywhere: an unmanaged directory has no
     layers, and a moved template is a repair task, not a broken machine.
     """
-    from .agent.files import resolve_target
+    from ._compat.gitutil import resolve_repo_root
     from .project.layers import discover_layers, source_status
 
-    root = resolve_target(target)
+    root = resolve_repo_root(target)
     layers = discover_layers(root)
     if not layers:
         return DoctorCheck(name="template-source", ok=True, detail="no managed layers here", warn_only=True)
@@ -150,7 +128,6 @@ def run_doctor() -> DoctorReport:
             _check_copier(),
             _check_git(),
             _check_cache(),
-            _check_agent_files(),
             _check_template_source(),
         ]
     )

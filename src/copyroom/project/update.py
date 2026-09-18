@@ -22,7 +22,7 @@ from .._compat.errors import CopyRoomError
 from .._compat.refs import same_version
 from .._compat.shellcmd import run_hook_commands
 from .._compat.state_machine import StateMachine
-from .config import load_hook_commands, load_project_config
+from .config import load_hook_commands
 from .layers import BASE_LAYER, answers_filename, discover_layers
 from .model import (
     VALID_UPDATE_TRANSITIONS,
@@ -307,13 +307,6 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
     Called after either ``worktree_verified`` (no branch) or
     ``branch_created`` (with isolation branch).
 
-    Skills the project declares in ``copyroom.project.yml`` ``agent.overlay``
-    are permanently diverged: each is mapped to a Copier ``--exclude`` pattern
-    (``<skills_dir>/<name>/**``) so the template stops managing it and the
-    project's local version survives the update untouched. The excludes apply to
-    **every** layer — an overlay declaration means "no template manages this",
-    not "the base template doesn't".
-
     The update is scoped to ``update.layer``'s answers file, so converging one
     layer never reads or rewrites another's (see :mod:`copyroom.project.layers`).
 
@@ -322,13 +315,10 @@ def execute_update(update: TemplateUpdate) -> UpdateStatus:
     """
     from_state = update.status
 
-    excludes = _overlay_excludes(update.project_root)
-
     try:
         result = copier_update(
             destination=update.project_root,
             vcs_ref=update.target_ref,
-            exclude=excludes,
             answers_file=answers_filename(update.layer),
         )
     except Exception as exc:
@@ -445,26 +435,6 @@ def run_post_update_commands(
         UpdateStatus.complete,
     )
     return update.status
-
-
-def _overlay_excludes(project_root: Path) -> list[str]:
-    """Map ``agent.overlay`` from ``copyroom.project.yml`` to exclude patterns.
-
-    Each declared skill becomes ``<skills_dir>/<name>/**`` so Copier's update
-    excludes the whole skill directory from both renders — the template stops
-    managing it and the repo's local version is left alone (the
-    permanently-diverge contract). A missing/unreadable config yields no
-    excludes (updates must never be blocked by a config problem).
-    """
-    try:
-        cfg = load_project_config(project_root / "copyroom.project.yml")
-    except CopyRoomError:
-        return []
-    overlay = cfg.agent.overlay
-    if not overlay:
-        return []
-    skills_dir = cfg.agent.skills_dir
-    return [f"{skills_dir}/{name}/**" for name in overlay]
 
 
 # ===================================================================

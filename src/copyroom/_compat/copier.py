@@ -80,7 +80,6 @@ def copier_copy(
 def copier_update(
     destination: Path,
     vcs_ref: str | None = None,
-    exclude: list[str] | None = None,
     answers_file: str | Path | None = None,
     timeout: int = _COPIER_TIMEOUT,
 ) -> subprocess.CompletedProcess[str]:
@@ -92,10 +91,6 @@ def copier_update(
         Project directory to update.
     vcs_ref:
         Optional VCS ref (tag / branch) to update to.
-    exclude:
-        Optional shell-style patterns of files/folders the template must stop
-        managing (mapped from ``agent.overlay`` — the permanently-diverge
-        contract). Each is passed as a ``-x/--exclude`` flag.
     answers_file:
         Optional path (relative to *destination*) of the answers file to update
         from — i.e. **which layer** to converge. Omit for the base layer's
@@ -106,8 +101,6 @@ def copier_update(
     cmd = ["copier", "update", "--defaults"]
     if vcs_ref is not None:
         cmd.extend(["--vcs-ref", vcs_ref])
-    for pattern in exclude or []:
-        cmd.extend(["--exclude", pattern])
     if answers_file is not None:
         cmd.extend(["--answers-file", str(answers_file)])
     cmd.append(str(destination))

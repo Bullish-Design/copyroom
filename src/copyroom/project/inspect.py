@@ -44,7 +44,6 @@ class InspectReport:
     answers_file: str
     has_project_config: bool
     hooks: dict[str, list[str]]
-    agent: dict  # the validated ``agent:`` section (skills_dir, instructions, claude_symlink, overlay)
     # Every template layer managing this repo, base first. The scalar
     # ``template_*``/``commit``/``answers_file`` fields above describe the
     # *primary* layer and are kept for compatibility with single-layer readers.
@@ -61,7 +60,6 @@ class InspectReport:
             "answers_file": self.answers_file,
             "has_project_config": self.has_project_config,
             "hooks": self.hooks,
-            "agent": self.agent,
             "layers": [layer.to_dict() for layer in self.layers],
         }
 
@@ -78,7 +76,6 @@ class StatusReport:
     latest_ref: str | None
     update_available: bool
     worktree_clean: bool | None  # None → not a git repository
-    agent: dict  # the validated ``agent:`` section (advisory; round-trips)
     #: ``[{name, ref, latest_ref, update_available, template_source}, …]``, base
     #: first. The scalar fields above describe the *primary* layer.
     layers: list[dict] = field(default_factory=list)
@@ -95,7 +92,6 @@ class StatusReport:
             "latest_ref": self.latest_ref,
             "update_available": self.update_available,
             "worktree_clean": self.worktree_clean,
-            "agent": self.agent,
             "layers": self.layers,
         }
 
@@ -111,17 +107,6 @@ def _template_id(answers: dict, cfg_template_id: str | None) -> str | None:
         return cfg_template_id
     raw = answers.get("_template")
     return str(raw) if raw is not None else None
-
-
-def _agent_dict(cfg) -> dict:
-    """The validated ``agent:`` section as a stable dict (round-trips through JSON)."""
-    agent = cfg.agent
-    return {
-        "skills_dir": str(agent.skills_dir),
-        "instructions": str(agent.instructions),
-        "claude_symlink": agent.claude_symlink,
-        "overlay": list(agent.overlay),
-    }
 
 
 
@@ -175,7 +160,6 @@ def inspect_project(project_root: str | Path | None = None) -> InspectReport:
         answers_file=str(root / primary.answers_file),
         has_project_config=project_yml.is_file(),
         hooks=dict(cfg.commands),
-        agent=_agent_dict(cfg),
         layers=discover_layers(root),
     )
 
@@ -217,6 +201,5 @@ def project_status(project_root: str | Path | None = None) -> StatusReport:
         latest_ref=primary_row["latest_ref"] if primary_row else None,
         update_available=any(row["update_available"] for row in layer_rows),
         worktree_clean=gitutil.worktree_clean(root),
-        agent=_agent_dict(cfg),
         layers=layer_rows,
     )

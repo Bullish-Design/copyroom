@@ -18,15 +18,6 @@ from types import SimpleNamespace
 
 import typer
 
-from .agent.files import (
-    CopyRoomError as AgentFilesError,
-)
-from .agent.files import (
-    check_agent_files,
-    export_agent_files,
-    format_check_report,
-    format_export_report,
-)
 from .manage import CopyRoomError as ManageError
 from .manage import adopt as _adopt
 from .manage import templatize as _templatize
@@ -107,16 +98,11 @@ Bootstrap commands (in an unmanaged repo — no markers needed):
                                Link this repo to a template and report drift
   layer         add <template> [--as NAME] [--ref REF] [--force]
                                Apply a template to this repo as an extra layer
-                               (e.g. the personal layer: agent files everywhere)
+                               (e.g. the personal layer)
   layer         list [--json]  List the template layers managing this repo
 
 Runs anywhere (no markers needed):
   doctor        [--json]       Check the CopyRoom environment
-  agent-files   export [--target DIR]
-                               Materialize the canonical skills + AGENTS.md + CLAUDE.md
-  agent-files   check [--target DIR] [--strict]
-                               Report conformance with the agent-files convention
-                               (--strict exits 1 on a finding, for gates/CI)
 
 Workshop commands (in a workshop directory):
   registry      list | show <id> | validate | add <id> --source <src> [--scaffold]
@@ -371,13 +357,6 @@ def _cmd_inspect(args: argparse.Namespace) -> None:
     print("  Layers:")
     for layer in report.layers:
         print(f"    {layer.name:<12} {layer.ref or '(no ref)':<24} {layer.template_source or '(no source)'}")
-    agent = report.agent
-    overlay = ", ".join(agent["overlay"]) if agent.get("overlay") else "(none)"
-    print("  Agent files:")
-    print(f"    skills_dir:    {agent.get('skills_dir')}")
-    print(f"    instructions:  {agent.get('instructions')}")
-    print(f"    claude_symlink: {agent.get('claude_symlink')}")
-    print(f"    overlay:       {overlay}")
     if report.hooks:
         print("  Configured commands:")
         for name, cmds in report.hooks.items():
@@ -411,8 +390,6 @@ def _cmd_status(args: argparse.Namespace) -> None:
     print(f"Latest ref:       {report.latest_ref or 'unknown'}")
     print(f"Update available: {'yes' if report.update_available else 'no'}")
     print(f"Worktree:         {worktree}")
-    overlay = report.agent.get("overlay") or []
-    print(f"Agent overlay:    {', '.join(overlay) if overlay else '(none)'}")
     if len(report.layers) > 1:
         print("Layers:")
         for layer in report.layers:
@@ -643,40 +620,6 @@ def _cmd_layer_list(args: argparse.Namespace) -> None:
         print(f"  {layer.name:<12} {layer.answers_file}")
         print(f"    template: {layer.template_id or layer.template_source or '(unknown)'}")
         print(f"    ref:      {layer.ref or '(none recorded)'}")
-
-
-def _cmd_agent_files_export(args: argparse.Namespace) -> None:
-    """``copyroom agent-files export [--target DIR]`` — materialize convention files.
-
-    Idempotently writes the canonical skills into ``<target>/.agents/skills/``,
-    a blueprint ``AGENTS.md`` only when absent, and ensures ``CLAUDE.md`` is a
-    symlink to it. Runs anywhere (no mode gating).
-    """
-    try:
-        result = export_agent_files(target=args.target)
-    except AgentFilesError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-    print(format_export_report(result))
-
-
-def _cmd_agent_files_check(args: argparse.Namespace) -> None:
-    """``copyroom agent-files check [--target DIR] [--strict]`` — conformance report.
-
-    Warn-level by default: reports findings (✓ / ⚠️) and exits 0, so an embedded
-    caller (``doctor``, RepoMan's conductor) never fails on a convention finding.
-    ``--strict`` opts in to the family exit-code contract — **exit 1** on a
-    finding — which is what a release gate or CI job wants. Runs anywhere (no
-    mode gating).
-    """
-    try:
-        report = check_agent_files(target=args.target)
-    except AgentFilesError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-    print(format_check_report(report))
-    if getattr(args, "strict", False) and not report.ok:
-        sys.exit(1)
 
 
 _REGISTRY_ACTIONS = ("list", "show", "validate", "add")
@@ -1123,7 +1066,7 @@ def _typer_layer(
     ),
     json_output: bool = typer.Option(False, "--json", help="Emit the listing as JSON"),
 ) -> None:
-    """Manage the template layers of this repo (runs anywhere, like agent-files)."""
+    """Manage the template layers of this repo (runs anywhere, like doctor)."""
     if action == "add":
         if template is None:
             print("copyroom layer add requires a template source.", file=sys.stderr)
@@ -1137,28 +1080,6 @@ def _typer_layer(
 
 
 # --- Runs-anywhere commands (no mode gating, like doctor) ---
-
-
-@app.command("agent-files")
-def _typer_agent_files(
-    action: str = typer.Argument(..., help="Action: export or check"),
-    target: str | None = typer.Option(
-        None, "--target", help="Target directory (default: repo root / DEVENV_ROOT / cwd)",
-    ),
-    strict: bool = typer.Option(
-        False, "--strict", help="check: exit 1 when the report is non-conformant (for gates/CI)",
-    ),
-) -> None:
-    """Materialize or verify the agent-files convention (skills + AGENTS.md + CLAUDE.md)."""
-    if action == "export":
-        _cmd_agent_files_export(SimpleNamespace(target=target))
-        return
-    if action == "check":
-        _cmd_agent_files_check(SimpleNamespace(target=target, strict=strict))
-        return
-    typer.echo(f"Error: unknown agent-files action '{action}'. Supported: export, check.", err=True)
-    raise typer.Exit(code=2)
-
 
 
 # --- Workshop commands ---
