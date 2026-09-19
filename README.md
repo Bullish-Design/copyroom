@@ -118,24 +118,13 @@ file is ever modified.** It refuses an already-managed repo unless you pass
 `--force`. Agents can follow the `copyroom-adopt` skill
 (`.agents/skills/copyroom-adopt/SKILL.md`) to run the whole arc.
 
-## Agent files (the `*man` convention)
+## Agent skills (the `*man` convention)
 
-CopyRoom follows the family's **agent-files convention**: skills live at
-`.agents/skills/<name>/SKILL.md`, `AGENTS.md` is the canonical instructions
-file, and `CLAUDE.md` is a symlink to it — one source, every tool reads it.
-
-The canonical skill set ships as package assets and is materialized by:
-
-```bash
-copyroom agent-files export     # skills + AGENTS.md (if absent) + CLAUDE.md symlink
-copyroom agent-files check      # conformance report (warn-level)
-```
-
-The repo's own `.agents/skills/copyroom*/SKILL.md` files are materialized from
-these assets by `export` — never hand-maintained as a second copy. Templates
-ship the files themselves (with `_preserve_symlinks` + `_copy_without_render`),
-`copyroom update` converges them, and a repo can declare permanent divergence in
-`copyroom.project.yml` `agent.overlay`. See [agent files](docs/user/agent-files.md).
+The fleet's agent surface is machine-local. The devman central overlay keeps one
+copy of each skill at `~/.config/devman/skills/<name>` and links it into each
+project's `.agents/skills/`. `.agents` is a link, and no repository tracks it.
+CopyRoom no longer ships or materializes skills — that surface is deleted.
+`AGENTS.md` stays canonical; `CLAUDE.md` is a symlink to it.
 
 ## Trust model
 

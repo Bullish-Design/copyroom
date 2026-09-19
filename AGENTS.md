@@ -41,8 +41,8 @@ The gate before any PR: `pytest` green, `ruff` clean, the walkthrough passes.
 - `src/copyroom/` — the package: `cli.py` (Typer frontend), `session/` (mode
   detection + dispatch), `project/` (new/update/inspect/status + `layers.py`),
   `template/` (checkout/test/preview), `workshop/` (render/golden/update-test),
-  `manage/` (adopt/templatize/layer), `agent/` (the agent-files convention +
-  canonical skills), `_compat/` (the only place that shells out to copier/git).
+  `manage/` (adopt/templatize/layer), `_compat/` (the only place that shells out
+  to copier/git).
 - `docs/` — three tracks: `docs/user/`, `docs/developer/`, `docs/copier/`.
   Docs are the detailed source of truth; skills link to them, never repeat them.
 - `.scratch/` — concepting and per-project implementation guides (numbered).
@@ -66,14 +66,11 @@ A repo can be managed by **several templates at once** — the genome in
 converge independently (`copyroom update --layer NAME`). Details:
 `docs/user/layers.md`.
 
-## Agent-files convention
+## Agent skills
 
-`.agents/skills/copyroom/SKILL.md` is the entry skill for CopyRoom work: it
-states the law and routes to `copyroom-adopt` (adoption) and
-`copyroom-template-edit` (template editing). `AGENTS.md` is canonical;
-`CLAUDE.md` is a symlink to it. The canonical skill set ships as package assets
-under `src/copyroom/agent/assets/skills/` and is materialized with
-`copyroom agent-files export` — never hand-edit `.agents/skills/` as a second
-copy. Details: `docs/user/agent-files.md`.
+The fleet's agent surface is machine-local. The devman central overlay keeps one
+copy of each skill and links it into each project's `.agents/`. CopyRoom no
+longer ships or materializes skills. `AGENTS.md` stays canonical; `CLAUDE.md` is
+a symlink to it.
 
 **Start at `.agents/skills/copyroom/SKILL.md`.**

@@ -84,7 +84,6 @@ agent:
   skills_dir: .agents/skills   # default
   instructions: AGENTS.md       # default
   claude_symlink: true          # default; CLAUDE.md -> AGENTS.md
-  overlay: []                   # skills this repo permanently diverges on (→ Copier --exclude)
 
 context:
   docs: [README.md, docs/]
@@ -125,10 +124,6 @@ commands:
 | `context` | `docs` / `source` / `config` | `[]` | Declared context roots for agents/tooling. |
 | `devenv` | `enabled` | `false` | Whether the project uses devenv. |
 | `devenv` | `shell_command` | `devenv shell` | How to enter the dev shell. |
-| `agent` | `skills_dir` | `.agents/skills` | Where the agent-files skills live (see [agent files](agent-files.md)). |
-| `agent` | `instructions` | `AGENTS.md` | The canonical instructions file (`CLAUDE.md` symlinks to it). |
-| `agent` | `claude_symlink` | `true` | Whether the `CLAUDE.md -> instructions` symlink is ensured. |
-| `agent` | `overlay` | `[]` | Skills this repo permanently diverges on; `copyroom update` maps them to Copier `--exclude` patterns so the template stops managing them. |
 | `commands` | `<name>` | `{}` | Named command lists (`check`, `post_project_create`, `post_template_update`, …). |
 
 **Every field is optional and defaulted** — a missing file (or any missing key)

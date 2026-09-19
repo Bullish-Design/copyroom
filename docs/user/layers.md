@@ -27,9 +27,7 @@ real Copier template, so each repo gets:
 - a **version record** — which release of the layer it is on;
 - a **three-way merge** on update, not an overwrite — local edits survive, and a
   genuine collision surfaces as a conflict to resolve deliberately;
-- a **"which repos are behind"** answer, from `copyroom status` / `layer list`;
-- the **overlay contract** — `agent.overlay` in `copyroom.project.yml` maps to
-  Copier `--exclude`, so a repo can permanently diverge on one file.
+- a **"which repos are behind"** answer, from `copyroom status` / `layer list`.
 
 ## Discovery, not configuration
 
@@ -188,7 +186,6 @@ identical in every repo has a trivially clean three-way merge everywhere.
 
 ## See also
 
-- [Agent files](agent-files.md) — the convention the personal layer delivers, and the skill-ownership split.
 - [Projects: new & update](projects.md) — the base-layer lifecycle.
 - [Adoption](adoption.md) — `templatize` and `adopt`.
 - [Copier overview §5](../copier/overview.md#5-copier-update--the-three-way-merge) — the merge each layer converges with.

@@ -21,7 +21,6 @@ This documentation is split into three tracks. Start wherever fits you.
 | [The workshop](user/workshop.md) | `render`, `golden`, `update-test`, `release-check`. |
 | [Adopting / templatizing a repo](user/adoption.md) | `templatize` and `adopt`. |
 | [Template layers](user/layers.md) | One repo, several templates: `layer add`, `update --layer`, and the personal layer. |
-| [Agent files](user/agent-files.md) | The `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention, how templates ship it, and the overlay contract. |
 | [Configuration files](user/configuration.md) | `copyroom.yml`, `copyroom.project.yml`, `.copier-answers.yml`. |
 | [Trust & safety model](user/trust-and-safety.md) | What runs, what's gated, what's guaranteed. |
 

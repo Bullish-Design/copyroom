@@ -208,4 +208,3 @@ git status            # the only addition is .copier-answers.yml (+ .copyroom/ s
 - [Copier overview](../copier/overview.md#24-_subdirectory--separating-template-source-from-template-repo) — why `_subdirectory: template` and the `.jinja` rule make this work.
 - [Template layers](layers.md) — `layer add`, the other way a repo comes under a template's management.
 - The `copyroom-adopt` agent skill (`.agents/skills/copyroom-adopt/SKILL.md`).
-- [Agent files](agent-files.md) — the `.agents/skills` + `AGENTS.md` + `CLAUDE.md` convention.
