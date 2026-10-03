@@ -21,7 +21,7 @@ orchestrated by repoman). Every family repo follows the same law.
 ## Writing style
 
 Write in **Simplified Technical English (ASD-STE100) style**. The rules live in
-the personal layer: `.agents/skills/my-ai/SKILL.md`, section "Writing style".
+the `writing` skill.
 
 CopyRoom's fixed vocabulary — use one word for one meaning, and never swap in a
 synonym: `layer`, `mode`, `marker`, `genome`, `workshop`, `overlay`, `converge`.
