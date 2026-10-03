@@ -67,7 +67,7 @@ Run from inside the project (or any descendant). `<target_ref>` is the template
 version to move to — a tag, branch, or commit.
 
 > **A repo can have more than one template.** `--layer NAME` converges an overlay
-> [layer](layers.md) (e.g. the personal layer) instead of the project's own
+> [layer](layers.md) (e.g. a documentation overlay) instead of the project's own
 > template; `--all-layers` converges every one. Without either flag, `update`
 > means what it always did: the base layer, `.copier-answers.yml`.
 

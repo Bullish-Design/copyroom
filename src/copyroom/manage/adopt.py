@@ -59,8 +59,8 @@ def adopt(
     files are never modified except, under *write*, the added answers file.
 
     ``layer`` selects which answers file records the link. The refusal below is
-    **per layer**: adopting a repo into the ``my-ai`` layer must not trip over
-    the ``.copier-answers.yml`` its genome already wrote.
+    **per layer**: adopting a repo into a named layer must not trip over the
+    ``.copier-answers.yml`` its genome already wrote.
 
     A non-base layer's template is *partial* by construction (it ships a slice of
     a repo, not a whole one), so its drift report drops the "repo-only" set —

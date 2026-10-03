@@ -10,11 +10,8 @@ management, and they answer different questions:
   and record the link."* That is a ``copier copy``, so the template's files land
   in the repo.
 
-The motivating case is the **personal layer**: `my-ai` ships the user's
-``AGENTS.md`` seed, the ``CLAUDE.md`` symlink, and the personal skills, and every
-repo needs them regardless of which genome generated it. Because the layer
-writes to its own answers file, it composes with whatever template already
-manages the repo instead of replacing it.
+An overlay can add a focused set of files beside the template that manages the
+whole repo. Its answers file keeps its update history separate from other layers.
 
 Idempotence and safety come from Copier, not from us: re-running is a re-copy,
 and a layer template protects the repo's own files with ``_skip_if_exists``.

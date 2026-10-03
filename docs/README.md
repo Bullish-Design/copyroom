@@ -20,7 +20,7 @@ This documentation is split into three tracks. Start wherever fits you.
 | [Editing a template from a project](user/template-editing.md) | The `template-checkout → test → preview` loop. |
 | [The workshop](user/workshop.md) | `render`, `golden`, `update-test`, `release-check`. |
 | [Adopting / templatizing a repo](user/adoption.md) | `templatize` and `adopt`. |
-| [Template layers](user/layers.md) | One repo, several templates: `layer add`, `update --layer`, and the personal layer. |
+| [Template layers](user/layers.md) | One repo, several templates: `layer add` and `update --layer`. |
 | [Configuration files](user/configuration.md) | `copyroom.yml`, `copyroom.project.yml`, `.copier-answers.yml`. |
 | [Trust & safety model](user/trust-and-safety.md) | What runs, what's gated, what's guaranteed. |
 
@@ -53,8 +53,8 @@ A TEMPLATE is a skeleton (copier.yml + *.jinja files), tagged with semver.
 A PROJECT is generated from a template; it remembers its template + version
           in .copier-answers.yml, so it can be UPDATED later.
 A LAYER   is one template's management of a repo. A repo can have several —
-          the genome in .copier-answers.yml, plus overlays like the personal
-          layer in .copier-answers.my-ai.yml — each converged independently.
+          the genome in .copier-answers.yml, plus named overlays in
+          .copier-answers.<name>.yml — each converged independently.
 A WORKSHOP is the template author's workbench: it proves templates render,
           match a golden snapshot, and update cleanly before release.
 

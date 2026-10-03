@@ -61,9 +61,9 @@ template repo, or unmanaged repo (bootstrap commands `new`/`adopt`/`templatize`/
 ## Layers
 
 A repo can be managed by **several templates at once** — the genome in
-`.copier-answers.yml`, plus overlays like the personal layer (`my-ai`) in
-`.copier-answers.my-ai.yml`. Layers are discovered by glob, never configured, and
-converge independently (`copyroom update --layer NAME`). Details:
+`.copier-answers.yml`, plus named overlays in
+`.copier-answers.<name>.yml`. Layers are discovered by glob, never configured,
+and converge independently (`copyroom update --layer NAME`). Details:
 `docs/user/layers.md`.
 
 ## Agent skills

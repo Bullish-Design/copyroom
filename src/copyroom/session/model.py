@@ -70,8 +70,7 @@ PROJECT_COMMANDS: frozenset[str] = frozenset(
 # belongs here: it is run to *create* a project, so the project markers it would
 # be gated on don't exist yet (its real guard is the empty-target check).
 # `layer` belongs here too: `layer add` applies a template to a repo that may
-# have no markers yet (the personal layer lands on unmanaged repos as readily as
-# on generated ones), and `layer list` is a read that must answer honestly
+# have no markers yet, and `layer list` is a read that must answer honestly
 # wherever it is run.
 BOOTSTRAP_COMMANDS: frozenset[str] = frozenset({"adopt", "templatize", "new", "layer"})
 

@@ -28,7 +28,7 @@ class TestAnswersFilename:
         assert answers_filename(BASE_LAYER) == ".copier-answers.yml"
 
     def test_named_layer_gets_an_infix(self) -> None:
-        assert answers_filename("my-ai") == ".copier-answers.my-ai.yml"
+        assert answers_filename("docs") == ".copier-answers.docs.yml"
 
     @pytest.mark.parametrize("bad", ["../escape", "a/b", "", ".hidden", "trailing."])
     def test_a_name_that_could_escape_the_root_is_refused(self, bad: str) -> None:
@@ -40,7 +40,7 @@ class TestAnswersFilename:
 
 class TestLayerNameFromAnswersFile:
     def test_round_trips(self) -> None:
-        for name in (BASE_LAYER, "my-ai", "fleet_ops", "a.b"):
+        for name in (BASE_LAYER, "docs", "fleet_ops", "a.b"):
             assert layer_name_from_answers_file(answers_filename(name)) == name
 
     def test_ignores_unrelated_files(self) -> None:
@@ -49,7 +49,7 @@ class TestLayerNameFromAnswersFile:
         assert layer_name_from_answers_file(".copier-answers..yml") is None
 
     def test_accepts_a_full_path(self) -> None:
-        assert layer_name_from_answers_file("/repo/.copier-answers.my-ai.yml") == "my-ai"
+        assert layer_name_from_answers_file("/repo/.copier-answers.docs.yml") == "docs"
 
 
 class TestDiscoverLayers:
@@ -57,19 +57,19 @@ class TestDiscoverLayers:
         assert discover_layers(tmp_path) == []
 
     def test_base_sorts_first_then_alphabetical(self, tmp_path: Path) -> None:
-        for name in ("zeta", "my-ai", BASE_LAYER, "alpha"):
+        for name in ("zeta", "docs", BASE_LAYER, "alpha"):
             (tmp_path / answers_filename(name)).write_text("_src_path: x\n")
         assert [layer.name for layer in discover_layers(tmp_path)] == [
-            BASE_LAYER, "alpha", "my-ai", "zeta",
+            BASE_LAYER, "alpha", "docs", "zeta",
         ]
 
     def test_reads_the_copier_metadata(self, tmp_path: Path) -> None:
-        (tmp_path / ".copier-answers.my-ai.yml").write_text(
-            "_src_path: /src/my-ai\n_commit: v1.2.3\n_template: my-ai\n"
+        (tmp_path / ".copier-answers.docs.yml").write_text(
+            "_src_path: /src/project-docs\n_commit: v1.2.3\n_template: project-docs\n"
         )
         (layer,) = discover_layers(tmp_path)
-        assert (layer.name, layer.ref, layer.template_id) == ("my-ai", "v1.2.3", "my-ai")
-        assert layer.template_source == "/src/my-ai"
+        assert (layer.name, layer.ref, layer.template_id) == ("docs", "v1.2.3", "project-docs")
+        assert layer.template_source == "/src/project-docs"
         assert layer.is_base is False
 
     def test_a_malformed_answers_file_still_lists(self, tmp_path: Path) -> None:
@@ -85,11 +85,11 @@ class TestResolveLayer:
     def test_names_the_layers_present_when_asked_for_a_missing_one(self, tmp_path: Path) -> None:
         (tmp_path / ".copier-answers.yml").write_text("_src_path: x\n")
         with pytest.raises(CopyRoomError, match=r"Layers present: base"):
-            resolve_layer(tmp_path, "my-ai")
+            resolve_layer(tmp_path, "docs")
 
     def test_points_at_the_bootstrap_commands_when_nothing_is_managed(self, tmp_path: Path) -> None:
         with pytest.raises(CopyRoomError, match="copyroom layer add"):
-            resolve_layer(tmp_path, "my-ai")
+            resolve_layer(tmp_path, "docs")
 
     def test_defaults_to_base(self, tmp_path: Path) -> None:
         (tmp_path / ".copier-answers.yml").write_text("_commit: v1.0.0\n")
@@ -98,8 +98,8 @@ class TestResolveLayer:
 
 class TestTemplateDefaultLayer:
     def test_reads_the_declared_answers_file(self, tmp_path: Path) -> None:
-        (tmp_path / "copier.yml").write_text("_answers_file: .copier-answers.my-ai.yml\n")
-        assert template_default_layer(tmp_path) == "my-ai"
+        (tmp_path / "copier.yml").write_text("_answers_file: .copier-answers.docs.yml\n")
+        assert template_default_layer(tmp_path) == "docs"
 
     def test_none_when_the_template_declares_the_base_file(self, tmp_path: Path) -> None:
         # A genome names the default file; that is not a layer name.

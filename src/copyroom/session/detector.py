@@ -31,8 +31,8 @@ def is_project(path: Path) -> bool:
     Project markers (from DetectProjectMode guidance):
         ancestor contains ``.copier-answers.yml`` OR ``copyroom.project.yml``.
 
-    A repo managed *only* by a non-base layer (``.copier-answers.<name>.yml`` —
-    e.g. a repo that took the personal layer without a genome) is a project too:
+    A repo managed *only* by a non-base layer (``.copier-answers.<name>.yml``)
+    is a project too:
     the marker is "Copier records a template link here", not "the link lives in
     one particular filename". See :mod:`copyroom.project.layers`.
     """

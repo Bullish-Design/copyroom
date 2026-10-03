@@ -10,9 +10,8 @@ Layer                   Answers file                    Typically ships
 ``<name>``              ``.copier-answers.<name>.yml``  a slice of it
 ======================  ==============================  ==========================
 
-The canonical second layer is the **personal layer** (``my-ai``): the user's
-``AGENTS.md`` seed, the ``CLAUDE.md`` symlink, and the personal skills, layered
-onto every repo regardless of which genome generated it.
+There is no canonical second layer. Each overlay records its own name and the
+files that its template manages.
 
 **Discovery, not configuration.** The layer set is a glob over the project root —
 never declared anywhere — so it cannot drift out of sync with what Copier
@@ -21,7 +20,7 @@ actually recorded, and a layer is removed by deleting one file.
 **Layers are independent.** Copier's ``-a/--answers-file`` scopes both ``copy``
 and ``update`` to a single answers file: neither layer's update reads, writes, or
 merges the other's files (verified empirically —
-``.scratch/projects/11-my-ai-personal-layer/SPIKE.md``). CopyRoom therefore never
+``.scratch/projects/11-layer-isolation/SPIKE.md``). CopyRoom therefore never
 sequences or arbitrates between layers; it runs the same single-layer workflow
 once per layer.
 """
@@ -80,8 +79,8 @@ def answers_filename(layer: str | None = None) -> str:
 def layer_name_from_answers_file(filename: str) -> str | None:
     """The layer name recorded by *filename*, or ``None`` if it isn't one.
 
-    ``.copier-answers.yml`` → ``base``; ``.copier-answers.my-ai.yml`` →
-    ``my-ai``; anything else → ``None``.
+    ``.copier-answers.yml`` → ``base``; ``.copier-answers.docs.yml`` →
+    ``docs``; anything else → ``None``.
     """
     name = Path(filename).name
     if name == f"{_PREFIX}{_SUFFIX}":
@@ -237,7 +236,7 @@ def resolve_layer(project_root: str | Path, layer: str | None = None) -> Layer:
 def template_default_layer(template_dir: str | Path) -> str | None:
     """The layer name a template declares via ``_answers_file`` in ``copier.yml``.
 
-    An overlay template that ships ``_answers_file: .copier-answers.my-ai.yml``
+    An overlay template that ships ``_answers_file: .copier-answers.<name>.yml``
     names its own layer, so ``copyroom layer add <template>`` needs no ``--as``.
     Returns ``None`` when the template declares nothing, declares the default
     file, or can't be read — every one of which means "let the caller decide".

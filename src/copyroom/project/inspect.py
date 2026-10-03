@@ -119,8 +119,8 @@ def _template_id(answers: dict, cfg_template_id: str | None) -> str | None:
 def _primary_layer(root: Path) -> Layer:
     """The layer the scalar report fields describe: ``base``, else the first.
 
-    A repo can be managed by an overlay layer alone (the personal layer applied
-    to a repo with no genome), and ``inspect``/``status`` must still work there.
+    A repo can be managed by an overlay layer alone, and ``inspect``/``status``
+    must still work there.
     """
     layers = discover_layers(root)
     if not layers:

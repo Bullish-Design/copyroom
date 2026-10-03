@@ -113,7 +113,7 @@ def test_template_source_flags_a_bare_directory_name(tmp_path: Path) -> None:
 def test_template_source_does_not_probe_remote_sources(tmp_path: Path) -> None:
     project = tmp_path / "proj"
     project.mkdir()
-    _answers(project, "gh:Bullish-Design/my-ai", ".copier-answers.my-ai.yml")
+    _answers(project, "gh:example/project-docs", ".copier-answers.docs.yml")
     check = doctor._check_template_source(project)
     assert check.ok is True
 

@@ -35,7 +35,7 @@ questions — and the difference is whether the files are already there:
 | Question | *"this repo already looks like the template — record the link"* | *"this repo doesn't have these files — put them here"* |
 | Writes repo files | **no** (report-only) | **yes** |
 | Output | a drift report + a reviewable patch | what landed |
-| Typical use | a repo you templatized, or one that matches a genome | an overlay such as the personal layer |
+| Typical use | a repo you templatized, or one that matches a genome | a focused overlay such as shared documentation |
 
 If you find yourself wanting `adopt` to *place* files, you want `layer add`.
 

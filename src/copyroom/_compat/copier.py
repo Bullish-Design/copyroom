@@ -51,7 +51,7 @@ def copier_copy(
         the template-edit workflow passes the scratch branch here.
     answers_file:
         Optional path (relative to *destination*) for the answers file Copier
-        records, e.g. ``.copier-answers.my-ai.yml``. Omit for the template's own
+        records, e.g. ``.copier-answers.docs.yml``. Omit for the template's own
         default — the base layer's ``.copier-answers.yml``.
     overwrite:
         Replace existing destination files without prompting. Required when

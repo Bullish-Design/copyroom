@@ -127,7 +127,7 @@ copyroom update [target_ref] [--branch] [--trust] [--layer NAME | --all-layers]
 | `--all-layers` | Converge every recorded layer to its own latest tag. Takes no `target_ref`. |
 
 **Layers.** A repo may be managed by several templates at once — a genome plus
-overlays such as the [personal layer](layers.md). `--layer` picks one;
+one or more named overlays. `--layer` picks one;
 `--all-layers` does all, committing each layer's result before running the next
 (Copier refuses a dirty destination) and leaving the last uncommitted for review.
 The clean-worktree guard then runs once for the whole run. Exits `3` if
@@ -309,7 +309,7 @@ produces the repo lacks), **Differs** (content mismatch), **Repo-only**
 (legitimately-extra repo files). Writes a reviewable patch under
 `.copyroom/adopt/`. With `--write` it copies the rendered answers file
 into the repo — **the only repo file it ever modifies**. The already-managed
-refusal is **per layer**, so adopting into `--layer my-ai` does not trip over the
+refusal is **per layer**, so adopting into a named layer does not trip over the
 `.copier-answers.yml` a genome already wrote. For a non-base layer the
 **Repo-only** set is dropped: an overlay template is partial by construction, so
 every file it doesn't ship would otherwise read as drift.

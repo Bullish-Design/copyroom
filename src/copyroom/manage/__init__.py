@@ -6,7 +6,7 @@ Public entry points:
 - :func:`templatize` — scaffold a self-contained template repo (Home A) whose
   golden snapshot is the repo, ready for the agent to parameterize.
 - :func:`add_layer` — apply a template to a repo as an extra *layer*, so one
-  repo can be managed by several templates at once (the personal layer).
+  repo can be managed by several templates at once.
 """
 
 from __future__ import annotations

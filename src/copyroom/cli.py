@@ -98,7 +98,7 @@ Bootstrap commands (in an unmanaged repo — no markers needed):
                                Link this repo to a template and report drift
   layer         add <template> [--as NAME] [--ref REF] [--force]
                                Apply a template to this repo as an extra layer
-                               (e.g. the personal layer)
+                               (e.g. a documentation overlay)
   layer         list [--json]  List the template layers managing this repo
 
 Runs anywhere (no markers needed):
