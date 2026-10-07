@@ -1,11 +1,11 @@
-# Importable devenv module: exposes the CopyRoom CLI.
+# Importable devenv module: exposes CopyRoom, Templateer, and jj.
 #
 # Any devenv-managed project can depend on this repo and pull this module in:
 #
 #   # devenv.yaml
 #   inputs:
 #     copyroom:
-#       url: github:Bullish-Design/copyroom?ref=v0.1.0
+#       url: github:Bullish-Design/copyroom?ref=v0.7.7
 #       flake: false
 #   imports:
 #     - copyroom
@@ -20,6 +20,9 @@
 }:
 let
   cfg = config.copyroom;
+  minijinja = pkgs.python313Packages.callPackage ../packages/minijinja.nix { };
+  templateer = pkgs.python313Packages.callPackage ../packages/templateer.nix { inherit minijinja; };
+  copyroomPackage = pkgs.python313Packages.callPackage ../packages/copyroom-cli.nix { inherit templateer; };
 in
 {
   options.copyroom = {
@@ -31,13 +34,13 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.callPackage ../packages/copyroom-cli.nix { };
-      defaultText = lib.literalExpression "pkgs.callPackage ../packages/copyroom-cli.nix { }";
+      default = copyroomPackage;
+      defaultText = lib.literalExpression "pkgs.python313Packages.callPackage ../packages/copyroom-cli.nix { templateer = ...; }";
       description = "The CopyRoom CLI package added to the environment.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    packages = [ cfg.package ];
+    packages = [ cfg.package pkgs.jujutsu ];
   };
 }

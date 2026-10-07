@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from copyroom.workshop.edits import (
+from copyroom.local.edits import (
     EditsParseError,
     apply_edits,
     load_edits,

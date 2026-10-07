@@ -1,5 +1,9 @@
 # ADR 0001 — CLI command structure: flat verbs vs. noun-grouped subcommands
 
+> Superseded. The public CLI now uses one Typer app and local Templateer/jj
+> workflows. See [Local Workflows](../../user/local-workflows.md). This file is
+> kept as a record of the earlier dispatcher design.
+
 - **Status:** Accepted — **flat** for v0.x. Revisit at the 1.0 CLI-stability milestone.
 - **Date:** 2026-06-10
 - **Deciders:** CopyRoom maintainers

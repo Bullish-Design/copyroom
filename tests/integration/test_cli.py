@@ -1,10 +1,21 @@
-"""CLI-level regression tests (mode override and the trust gate)."""
+"""Public CLI routes for local project and workshop workflows."""
 
 from __future__ import annotations
 
+import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from typer.testing import CliRunner
+
+from copyroom.cli import app
+
+ROOT = Path(__file__).resolve().parents[2]
+SOURCE_FIXTURE = ROOT / ".scratch" / "projects" / "26-templateer-jj-slice" / "example"
 
 
 def _run(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -16,91 +27,142 @@ def _run(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_mode_override_reaches_handler(workshop: Path) -> None:
-    """#3: --mode forces a mode so the command dispatches to its handler.
-
-    Previously every command under --no-detect died with "Unknown command".
-    With --mode the workshop handler runs and reaches the registry lookup.
-    """
-    r = _run("--mode", "workshop", "render", "nope", "scenario", cwd=workshop)
-    assert r.returncode != 0
-    assert "Unknown command" not in r.stderr
-    assert "not found in workshop registry" in r.stderr
+def _source(tmp_path: Path) -> tuple[Path, Path]:
+    source = tmp_path / "source"
+    shutil.copytree(SOURCE_FIXTURE, source)
+    return source, source / "answers.json"
 
 
-def test_render_works_from_workshop(workshop: Path) -> None:
-    r = _run("render", "demo", "basic", cwd=workshop)
-    assert r.returncode == 0, r.stderr
-    assert "Rendered demo/basic" in r.stdout
+def test_new_and_update_use_local_source(tmp_path: Path) -> None:
+    source, answers = _source(tmp_path)
+    project = tmp_path / "project"
+    created = _run("new", str(source), str(project), "--answers", str(answers), cwd=tmp_path)
+    assert created.returncode == 0, created.stderr
+    assert (project / ".copyroom-local.json").is_file()
+
+    settings = source / "templates" / "settings" / "template.j2"
+    settings.write_text(settings.read_text(encoding="utf-8") + '\nrevision: "v2"\n', encoding="utf-8")
+    preview = tmp_path / "preview"
+    updated = _run("update", "--source", str(source), "--out", str(preview), cwd=project)
+    assert updated.returncode == 0, updated.stderr
+    applied = _run("apply", "--preview", str(preview), cwd=project)
+    assert applied.returncode == 0, applied.stderr
+    assert 'revision: "v2"' in (project / "config/project.yml").read_text(encoding="utf-8")
 
 
-def _add_post_create_hook(template_repo: Path) -> None:
-    """Add a post-create hook that drops a marker file, tagged as a new version.
+def test_inspect_and_status_emit_local_json(tmp_path: Path) -> None:
+    source, answers = _source(tmp_path)
+    project = tmp_path / "project"
+    created = _run("new", str(source), str(project), "--answers", str(answers), cwd=tmp_path)
+    assert created.returncode == 0, created.stderr
 
-    Copier renders the latest tag, so the hook config must be tagged to appear
-    in generated output.
-    """
-    (template_repo / "copyroom.project.yml").write_text(
-        "commands:\n  post_project_create:\n    - \"touch HOOK_RAN\"\n"
+    for command in ("inspect", "status"):
+        result = _run(command, "--json", cwd=project)
+        assert result.returncode == 0, result.stderr
+        report = json.loads(result.stdout)
+        assert report["project"] == str(project)
+        assert report["source_digest"]
+
+
+def test_workshop_registry_and_golden_use_local_source(tmp_path: Path) -> None:
+    source, _ = _source(tmp_path)
+    workshop = tmp_path / "workshop"
+    (workshop / "registry").mkdir(parents=True)
+    (workshop / "scenarios").mkdir()
+    (workshop / "copyroom.yml").write_text("name: test\ntemplates: {}\n", encoding="utf-8")
+
+    added = _run("registry", "add", "demo", "--source", str(source), "--scaffold", cwd=workshop)
+    assert added.returncode == 0, added.stderr
+    rendered = _run("render", "demo", "default", cwd=workshop)
+    assert rendered.returncode == 0, rendered.stderr
+    refreshed = _run("golden", "demo", "default", "--refresh", cwd=workshop)
+    assert refreshed.returncode == 0, refreshed.stderr
+    compared = _run("golden", "demo", "default", cwd=workshop)
+    assert compared.returncode == 0, compared.stderr
+    assert '"result": "match"' in compared.stdout
+
+
+def test_mode_override_requires_a_marked_workshop(tmp_path: Path) -> None:
+    (tmp_path / "registry").mkdir()
+    (tmp_path / "scenarios").mkdir()
+    (tmp_path / "copyroom.yml").write_text("name: test\ntemplates: {}\n", encoding="utf-8")
+
+    result = _run("--mode", "workshop", "registry", "show", "missing", cwd=tmp_path)
+
+    assert result.returncode == 1
+    assert "not registered" in result.stderr
+
+
+def test_cli_usage_errors_exit_three(tmp_path: Path) -> None:
+    result = _run("new", cwd=tmp_path)
+
+    assert result.returncode == 3
+    assert "Missing argument 'SOURCE'" in result.stderr
+
+
+def test_workshop_scenario_path_traversal_cannot_delete_outside_output(tmp_path: Path) -> None:
+    source, _ = _source(tmp_path)
+    workshop = tmp_path / "workshop"
+    (workshop / "registry").mkdir(parents=True)
+    (workshop / "scenarios" / "demo").mkdir(parents=True)
+    (workshop / "generated" / "demo").mkdir(parents=True)
+    (workshop / "copyroom.yml").write_text(
+        f"name: test\ntemplates:\n  demo:\n    source: {source}\n",
+        encoding="utf-8",
     )
-    for args in (["add", "-A"], ["commit", "-qm", "hook"], ["tag", "v2.0.0"]):
-        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
-                       cwd=template_repo, check=True)
+    outside = workshop / "target"
+    outside.mkdir()
+    sentinel = outside / "sentinel.txt"
+    sentinel.write_text("keep this tree\n", encoding="utf-8")
+    (workshop / "target.yml").write_text((source / "answers.json").read_text(), encoding="utf-8")
+
+    result = _run("render", "demo", "../../target", cwd=workshop)
+
+    assert result.returncode == 3
+    assert "invalid scenario id" in result.stderr
+    assert sentinel.read_text(encoding="utf-8") == "keep this tree\n"
 
 
-def test_new_skips_hooks_without_trust(template_repo: Path, tmp_path: Path) -> None:
-    """#4.3: post-create hooks are skipped (with a warning) unless --trust."""
-    _add_post_create_hook(template_repo)
-    target = tmp_path / "out"
-    # cwd is unmarked, so force project mode for dispatch (global flag goes first).
-    r = _run("--mode", "project", "new", str(template_repo), str(target), cwd=tmp_path)
-    assert r.returncode == 0, r.stderr
-    assert "Skipping post-create command" in r.stderr
-    assert not (target / "HOOK_RAN").exists()
-
-
-def test_new_runs_hooks_with_trust(template_repo: Path, tmp_path: Path) -> None:
-    _add_post_create_hook(template_repo)
-    target = tmp_path / "out"
-    r = _run("--mode", "project", "new", str(template_repo), str(target), "--trust", cwd=tmp_path)
-    assert r.returncode == 0, r.stderr
-    assert (target / "HOOK_RAN").exists()
-
-
-def _git(*args: str, cwd: Path) -> None:
-    subprocess.run(
-        ["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
-        cwd=str(cwd), check=True, capture_output=True, text=True,
+def test_workshop_json_reports_contain_only_json(tmp_path: Path, monkeypatch) -> None:
+    source, _ = _source(tmp_path)
+    workshop = tmp_path / "workshop"
+    (workshop / "registry").mkdir(parents=True)
+    (workshop / "scenarios" / "demo").mkdir(parents=True)
+    (workshop / "copyroom.yml").write_text(
+        f"name: test\ntemplates:\n  demo:\n    source: {source}\n",
+        encoding="utf-8",
     )
+    (workshop / "registry" / "demo.yml").write_text(
+        f"id: demo\nsource: {source}\n", encoding="utf-8",
+    )
+    (workshop / "scenarios" / "demo" / "basic.yml").write_text(
+        (source / "answers.json").read_text(encoding="utf-8"), encoding="utf-8",
+    )
+    monkeypatch.chdir(workshop)
+    runner = CliRunner()
+    command = SimpleNamespace(returncode=0, stdout="test output\n", stderr="test diagnostic\n")
+
+    with patch("copyroom.local.workshop.subprocess.run", return_value=command):
+        tested = runner.invoke(app, ["test", "demo", "basic", "--json"])
+    assert tested.exit_code == 0, tested.output
+    assert json.loads(tested.stdout)["result"] == "passed"
+    log = workshop / ".copyroom-workshop" / "logs" / "demo-basic.log"
+    assert "test output" in log.read_text(encoding="utf-8")
+
+    golden = runner.invoke(app, ["golden", "demo", "basic", "--refresh"])
+    assert golden.exit_code == 0, golden.output
+    with patch("copyroom.local.workshop.subprocess.run", return_value=command):
+        checked = runner.invoke(app, ["release-check", "demo", "--json"])
+    assert checked.exit_code == 0, checked.output
+    assert json.loads(checked.stdout)["result"] == "ready"
+    release_log = workshop / ".copyroom-workshop" / "logs" / "demo-basic.log"
+    assert "test output" in release_log.read_text(encoding="utf-8")
 
 
-def test_update_noop_exits_zero(template_repo: Path, tmp_path: Path) -> None:
-    """#P1-2: a no-op `update` (already at latest) exits 0, not 1.
+def test_legacy_project_is_not_silently_converted(tmp_path: Path) -> None:
+    (tmp_path / ".copier-answers.yml").write_text("{}\n", encoding="utf-8")
 
-    An idempotent "nothing to do" reported as failure breaks scripting/CI on
-    the common case (`copyroom update` in a Makefile/loop).
-    """
-    from copyroom._compat.copier import copier_copy
+    result = _run("inspect", cwd=tmp_path)
 
-    proj = tmp_path / "proj"
-    assert copier_copy(str(template_repo), proj).returncode == 0  # generated at v1.0.0 (latest)
-    _git("init", cwd=proj)
-    _git("add", "-A", cwd=proj)
-    _git("commit", "-qm", "generated", cwd=proj)
-
-    r = _run("update", cwd=proj)
-    assert r.returncode == 0, r.stderr
-    assert "Already at the latest version" in r.stdout
-
-
-def test_new_bootstraps_without_mode(template_repo: Path, tmp_path: Path) -> None:
-    """#P1-1: `new` creates a project from an unmanaged dir, no --mode needed.
-
-    `new` runs to *create* a project, so the project markers it would otherwise
-    be gated on don't exist yet. It must bootstrap like adopt/templatize.
-    """
-    target = tmp_path / "out"
-    r = _run("new", str(template_repo), str(target), cwd=tmp_path)
-    assert r.returncode == 0, r.stderr
-    assert (target / "README.md").is_file()
-    assert (target / ".copier-answers.yml").is_file()
+    assert result.returncode == 1
+    assert "legacy project markers need local adoption" in result.stderr

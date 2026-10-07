@@ -1,0 +1,416 @@
+{
+  "active_after": {
+    "files": {
+      ".copyroom-local.json": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "69f4e9e1d06a5b7a3150fd91584fed3f3ae58443960f30f5d5ac3086916c0661"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/answers.json": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "20923830a75bbf68896aa1c337dfbb8dd445893e82c0dcd942a0e806b45f5e6c"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/bulk-source/000-sentinel.txt": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "331aeca27c634fe30bd4c2793910cdae6b7b4380246436d7be7b297c9e1fd205"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/bulk-source/001-target.txt": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "98712c51268c51e080412fbdfd999651f533fb9fd3fa9947480d65abafd6a314"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/manifest.json": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "e5904dd846167a83989e1cedf0b65df9eba916ea0dc24266d7bd92f7ffaf8239"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/about/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "dbbbf260ef78ae74d04553877e854500c86a07192e5edcd07af63d13b952ba9a"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/about/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/about/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/about/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8654895f1ac5a3cb0cda49860baac7e48745ceaf7e909805533f5b837e1cc33e"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/module/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "1e3c6e065e326c609aa4cec1836b181e4232d76241063bcb6eb21c4114ca6fb0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/module/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/module/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/module/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fdba81048373caa9328fc8d9193c4d3aad6831e81885237b61fa4d639c07e866"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/pyproject/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "312f4a4ac49f3f2dd08811bd0739873d2d84cd22dc4a0c961d442a418cf2ddbe"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/pyproject/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/pyproject/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/pyproject/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "154846caf36c255668b4f5f54231197218a04160fae267d7df9d4569684c3196"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/readme/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "87f70cb7b144e986347e5cfcaca83bca193886cda0690916c4cc8cb8839dbf2f"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/readme/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/readme/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/readme/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b80e5deafda15a2b06b88aedde9db23c84aa43978966ca523442652be6296a5d"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/settings/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b8ae177e6f6dcc9d543802850695b298e28176457d74da50606ed7257e9bb780"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/settings/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/settings/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67/templates/settings/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "cd185696431cffaa8d9c8f344be42fa6be34be926c96924ac7fd3a34544701f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/answers.json": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "20923830a75bbf68896aa1c337dfbb8dd445893e82c0dcd942a0e806b45f5e6c"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/manifest.json": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/about/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "dbbbf260ef78ae74d04553877e854500c86a07192e5edcd07af63d13b952ba9a"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/about/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/about/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/about/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8654895f1ac5a3cb0cda49860baac7e48745ceaf7e909805533f5b837e1cc33e"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/module/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "1e3c6e065e326c609aa4cec1836b181e4232d76241063bcb6eb21c4114ca6fb0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/module/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/module/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/module/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fdba81048373caa9328fc8d9193c4d3aad6831e81885237b61fa4d639c07e866"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/pyproject/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "312f4a4ac49f3f2dd08811bd0739873d2d84cd22dc4a0c961d442a418cf2ddbe"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/pyproject/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/pyproject/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/pyproject/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "154846caf36c255668b4f5f54231197218a04160fae267d7df9d4569684c3196"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/readme/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "87f70cb7b144e986347e5cfcaca83bca193886cda0690916c4cc8cb8839dbf2f"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/readme/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/readme/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/readme/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b80e5deafda15a2b06b88aedde9db23c84aa43978966ca523442652be6296a5d"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/settings/metadata.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b8ae177e6f6dcc9d543802850695b298e28176457d74da50606ed7257e9bb780"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/settings/prompt.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "781c5a39df86410989fbac1fc39368e293eae59b77dc1260ff69a28faea870b0"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/settings/schema.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d4c8eb6d26ae0b8cd44c863eca344df9c85b0c562fd7082cf8f864aac46137f7"
+      },
+      ".copyroom-local/sources/304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391/templates/settings/template.j2": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "522fbfc8c2411fdae01cd27bb931612339e268189618689c6961376db4f8bccf"
+      },
+      "README.md": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "f1679f15a06d1ee1e96a19e40a1b74ea94a638c46c6e17d66d32ef3bb66eb2d4"
+      },
+      "bulk-output/000-sentinel.txt": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "331aeca27c634fe30bd4c2793910cdae6b7b4380246436d7be7b297c9e1fd205"
+      },
+      "bulk-output/001-target.txt": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8d75f651f48bcdb122964c68b2b37c4d31c92778c8a6830ecdec6d5c58cac850"
+      },
+      "config/project.yml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "f6c07cda5aae06a7d4d856c266054b03b6d3a569b90b44c918f8b4828d938883"
+      },
+      "pyproject.toml": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "3d4c51a3fc1b30f564e4aedf0a4f6072757c7938d95775c6814b93131d94919e"
+      },
+      "scripts/about.py": {
+        "kind": "file",
+        "mode": 493,
+        "sha256": "c436a1dc9457ef2c930c5736d8e6b68c33056fb7e04df1d9361b937781ea29c5"
+      },
+      "src/cedar_lab/__init__.py": {
+        "kind": "file",
+        "mode": 420,
+        "sha256": "0f99548835c0ad1b3b34187516fd57293d4c4b39a4dc1ee4c0e09bb79f07fbc6"
+      }
+    },
+    "head": "36899e91727946fbafdffdf1c67c518f255b4bf4",
+    "marker": {
+      "answers": {
+        "description": "Local example with \"quotes\" and YAML: true",
+        "module": "cedar_lab",
+        "project_name": "cedar-lab",
+        "python_version": "3.13"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "layers": {
+        "base": {
+          "answers": {
+            "description": "Local example with \"quotes\" and YAML: true",
+            "module": "cedar_lab",
+            "project_name": "cedar-lab",
+            "python_version": "3.13"
+          },
+          "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+          "manifest_digest": "ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2",
+          "owners": {
+            "README.md": "readme",
+            "config/project.yml": "settings",
+            "pyproject.toml": "pyproject",
+            "scripts/about.py": "about",
+            "src/cedar_lab/__init__.py": "module"
+          },
+          "render_digest": "abffa72c667afd1f13f7cd716a39ce205d418b7d7071804f4a82a6e833f1d3eb",
+          "revision": 0,
+          "source": "/tmp/copyroom-handoff-during-update-ut4eytrw/source",
+          "source_digest": "304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391",
+          "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+          "templateer_version": "0.4.1"
+        }
+      },
+      "manifest_digest": "ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2",
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings",
+        "pyproject.toml": "pyproject",
+        "scripts/about.py": "about",
+        "src/cedar_lab/__init__.py": "module"
+      },
+      "project_id": "fc0ecbe0a2a34bff862dd92c5f93bebe",
+      "render_digest": "abffa72c667afd1f13f7cd716a39ce205d418b7d7071804f4a82a6e833f1d3eb",
+      "revision": 0,
+      "schema": 2,
+      "source": "/tmp/copyroom-handoff-during-update-ut4eytrw/source",
+      "source_digest": "304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    },
+    "marker_hex": "7b0a202022616e7377657273223a207b0a20202020226465736372697074696f6e223a20224c6f63616c206578616d706c652077697468205c2271756f7465735c2220616e642059414d4c3a2074727565222c0a20202020226d6f64756c65223a202263656461725f6c6162222c0a202020202270726f6a6563745f6e616d65223a202263656461722d6c6162222c0a2020202022707974686f6e5f76657273696f6e223a2022332e3133220a20207d2c0a202022636f6d706f7365725f646967657374223a202238313930656165623034363066393962616562316164353436346133306331386437323637383565613338346134656539386232343765633630323062383065222c0a2020226c6179657273223a207b0a202020202262617365223a207b0a20202020202022616e7377657273223a207b0a2020202020202020226465736372697074696f6e223a20224c6f63616c206578616d706c652077697468205c2271756f7465735c2220616e642059414d4c3a2074727565222c0a2020202020202020226d6f64756c65223a202263656461725f6c6162222c0a20202020202020202270726f6a6563745f6e616d65223a202263656461722d6c6162222c0a202020202020202022707974686f6e5f76657273696f6e223a2022332e3133220a2020202020207d2c0a20202020202022636f6d706f7365725f646967657374223a202238313930656165623034363066393962616562316164353436346133306331386437323637383565613338346134656539386232343765633630323062383065222c0a202020202020226d616e69666573745f646967657374223a202265633731333139373734333766633762623562376265636530663733656565343565386163333734353061666138656635393730303735343366656130346532222c0a202020202020226f776e657273223a207b0a202020202020202022524541444d452e6d64223a2022726561646d65222c0a202020202020202022636f6e6669672f70726f6a6563742e796d6c223a202273657474696e6773222c0a202020202020202022707970726f6a6563742e746f6d6c223a2022707970726f6a656374222c0a202020202020202022736372697074732f61626f75742e7079223a202261626f7574222c0a2020202020202020227372632f63656461725f6c61622f5f5f696e69745f5f2e7079223a20226d6f64756c65220a2020202020207d2c0a2020202020202272656e6465725f646967657374223a202261626666613732633636376166643166313366376364373136613339636532303564343138623764373037313830346634613832613665383333663164336562222c0a202020202020227265766973696f6e223a20302c0a20202020202022736f75726365223a20222f746d702f636f7079726f6f6d2d68616e646f66662d647572696e672d7570646174652d75743465797472772f736f75726365222c0a20202020202022736f757263655f646967657374223a202233303431343361613864373031366162393030386239646634636131656538373530323936366663303363313032343631613831616134353166636661333931222c0a2020202020202274656d706c61746565725f646967657374223a202235343664613331393361323366623035636537663566353339393937383863366333633963323034653761646530626135386631383230383336353030623862222c0a2020202020202274656d706c61746565725f76657273696f6e223a2022302e342e31220a202020207d0a20207d2c0a2020226d616e69666573745f646967657374223a202265633731333139373734333766633762623562376265636530663733656565343565386163333734353061666138656635393730303735343366656130346532222c0a2020226f776e657273223a207b0a2020202022524541444d452e6d64223a2022726561646d65222c0a2020202022636f6e6669672f70726f6a6563742e796d6c223a202273657474696e6773222c0a2020202022707970726f6a6563742e746f6d6c223a2022707970726f6a656374222c0a2020202022736372697074732f61626f75742e7079223a202261626f7574222c0a20202020227372632f63656461725f6c61622f5f5f696e69745f5f2e7079223a20226d6f64756c65220a20207d2c0a20202270726f6a6563745f6964223a20226663306563626530613261333462666638363264643932633566393362656265222c0a20202272656e6465725f646967657374223a202261626666613732633636376166643166313366376364373136613339636532303564343138623764373037313830346634613832613665383333663164336562222c0a2020227265766973696f6e223a20302c0a202022736368656d61223a20322c0a202022736f75726365223a20222f746d702f636f7079726f6f6d2d68616e646f66662d647572696e672d7570646174652d75743465797472772f736f75726365222c0a202022736f757263655f646967657374223a202233303431343361613864373031366162393030386239646634636131656538373530323936366663303363313032343631613831616134353166636661333931222c0a20202274656d706c61746565725f646967657374223a202235343664613331393361323366623035636537663566353339393937383863366333633963323034653761646530626135386631383230383336353030623862222c0a20202274656d706c61746565725f76657273696f6e223a2022302e342e31220a7d0a",
+    "operation_id": "5c2d1a50c2b95b1e578341e11d0175864cabc51d6725c68444d20a1c2f365c00617adc3f0e0ad1a0b2c9e01cfd54b09c5f27b6a6afd960f0907af206701ea97b",
+    "parents": [
+      "0c44ef67d871ac3ce82001dac91ecbff53949f1b"
+    ],
+    "render_heads": {
+      "base": "9ed10eed0508ed576a5ef556c31368b4aae5fd1c"
+    },
+    "source_snapshots": {
+      "base": {
+        "digest": "304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391",
+        "present": true
+      }
+    },
+    "tree_digest": "57812cb94399b8a756f5fdff157fd077c92306a8332ead7f02ffaad3d08a735a"
+  },
+  "barrier_command": {
+    "args": [
+      "new",
+      "0c44ef67d871ac3ce82001dac91ecbff53949f1b",
+      "-m",
+      "copyroom:update"
+    ],
+    "cwd": "/tmp/copyroom-handoff-during-update-ut4eytrw/project"
+  },
+  "case": "writer-during-active-workspace-update",
+  "copyroom_exit_code": 1,
+  "final_bytes_hex": "696e646570656e64656e742077726974657220647572696e6720616374697665206a6a20636865636b6f75740a",
+  "first_checkout_file_present_before_writer": true,
+  "operation_graph_after": "5c2d1a50c2b9 andrew@server default@ now, lasted 6 milliseconds\nsnapshot working copy\nargs: jj log --no-graph -r @ -T commit_id\n76dbee228fb8 andrew@server default@ now, lasted 12 milliseconds\nnew empty commit\nargs: jj new 0c44ef67d871ac3ce82001dac91ecbff53949f1b -m copyroom:update\ne90575089c7a andrew@server copyroom-e4b765dbf59b@ 2 seconds ago, lasted 6 milliseconds\ncommit 971b8bb33415c004a34820790e20173445c5e76b\nargs: jj commit -m 'copyroom:source snapshot 3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67'\n765e3f07972b andrew@server copyroom-e4b765dbf59b@ 2 seconds ago, lasted 10 milliseconds\nsnapshot working copy\nargs: jj commit -m 'copyroom:source snapshot 3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67'\n59f2eeeba08b andrew@server copyroom-e4b765dbf59b@ 2 seconds ago, lasted 12 milliseconds\nnew empty commit\nargs: jj new a10e38d70f546f02b6dd536513aa6c8c13ad2039 9ed10eed0508ed576a5ef556c31368b4aae5fd1c -m copyroom:preview\n1b8da8be1305 andrew@server copyroom-e4b765dbf59b@ 3 seconds ago, lasted 7 milliseconds\ncommit ff9ecd43264e98ca0dfb8960264e9f4ad4a4f6e8\nargs: jj commit -m 'copyroom:render fc0ecbe0a2a34bff862dd92c5f93bebe base 1 3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67'\nec3140998f46 andrew@server copyroom-e4b765dbf59b@ 3 seconds ago, lasted 13 milliseconds\nsnapshot working copy\nargs: jj commit -m 'copyroom:render fc0ecbe0a2a34bff862dd92c5f93bebe base 1 3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67'\n3b649a935cc8 andrew@server copyroom-e4b765dbf59b@ 3 seconds ago, lasted 5 milliseconds\ncreate initial working-copy commit in workspace copyroom-e4b765dbf59b\nargs: jj workspace add --name copyroom-e4b765dbf59b -r 5b453216407a724f27d4fe3c5100de5169e62fca /tmp/copyroom-handoff-during-update-ut4eytrw/preview\na79ba36d624b andrew@server 3 seconds ago, lasted 9 milliseconds\nadd workspace 'copyroom-e4b765dbf59b'\n9e20a98e21af andrew@server default@ 4 seconds ago, lasted 8 milliseconds\ncommit 1da9943e2ba3567d0a1f6973103489c80ba1f3c1\nargs: jj commit -m 'copyroom:project inputs'\n151df746fdf8 andrew@server default@ 4 seconds ago, lasted 7 milliseconds\nsnapshot working copy\nargs: jj commit -m 'copyroom:project inputs'\n311381ae8e87 andrew@server default@ 4 seconds ago, lasted 7 milliseconds\ncommit 4593946ce28392b2ed39d7845787e7f5e94b22a0\nargs: jj commit -m 'copyroom:render fc0ecbe0a2a34bff862dd92c5f93bebe base 0 304143aa8d7016ab9008b9df4ca1ee87502966fc03c102461a81aa451fcfa391'",
+  "prepared_bytes_hex": "7072657061726564207461726765740a",
+  "preview_kept": true,
+  "preview_state": {
+    "active_head": "a10e38d70f546f02b6dd536513aa6c8c13ad2039",
+    "active_tree": "d49e740410f0f01a66baa1018ce4da1139e0f74b44fed73304c90ee7353f4a3a",
+    "answers": {
+      "description": "Local example with \"quotes\" and YAML: true",
+      "module": "cedar_lab",
+      "project_name": "cedar-lab",
+      "python_version": "3.13"
+    },
+    "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+    "conflicts": [],
+    "layer": "base",
+    "manifest_digest": "e5904dd846167a83989e1cedf0b65df9eba916ea0dc24266d7bd92f7ffaf8239",
+    "marker_digest": "69f4e9e1d06a5b7a3150fd91584fed3f3ae58443960f30f5d5ac3086916c0661",
+    "next_render": "9ed10eed0508ed576a5ef556c31368b4aae5fd1c",
+    "old_render": "5b453216407a724f27d4fe3c5100de5169e62fca",
+    "owners": {
+      "README.md": "readme",
+      "bulk-output/000-sentinel.txt": "static:bulk-source/000-sentinel.txt",
+      "bulk-output/001-target.txt": "static:bulk-source/001-target.txt",
+      "bulk-output/zzz-slow.bin": "static:bulk-source/zzz-slow.bin",
+      "config/project.yml": "settings",
+      "pyproject.toml": "pyproject",
+      "scripts/about.py": "about",
+      "src/cedar_lab/__init__.py": "module"
+    },
+    "path": "/tmp/copyroom-handoff-during-update-ut4eytrw/preview",
+    "preview_head": "0c44ef67d871ac3ce82001dac91ecbff53949f1b",
+    "preview_tree": "11402ce9dc64ef12fd8c500ffcd04aa5ceeb0b723cbe05eaf940c6268d9873be",
+    "project": "/tmp/copyroom-handoff-during-update-ut4eytrw/project",
+    "project_id": "fc0ecbe0a2a34bff862dd92c5f93bebe",
+    "record_metadata": null,
+    "render_digest": "6051b804dd7e42d8c5f00e82c7fcd26e342792e2647f5b253586879825bd122c",
+    "revision": 1,
+    "schema": 1,
+    "source": "/tmp/copyroom-handoff-during-update-ut4eytrw/source",
+    "source_digest": "3013998ba403b52ed73449c2d28dbc26a35ee4daa8590a84033e4a18f7ae2c67",
+    "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+    "templateer_version": "0.4.1",
+    "workspace": "copyroom-e4b765dbf59b"
+  },
+  "preview_tree_digest": "11402ce9dc64ef12fd8c500ffcd04aa5ceeb0b723cbe05eaf940c6268d9873be",
+  "result": {
+    "code": 1,
+    "error": "apply overlapped a jj operation: expected parent operation e90575089c7a8f36e74be47cf2947939080fa0c5b5aa155f5b020b836c45a3a3a22d817c7a0facb1dcad8e57bd3dcffd1389235c8aa309c34e0564743ca492f0; current operation 5c2d1a50c2b95b1e578341e11d0175864cabc51d6725c68444d20a1c2f365c00617adc3f0e0ad1a0b2c9e01cfd54b09c5f27b6a6afd960f0907af206701ea97b has parent(s) 76dbee228fb82de206189da877e2571f6a766ed84bd23dd3a0154058d7b6becc0bfbea0e78d69d30f5ac1b8ac11e422d0256361fe749c47ca412dbe12b9b599e. The preview is kept. Inspect jj op log and recover the foreign operation before retrying.; repository advanced during apply (saved operation e90575089c7a8f36e74be47cf2947939080fa0c5b5aa155f5b020b836c45a3a3a22d817c7a0facb1dcad8e57bd3dcffd1389235c8aa309c34e0564743ca492f0, current operation 5c2d1a50c2b95b1e578341e11d0175864cabc51d6725c68444d20a1c2f365c00617adc3f0e0ad1a0b2c9e01cfd54b09c5f27b6a6afd960f0907af206701ea97b); preview kept for review",
+    "ok": false
+  },
+  "stderr": "",
+  "target_file": "bulk-output/001-target.txt",
+  "target_had_prepared_bytes_before_writer": true,
+  "writer_bytes_hex": "696e646570656e64656e742077726974657220647572696e6720616374697665206a6a20636865636b6f75740a",
+  "writer_bytes_survived": true,
+  "writer_during_real_jj_new": true,
+  "writer_finished_while_real_jj_new_running": true,
+  "writer_id": "filesystem-writer-pid-2624161",
+  "writer_process_exit_code": 0,
+  "writer_process_stderr": "",
+  "writer_process_stdout": ""
+}

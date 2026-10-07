@@ -1,1186 +1,487 @@
-"""CLI frontend for CopyRoom.
-
-Entry point::
-
-    copyroom [--mode {workshop,project}] <command> [args...]
-
-Modes are auto-detected from directory markers unless ``--mode`` forces one.
-If neither workshop nor project markers are found, exits with a clear error.
-"""
+"""Public command line for local Templateer and jj workflows."""
 
 from __future__ import annotations
 
-import argparse
 import json
-import sys
-from collections.abc import Callable, Sequence
-from types import SimpleNamespace
+import uuid
+from pathlib import Path
+from typing import Any
 
 import typer
 
-from .manage import CopyRoomError as ManageError
-from .manage import adopt as _adopt
-from .manage import templatize as _templatize
-from .manage.layer import add_layer as _add_layer
-from .manage.layer import list_layers as _list_layers
-from .project.create import CopyRoomError as CreateError
-from .project.create import create_project
-from .project.inspect import CopyRoomError as InspectError
-from .project.inspect import inspect_project, project_status
-from .project.layers import BASE_LAYER
-from .project.model import CreationStatus, UpdateStatus
-from .project.update import CopyRoomError as UpdateError
-from .project.update import update_all_layers, update_project
-from .release.check import CopyRoomError as ReleaseError
-from .release.check import ReleaseStatus
-from .release.check import run_release_check as _run_release_check
-from .session.detector import detect_mode
-from .session.dispatcher import COMMAND_MODE_MAP, dispatch
-from .session.model import (
-    PROJECT_COMMANDS,
-    WORKSHOP_COMMANDS,
-    CLIMode,
-    CLISession,
-    SessionStatus,
-)
-from .template.model import PreviewStatus
-from .template.preview import CopyRoomError as TemplateError
-from .template.preview import run_preview
-from .template.validate import validate_template
-from .template.workspace import checkout_template, discard_template_edit
-from .workshop.golden import CopyRoomError as GoldenError
-from .workshop.golden import golden_diff, refresh_golden
-from .workshop.model import GoldenStatus, RenderStatus, SimStatus
-from .workshop.registry import CopyRoomError as RegistryError
-from .workshop.registry import (
-    add_template,
-    list_templates,
-    load_entry,
-    require_workshop_root,
-    validate_registry,
-)
-from .workshop.render import CopyRoomError as RenderError
-from .workshop.render import render_scenario
-from .workshop.simulate import CopyRoomError as SimError
-from .workshop.simulate import run_update_simulation
 
-# ---------------------------------------------------------------------------
-# Help text
-# ---------------------------------------------------------------------------
-
-COPYROOM_DESCRIPTION = """\
-CopyRoom coordinates template-driven project workflows using Copier.
-
-Modes are auto-detected from directory markers. The command set adapts
-to the detected mode.
-
-Project commands (in a project directory):
-  update    [target_ref] [--branch] [--layer NAME | --all-layers]
-                               Update an existing project (latest tag if no ref).
-                               A project may be managed by several template
-                               *layers*; --layer picks one, --all-layers does all.
-  inspect   [--json]           Full report on this project + its template link
-  status    [--json]           Terse status: mode, ref, worktree, update available
-  template-checkout [--from REF]
-                               Resolve this project's template into an editable worktree
-  template-test     [--from REF] [--check CMD]
-                               Render-test the edited template with this project's answers
-  template-preview  [--from REF]
-                               Preview the update this project would receive from the edit
-  template-discard             Discard the edit worktree/branch and reset the edit loop
-
-Bootstrap commands (in an unmanaged repo — no markers needed):
-  new       <source> [target] [--answers FILE]
-                               Create a new project from a template (runs anywhere)
-  templatize    [--into PATH] [--name NAME] [--id ID]
-                               Scaffold a template repo from this repo
-  adopt         <template> [--ref REF] --answers FILE [--write] [--force] [--layer NAME]
-                               Link this repo to a template and report drift
-  layer         add <template> [--as NAME] [--ref REF] [--force]
-                               Apply a template to this repo as an extra layer
-                               (e.g. a documentation overlay)
-  layer         list [--json]  List the template layers managing this repo
-
-Runs anywhere (no markers needed):
-  doctor        [--json]       Check the CopyRoom environment
-
-Workshop commands (in a workshop directory):
-  registry      list | show <id> | validate | add <id> --source <src> [--scaffold]
-                               Inspect the template registry (add is create-only)
-  render        <template_id> <scenario_id>
-                               Render a template scenario
-  test          <template_id> <scenario_id>
-                               Run configured checks on a fresh render
-                               (= render when checks exist; not golden)
-  golden        <template_id> <scenario_id>
-                               Golden test a scenario
-  release-check <template_id>  Run release readiness checks
-  update-test   <template_id> <scenario_id> <old> <new>
-                               Simulate a template update
-"""
-
-NO_MODE_FOUND_MESSAGE = """\
-Error: No CopyRoom project or workshop found here.
-
-CopyRoom looks for these markers in the current directory and its ancestors:
-
-  Workshop markers (template author's workbench):
-    - copyroom.yml  +  registry/  +  scenarios/
-
-  Project markers (generated project):
-    - .copier-answers.yml  or  copyroom.project.yml
-
-Run 'copyroom --help' for more information.
-"""
-
-
-# ---------------------------------------------------------------------------
-# Mode detection helper
-# ---------------------------------------------------------------------------
-
-
-def _detect_and_report(mode_override: str | None) -> CLISession:
-    """Resolve the session mode and return a session. Prints status and may exit.
-
-    When *mode_override* is given (via ``--mode``), detection is skipped and the
-    forced mode is used. Otherwise the mode is auto-detected from directory
-    markers; an unknown mode prints a diagnostic and exits.
-    """
-    session = CLISession()
-
-    if mode_override is not None:
-        session.mode = CLIMode(mode_override)
-        session.advance(SessionStatus.mode_detected)
-        return session
-
-    mode = detect_mode()
-    if mode is None:
-        session.advance(SessionStatus.unknown_mode)
-        print(NO_MODE_FOUND_MESSAGE, file=sys.stderr)
-        sys.exit(1)
-        # unreachable
-
-    session.mode = mode
-    session.advance(SessionStatus.mode_detected)
-    return session
-
-
-# ---------------------------------------------------------------------------
-# Error formatters
-# ---------------------------------------------------------------------------
-
-
-def _print_out_of_mode_error(command: str, session: CLISession) -> None:
-    """Print a clear error when a command doesn't belong in the current mode."""
-    expected = COMMAND_MODE_MAP.get(command)
-    mode_label = session.mode.value if session.mode else "unknown"
-    expected_label = expected.value if expected else "unknown"
-    print(
-        f"Error: '{command}' is a {expected_label} command, "
-        f"but the current mode is {mode_label}.",
-        file=sys.stderr,
-    )
-    print(f"Available commands in {mode_label} mode:", file=sys.stderr)
-    if session.mode == CLIMode.workshop:
-        for c in sorted(WORKSHOP_COMMANDS):
-            print(f"  {c}", file=sys.stderr)
-    elif session.mode == CLIMode.project:
-        for c in sorted(PROJECT_COMMANDS):
-            print(f"  {c}", file=sys.stderr)
-    sys.exit(1)
-
-
-def _print_unknown_command_error(command: str) -> None:
-    """Print a clear error for an unknown command."""
-    print(
-        f"Error: Unknown command '{command}'. "
-        f"Run 'copyroom --help' for available commands.",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
-
-# ---------------------------------------------------------------------------
-# Subcommand handlers (one thin _cmd_* per command)
-# ---------------------------------------------------------------------------
-
-
-def _cmd_new(args: argparse.Namespace) -> None:
-    """``copyroom new <source> [target] [--answers FILE]`` — Phase 2."""
+def _usage_error_type() -> type[Exception]:
     try:
-        creation = create_project(
-            source=args.source,
-            target_dir=args.target or ".",
-            answers_file=args.answers_file,
-            trust=args.trust,
-        )
-    except CreateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
+        from typer._click.exceptions import UsageError
+    except ModuleNotFoundError:
+        from click.exceptions import UsageError
+    return UsageError
 
-    if creation.status == CreationStatus.failed:
-        for suggestion in creation.result_suggestions:
-            print(suggestion, file=sys.stderr)
-        sys.exit(1)
 
-    print(f"Project created in {creation.target_dir}")
-    for suggestion in creation.result_suggestions:
-        print(f"  Next: {suggestion}")
-
-
-def _cmd_update(args: argparse.Namespace) -> None:
-    """``copyroom update [target_ref] [--branch] [--layer N | --all-layers]``."""
-    all_layers = getattr(args, "all_layers", False)
-    layer = getattr(args, "layer", None) or BASE_LAYER
-
-    if all_layers:
-        if args.target_ref is not None:
-            print(
-                "--all-layers updates each layer to its own latest tag; a single "
-                "ref cannot apply across different templates. Drop the ref, or "
-                "update one layer at a time with --layer.",
-                file=sys.stderr,
-            )
-            sys.exit(3)
-        if getattr(args, "layer", None):
-            print("Pass either --layer or --all-layers, not both.", file=sys.stderr)
-            sys.exit(3)
-        _run_all_layer_updates(args)
-        return
-
-    try:
-        update = update_project(
-            project_root=None,  # defaults to cwd
-            target_ref=args.target_ref,
-            use_branch=args.branch,
-            trust=args.trust,
-            layer=layer,
-        )
-    except UpdateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    # A no-op (already at the target version) is a success, not a failure (P1-2).
-    if update.status == UpdateStatus.up_to_date:
-        if update.resolved_latest:
-            print(f"Already at the latest version ({update.target_ref}); nothing to update.")
-        else:
-            print(f"Already at version {update.target_ref}; nothing to update.")
-        return  # exit 0
-
-    if update.status == UpdateStatus.failed:
-        print(f"Update failed at state: {update.status.value}", file=sys.stderr)
-        if update.conflicts:
-            print("Conflicts:", file=sys.stderr)
-            for c in update.conflicts:
-                print(f"  {c}", file=sys.stderr)
-        if update.rejects:
-            print("Rejects:", file=sys.stderr)
-            for r in update.rejects:
-                print(f"  {r}", file=sys.stderr)
-        sys.exit(1)
-
-    scope = "" if update.layer == BASE_LAYER else f" [layer: {update.layer}]"
-    print(f"Project updated to {update.target_ref}{scope}")
-    if update.update_branch:
-        print(f"  Isolation branch: {update.update_branch}")
-    if update.conflicts:
-        print("  Conflicts captured:", file=sys.stderr)
-        for c in update.conflicts:
-            print(f"    {c}", file=sys.stderr)
-    if update.rejects:
-        print("  Rejects captured:", file=sys.stderr)
-        for r in update.rejects:
-            print(f"    {r}", file=sys.stderr)
-
-
-def _run_all_layer_updates(args: argparse.Namespace) -> None:
-    """``copyroom update --all-layers`` — converge every layer, then report once.
-
-    Exits 1 if any layer failed; the per-layer lines say which. Layers already at
-    their latest tag are reported as up-to-date, not as errors (P1-2).
-    """
-    try:
-        results = update_all_layers(
-            project_root=None, use_branch=args.branch, trust=args.trust,
-        )
-    except UpdateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Converged {len(results)} layer(s):")
-    failed = False
-    for result in results:
-        if result.status == UpdateStatus.up_to_date:
-            print(f"  {result.layer:<12} already at {result.target_ref}")
-        elif result.status == UpdateStatus.failed:
-            failed = True
-            print(f"  {result.layer:<12} FAILED at state {result.status.value}", file=sys.stderr)
-        else:
-            print(f"  {result.layer:<12} updated to {result.target_ref}")
-            for conflict in sorted(result.conflicts):
-                print(f"    conflict: {conflict}", file=sys.stderr)
-            for reject in sorted(result.rejects):
-                print(f"    reject:   {reject}", file=sys.stderr)
-
-    if failed:
-        print(
-            f"Stopped after {len(results)} layer(s): a failed update leaves the worktree "
-            "dirty, which Copier refuses for the next layer anyway. Undo the whole run "
-            "with 'git reset --hard' back to where you started.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if len(results) > 1:
-        print("  (each layer but the last was committed; review 'git log' and 'git status')")
-
-
-def _cmd_inspect(args: argparse.Namespace) -> None:
-    """``copyroom inspect [--json]`` — full read-only project report."""
-    try:
-        report = inspect_project(project_root=None)
-    except InspectError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if args.json:
-        print(json.dumps(report.to_dict(), indent=2))
-        return
-
-    print(f"Project: {report.project_root}")
-    print(f"  Template id:     {report.template_id or '(none)'}")
-    print(f"  Template source: {report.template_source or '(none)'}")
-    print(f"  Recorded commit: {report.commit or '(none)'}")
-    print(f"  Answers file:    {report.answers_file}")
-    print(f"  Project config:  {'present' if report.has_project_config else 'absent'}")
-    print("  Layers:")
-    for layer in report.layers:
-        print(f"    {layer.name:<12} {layer.ref or '(no ref)':<24} {layer.template_source or '(no source)'}")
-    if report.hooks:
-        print("  Configured commands:")
-        for name, cmds in report.hooks.items():
-            print(f"    {name}:")
-            for cmd in cmds:
-                print(f"      - {cmd}")
-    else:
-        print("  Configured commands: (none)")
-
-
-def _cmd_status(args: argparse.Namespace) -> None:
-    """``copyroom status [--json]`` — terse "where am I" project status."""
-    try:
-        report = project_status(project_root=None)
-    except InspectError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if args.json:
-        print(json.dumps(report.to_dict(), indent=2))
-        return
-
-    if report.worktree_clean is None:
-        worktree = "N/A (not a git repository)"
-    else:
-        worktree = "clean" if report.worktree_clean else "dirty"
-
-    print(f"Mode:             {report.mode or 'unknown'}")
-    print(f"Template:         {report.template_id or report.template_source or '(none)'}")
-    print(f"Current ref:      {report.current_ref or '(none)'}")
-    print(f"Latest ref:       {report.latest_ref or 'unknown'}")
-    print(f"Update available: {'yes' if report.update_available else 'no'}")
-    print(f"Worktree:         {worktree}")
-    if len(report.layers) > 1:
-        print("Layers:")
-        for layer in report.layers:
-            flag = "update available" if layer["update_available"] else "up to date"
-            print(f"  {layer['name']:<12} {layer['ref'] or '(no ref)':<24} {flag}")
-
-
-def _cmd_template_checkout(args: argparse.Namespace) -> None:
-    """``copyroom template-checkout [--from REF]`` — editable template worktree."""
-    try:
-        checkout = checkout_template(project_root=None, from_ref=args.from_ref)
-    except TemplateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    print("Template checked out for editing:")
-    print(f"  Worktree: {checkout.worktree_dir}")
-    print(f"  Branch:   {checkout.branch}")
-    print(f"  Source:   {checkout.template_source}")
-    if checkout.reused_commits:
-        n = checkout.reused_commits
-        plural = "s" if n != 1 else ""
-        print(
-            f"  ⚠️  Reusing an existing edit branch with {n} pending commit{plural} "
-            "from a prior session.",
-        )
-        print("      Run 'copyroom template-discard' to start fresh.")
-    print()
-    print("Edit files under the worktree, then run:")
-    print("  copyroom template-test       # confirm it still renders")
-    print("  copyroom template-preview    # see what your project would receive")
-
-
-def _cmd_template_test(args: argparse.Namespace) -> None:
-    """``copyroom template-test [--from REF] [--check CMD]`` — render-test the edit."""
-    try:
-        result = validate_template(
-            project_root=None, from_ref=args.from_ref, check_cmd=args.check,
-        )
-    except TemplateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if not result.ok:
-        print("Template test failed:", file=sys.stderr)
-        for msg in result.messages:
-            print(f"  {msg}", file=sys.stderr)
-        sys.exit(1)
-
-    for msg in result.messages:
-        print(f"  ✅ {msg}")
-    print(f"  Rendered into: {result.output_dir}")
-
-
-def _cmd_template_preview(args: argparse.Namespace) -> None:
-    """``copyroom template-preview [--from REF]`` — preview the project's update."""
-    try:
-        preview = run_preview(project_root=None, from_ref=args.from_ref)
-    except TemplateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if preview.status != PreviewStatus.complete or preview.result is None:
-        print("Template preview failed.", file=sys.stderr)
-        sys.exit(1)
-
-    result = preview.result
-    print(f"Update preview (project ← edited template on {preview.branch}):")
-    if not result.has_changes and not result.conflicts and not result.rejects:
-        print("  No changes — your project already matches the edited template.")
-    else:
-        if result.added:
-            print(f"  Added:    {sorted(result.added)}")
-        if result.modified:
-            print(f"  Modified: {sorted(result.modified)}")
-        if result.removed:
-            print(f"  Removed:  {sorted(result.removed)}")
-        if result.conflicts:
-            print(f"  ⚠️  Conflicts: {sorted(result.conflicts)}")
-        if result.rejects:
-            print(f"  ⚠️  Rejects:   {sorted(result.rejects)}")
-    print(f"  Patch: {result.patch_path}")
-    print()
-    print("Nothing was applied to your project. Review the patch, then once the")
-    print("template change is committed/tagged, apply it with: copyroom update <ref>")
-
-
-def _cmd_template_discard(args: argparse.Namespace) -> None:
-    """``copyroom template-discard`` — reset the edit worktree/branch."""
-    try:
-        worktree = discard_template_edit(project_root=None)
-    except TemplateError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if worktree is None:
-        print("No edit worktree to discard — nothing to do.")
-        return
-    print(f"Discarded the edit worktree and branch ({worktree}).")
-    print("The next 'copyroom template-checkout' will start fresh from the base.")
-
-
-def _cmd_templatize(args: argparse.Namespace) -> None:
-    """``copyroom templatize [--into PATH] [--name NAME] [--id ID]``.
-
-    Scaffold a self-contained template repo (Home A) from the current repo.
-    """
-    try:
-        tz = _templatize(
-            repo_root=None, into=args.into, name=args.name, template_id=args.id,
-        )
-    except ManageError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Template repo scaffolded at {tz.home_dir}")
-    print(f"  Template id: {tz.template_id}")
-    print(f"  Default project_name: {tz.project_name}")
-    print()
-    print("Next — parameterize, then converge the golden loop (from the template repo):")
-    print(f"  cd {tz.home_dir}")
-    print(f"  copyroom golden {tz.template_id} default      # → no diffs when faithful")
-    print("  # rename files under template/ to *.jinja and insert {{ project_name }}")
-    print(f"  copyroom render {tz.template_id} probe         # sanity-check parameterization")
-    print()
-    print("When the golden loop is clean, finalize and adopt:")
-    print("  git init -q && git add -A && git commit -qm 'template v0.1.0' && git tag v0.1.0")
-    print(f"  cd {tz.repo_root}")
-    print(f"  copyroom adopt {tz.home_dir} --ref v0.1.0 --answers <answers.yml> --write")
-
-
-def _cmd_adopt(args: argparse.Namespace) -> None:
-    """``copyroom adopt <template> [--ref REF] --answers FILE [--write] [--force]``.
-
-    Link this repo to a template and report drift (report-only unless --write).
-    """
-    layer = getattr(args, "layer", None) or BASE_LAYER
-    try:
-        adoption = _adopt(
-            template=args.template,
-            repo_root=None,
-            ref=args.ref,
-            answers_file=args.answers_file,
-            write=args.write,
-            force=args.force,
-            layer=layer,
-        )
-    except ManageError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    result = adoption.result
-    scope = "" if layer == BASE_LAYER else f" [layer: {layer}]"
-    print(f"Adoption drift{scope} (repo vs {args.template} rendered with your answers):")
-    if result is None or not result.has_drift:
-        print("  No drift — the template reproduces this repo exactly.")
-    else:
-        if result.added:
-            print(f"  Template adds (absent in repo): {sorted(result.added)}")
-        if result.modified:
-            print(f"  Differs:                        {sorted(result.modified)}")
-        if result.removed:
-            print(f"  Repo-only (not in template):    {sorted(result.removed)}")
-    if result and result.patch_path:
-        print(f"  Patch: {result.patch_path}")
-    print()
-    from .project.layers import answers_filename
-
-    answers_name = answers_filename(layer)
-    if adoption.wrote_answers:
-        print(f"  Recorded {answers_name} — this repo is now CopyRoom-managed.")
-        print("  No other repo file was modified. Verify with: git status")
-    else:
-        print("  Report-only: nothing was written. Re-run with --write to record")
-        print(f"  the link ({answers_name}) once the answers look right.")
-
-
-def _cmd_layer_add(args: argparse.Namespace) -> None:
-    """``copyroom layer add <template> [--as NAME] [--ref REF] [--force]``.
-
-    Applies a template to this repo as an extra layer — the files land, and the
-    link is recorded in that layer's own answers file.
-    """
-    try:
-        result = _add_layer(
-            template=args.template,
-            repo_root=None,
-            layer=args.as_layer,
-            ref=args.ref,
-            force=args.force,
-        )
-    except ManageError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    verb = "Re-applied" if result.replaced else "Added"
-    print(f"{verb} layer '{result.layer}' → {result.repo_root}")
-    print(f"  Template:     {result.template_source}{f' @ {result.template_ref}' if result.template_ref else ''}")
-    print(f"  Answers file: {result.answers_file}")
-    if result.written:
-        print("  Wrote:")
-        for path in result.written:
-            print(f"    {path}")
-    else:
-        print("  Wrote: (nothing changed — already converged)")
-    print()
-    print(f"  Next: review with 'git status', then 'copyroom update --layer {result.layer}' to converge later.")
-
-
-def _cmd_layer_list(args: argparse.Namespace) -> None:
-    """``copyroom layer list [--json]`` — the template layers managing this repo."""
-    root, layers = _list_layers(repo_root=None)
-
-    if args.json:
-        print(json.dumps(
-            {"command": "layer-list", "repo_root": str(root),
-             "layers": [layer.to_dict() for layer in layers]},
-            indent=2,
-        ))
-        return
-
-    print(f"Template layers → {root}")
-    if not layers:
-        print("  (none — not a Copier-managed repo)")
-        print("  Add one: copyroom layer add <template>")
-        return
-    for layer in layers:
-        print(f"  {layer.name:<12} {layer.answers_file}")
-        print(f"    template: {layer.template_id or layer.template_source or '(unknown)'}")
-        print(f"    ref:      {layer.ref or '(none recorded)'}")
-
-
-_REGISTRY_ACTIONS = ("list", "show", "validate", "add")
-
-
-def _cmd_registry(args: argparse.Namespace) -> None:
-    """``copyroom registry <list|show|validate|add> ...``.
-
-    Read-only (``list``/``show``/``validate``) plus a create-only ``add`` that
-    writes a new ``registry/<id>.yml`` — ``copyroom.yml`` is never rewritten.
-    """
-    action = args.action
-    try:
-        root = require_workshop_root(None)
-
-        if action == "list":
-            entries = list_templates(root)
-            if not entries:
-                print("No templates registered.")
-                return
-            for entry in entries:
-                print(f"{entry.template_id}")
-                print(f"  source: {entry.source or '(unresolved)'}")
-                if entry.checks:
-                    print(f"  checks: {len(entry.checks)} configured")
-            return
-
-        if action == "show":
-            if not args.args:
-                print("Usage: copyroom registry show <template_id>", file=sys.stderr)
-                sys.exit(1)
-            entry = load_entry(root, args.args[0])
-            print(f"{entry.template_id}")
-            print(f"  source: {entry.source or '(unresolved)'}")
-            print(f"  checks: {entry.checks or '(none)'}")
-            return
-
-        if action == "validate":
-            report = validate_registry(root)
-            if not report.problems:
-                print("No templates registered — nothing to validate.")
-                return
-            for template_id, problems in report.problems.items():
-                if problems:
-                    print(f"✗ {template_id}", file=sys.stderr)
-                    for problem in problems:
-                        print(f"    - {problem}", file=sys.stderr)
-                else:
-                    print(f"✓ {template_id}")
-            if not report.ok:
-                sys.exit(1)
-            return
-
-        if action == "add":
-            if not args.args:
-                print(
-                    "Usage: copyroom registry add <template_id> --source <src> [--scaffold]",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-            if not args.source:
-                print("registry add requires --source <path-or-url>", file=sys.stderr)
-                sys.exit(1)
-            path = add_template(root, args.args[0], args.source, scaffold=args.scaffold)
-            print(f"Created registry entry: {path.relative_to(root)}")
-            if args.scaffold:
-                print(f"Scaffolded scenarios/{args.args[0]}/default.yml")
-            return
-
-        supported = ", ".join(_REGISTRY_ACTIONS)
-        print(
-            f"Error: unknown registry action '{action}'. Supported: {supported}.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    except RegistryError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-
-def _cmd_render(args: argparse.Namespace) -> None:
-    """``copyroom render <template_id> <scenario_id>`` — Phase 3."""
-    try:
-        render = render_scenario(
-            template_id=args.template_id,
-            scenario_id=args.scenario_id,
-        )
-    except RenderError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if render.status == RenderStatus.failed:
-        print(f"Render failed: {render.template_id}/{render.scenario_id}", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Rendered {render.template_id}/{render.scenario_id} → generated/{render.template_id}/{render.scenario_id}/")
-    if render.status == RenderStatus.tested:
-        print("  Tests: passed")
-    print(f"  Status: {render.status.value}")
-
-
-def _cmd_test(args: argparse.Namespace) -> None:
-    """``copyroom test <template_id> <scenario_id>`` — Phase 3.
-
-    Runs the configured registry ``checks`` against a fresh render — equivalent
-    to ``render`` when checks exist (the render workflow runs them). It does
-    **not** run golden snapshot comparison; use ``copyroom golden`` for that.
-    """
-    _cmd_render(args)
-
-
-def _cmd_golden(args: argparse.Namespace) -> None:
-    """``copyroom golden <template_id> <scenario_id>`` — Phase 3.
-
-    Supports ``--refresh`` to overwrite the golden snapshot.
-    """
-    if args.refresh:
-        try:
-            refresh_golden(
-                template_id=args.template_id,
-                scenario_id=args.scenario_id,
-                workshop_root=None,
-            )
-        except GoldenError as exc:
-            print(str(exc), file=sys.stderr)
-            sys.exit(1)
-        print(f"Golden snapshot refreshed: {args.template_id}/{args.scenario_id}")
-        return
-
-    try:
-        diff = golden_diff(
-            template_id=args.template_id,
-            scenario_id=args.scenario_id,
-        )
-    except GoldenError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if diff.status == GoldenStatus.failed:
-        print(f"Golden diff failed: {diff.template_id}/{diff.scenario_id}", file=sys.stderr)
-        sys.exit(1)
-
-    if diff.status == GoldenStatus.no_diffs:
-        print(f"Golden: {diff.template_id}/{diff.scenario_id} — ✅ OK (no diffs)")
-    elif diff.status == GoldenStatus.has_diffs:
-        print(f"Golden: {diff.template_id}/{diff.scenario_id} — ⚠️  DIFFS FOUND")
-        if diff.result:
-            print(f"  {diff.result}")
-            if diff.result.modified:
-                print(f"  Modified: {sorted(diff.result.modified)}")
-            if diff.result.added:
-                print(f"  Added:    {sorted(diff.result.added)}")
-            if diff.result.removed:
-                print(f"  Removed:  {sorted(diff.result.removed)}")
-        print("  Review changes, then run: copyroom golden --refresh <template_id> <scenario_id>")
-        sys.exit(1)
-
-
-def _cmd_release_check(args: argparse.Namespace) -> None:
-    """``copyroom release-check <template_id>`` — Phase 4."""
-    try:
-        check = _run_release_check(template_id=args.template_id)
-    except ReleaseError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    # Format and print the report
-    from .release.check import format_release_report
-    print(format_release_report(check))
-
-    if check.status == ReleaseStatus.failed:
-        sys.exit(1)
-
-
-def _cmd_update_test(args: argparse.Namespace) -> None:
-    """``copyroom update-test <template_id> <scenario_id> <old> <new>`` — Phase 3."""
-    try:
-        sim = run_update_simulation(
-            template_id=args.template_id,
-            scenario_id=args.scenario_id,
-            old_version=args.old_version,
-            new_version=args.new_version,
-        )
-    except SimError as exc:
-        print(str(exc), file=sys.stderr)
-        sys.exit(1)
-
-    if sim.status == SimStatus.failed:
-        print(
-            f"Update simulation failed: {sim.template_id}/{sim.scenario_id} "
-            f"({sim.old_version} → {sim.new_version})",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if sim.status == SimStatus.complete:
-        print(
-            f"Update simulation: {sim.template_id}/{sim.scenario_id} "
-            f"({sim.old_version} → {sim.new_version})"
-        )
-        result = sim.result
-        if result and result.clean:
-            print("  ✅ Update applied cleanly — no conflicts")
-        elif result:
-            print("  ⚠️  Update had issues:")
-            if result.conflicts:
-                print(f"  Conflicts: {sorted(result.conflicts)}")
-            if result.rejects:
-                print(f"  Rejects:   {sorted(result.rejects)}")
-            if not result.check_passed:
-                print("  Checks:    failed")
-        print(f"  Status: {sim.status.value}")
-
-
-# ---------------------------------------------------------------------------
-# Command dispatch map
-# ---------------------------------------------------------------------------
-
-COMMAND_FN: dict[str, Callable[..., None]] = {
-    "templatize": _cmd_templatize,
-    "adopt": _cmd_adopt,
-    "new": _cmd_new,
-    "update": _cmd_update,
-    "inspect": _cmd_inspect,
-    "status": _cmd_status,
-    "template-checkout": _cmd_template_checkout,
-    "template-test": _cmd_template_test,
-    "template-preview": _cmd_template_preview,
-    "template-discard": _cmd_template_discard,
-    "registry": _cmd_registry,
-    "render": _cmd_render,
-    "test": _cmd_test,
-    "golden": _cmd_golden,
-    "release-check": _cmd_release_check,
-    "update-test": _cmd_update_test,
-}
-
-
-# ---------------------------------------------------------------------------
-# Typer frontend
-# ---------------------------------------------------------------------------
+UsageError = _usage_error_type()
 
 app = typer.Typer(
     name="copyroom",
-    help=COPYROOM_DESCRIPTION,
+    help="Compose local Templateer sources and converge projects with jj.",
     add_completion=False,
-    rich_markup_mode=None,         # keep help text verbatim (no Rich markup)
+    rich_markup_mode=None,
+    no_args_is_help=True,
 )
-
-# Module-global the gating helper reads; set by the root callback before any
-# command body runs (Typer/Click invokes the callback first).
+preview_app = typer.Typer(help="Create and recover isolated project previews.", add_completion=False)
+layer_app = typer.Typer(help="Manage independent local source layers.", add_completion=False)
+app.add_typer(preview_app, name="preview")
+app.add_typer(layer_app, name="layer")
 _MODE_OVERRIDE: str | None = None
 
 
-def _version_callback(value: bool) -> None:
-    if value:
-        from . import __version__
-        typer.echo(f"copyroom {__version__}")
-        raise typer.Exit()
+def _error(message: str, code: int = 2) -> None:
+    typer.echo(f"Error: {message}", err=True)
+    raise typer.Exit(code=code)
 
 
-@app.callback(invoke_without_command=True)
-def _root(
-    ctx: typer.Context,
-    mode: str | None = typer.Option(
-        None, "--mode",
-        help="Force a mode instead of auto-detecting from directory markers",
-    ),
-    version: bool = typer.Option(
-        False, "--version", callback=_version_callback, is_eager=True,
-        help="Print version and exit",
-    ),
-) -> None:
-    global _MODE_OVERRIDE
-    if mode is not None and mode not in ("workshop", "project"):
-        typer.echo("Error: --mode must be 'workshop' or 'project'.", err=True)
-        raise typer.Exit(code=2)
-    _MODE_OVERRIDE = mode
-    # No command given → show help and exit 0 (parity with the old frontend).
-    if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
-        raise typer.Exit(code=0)
+def _emit(value: Any, json_output: bool) -> Any:
+    if isinstance(value, (dict, list)):
+        typer.echo(json.dumps(value, indent=2 if json_output else None, sort_keys=True))
+    elif value is not None:
+        typer.echo(str(value))
+    return value
 
 
-def _require_mode(command: str) -> None:
-    """Detect/resolve mode and gate *command*; print + exit on failure.
+def _call(function: Any, *args: Any, json_output: bool = False, **kwargs: Any) -> Any:
+    from .local.errors import LocalError
 
-    Parity with the old ``main()`` dispatch loop — reuses ``session/`` verbatim.
-    Bootstrap commands (``new``/``adopt``/``templatize``) and ``doctor`` do not
-    call this: they run in any directory.
-    """
-    session = _detect_and_report(mode_override=_MODE_OVERRIDE)  # exits on unknown mode
-    result = dispatch(command, session)
-    if result == SessionStatus.command_failed:
-        session.advance(SessionStatus.command_failed)
-        if session.mode and command in COMMAND_MODE_MAP:
-            _print_out_of_mode_error(command, session)   # exits 1
-        else:
-            _print_unknown_command_error(command)        # exits 1
-        # unreachable — both helpers sys.exit(1)
-    session.advance(SessionStatus.command_running)
+    try:
+        result = function(*args, **kwargs)
+    except LocalError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=exc.code) from exc
+    return _emit(result, json_output)
 
 
-# --- Project commands ---
+def _project_root() -> Path:
+    if _MODE_OVERRIDE == "workshop":
+        _error("project command cannot run in workshop mode", 1)
+    for path in (Path.cwd(), *Path.cwd().parents):
+        if (path / ".copyroom-local.json").is_file():
+            return path
+        if _has_legacy_project_marker(path):
+            _error(
+                "legacy project markers need local adoption; use 'copyroom adopt SOURCE --answers FILE --write'",
+                1,
+            )
+        if (
+            (path / "copyroom.yml").is_file()
+            and (path / "registry").is_dir()
+            and (path / "scenarios").is_dir()
+        ):
+            _error("project command cannot run in workshop mode", 1)
+    _error("no local CopyRoom project marker found", 2)
 
 
-@app.command("update")
-def _typer_update(
-    target_ref: str | None = typer.Argument(None, help="Target version ref (tag or branch)"),
-    branch: bool = typer.Option(False, "--branch", help="Create an isolation branch for the update"),
-    trust: bool = typer.Option(False, "--trust", help="Execute the template's post-update hook commands"),
-    layer: str | None = typer.Option(
-        None, "--layer",
-        help="Which template layer to converge (default: base, this project's own template)",
-    ),
-    all_layers: bool = typer.Option(
-        False, "--all-layers",
-        help="Converge every layer to its own latest tag (no ref argument). "
-             "Commits each layer's result before the next runs — Copier refuses "
-             "a dirty destination. The last layer is left uncommitted for review.",
-    ),
-) -> None:
-    _require_mode("update")
-    _cmd_update(SimpleNamespace(
-        target_ref=target_ref, branch=branch, trust=trust, layer=layer, all_layers=all_layers,
-    ))
+def _workshop_root() -> Path:
+    if _MODE_OVERRIDE == "project":
+        _error("workshop command cannot run in project mode", 1)
+    for path in (Path.cwd(), *Path.cwd().parents):
+        if (path / ".copyroom-local.json").is_file():
+            _error("workshop command cannot run in project mode", 1)
+        if _has_legacy_project_marker(path):
+            _error(
+                "legacy project markers need local adoption; use 'copyroom adopt SOURCE --answers FILE --write'",
+                1,
+            )
+        if (
+            (path / "copyroom.yml").is_file()
+            and (path / "registry").is_dir()
+            and (path / "scenarios").is_dir()
+        ):
+            return path
+    _error("no local workshop markers found", 2)
 
 
-@app.command("inspect")
-def _typer_inspect(
-    json_output: bool = typer.Option(False, "--json", help="Emit the report as JSON"),
-) -> None:
-    _require_mode("inspect")
-    _cmd_inspect(SimpleNamespace(json=json_output))
-
-
-@app.command("status")
-def _typer_status(
-    json_output: bool = typer.Option(False, "--json", help="Emit the status as JSON"),
-) -> None:
-    _require_mode("status")
-    _cmd_status(SimpleNamespace(json=json_output))
-
-
-@app.command("template-checkout")
-def _typer_template_checkout(
-    from_ref: str | None = typer.Option(
-        None, "--from",
-        help="Base ref for the edit branch (default: template's default branch)",
-    ),
-) -> None:
-    _require_mode("template-checkout")
-    _cmd_template_checkout(SimpleNamespace(from_ref=from_ref))
-
-
-@app.command("template-test")
-def _typer_template_test(
-    from_ref: str | None = typer.Option(None, "--from", help="Base ref for the edit branch"),
-    check: str | None = typer.Option(None, "--check", help="Shell command to run against the rendered output"),
-) -> None:
-    _require_mode("template-test")
-    _cmd_template_test(SimpleNamespace(from_ref=from_ref, check=check))
-
-
-@app.command("template-preview")
-def _typer_template_preview(
-    from_ref: str | None = typer.Option(None, "--from", help="Base ref for the edit branch"),
-) -> None:
-    _require_mode("template-preview")
-    _cmd_template_preview(SimpleNamespace(from_ref=from_ref))
-
-
-@app.command("template-discard")
-def _typer_template_discard() -> None:
-    _require_mode("template-discard")
-    _cmd_template_discard(SimpleNamespace())
-
-
-# --- Bootstrap commands (unmanaged repo — no mode gating) ---
-
-
-@app.command("new")
-def _typer_new(
-    source: str = typer.Argument(..., help="Template source (local path or git URL)"),
-    target: str = typer.Argument(".", help="Target directory"),
-    answers_file: str | None = typer.Option(None, "--answers", help="Path to YAML answers file"),
-    trust: bool = typer.Option(False, "--trust", help="Execute the template's post-create hook commands"),
-) -> None:
-    _cmd_new(SimpleNamespace(source=source, target=target, answers_file=answers_file, trust=trust))
-
-
-@app.command("templatize")
-def _typer_templatize(
-    into: str | None = typer.Option(
-        None, "--into",
-        help="Where to create the template repo (default: <repo>-template sibling)",
-    ),
-    name: str | None = typer.Option(
-        None, "--name",
-        help="Project name to record as the template default (default: repo name)",
-    ),
-    id: str | None = typer.Option(
-        None, "--id",
-        help="Workshop/registry template id (default: slug of --name)",
-    ),
-) -> None:
-    _cmd_templatize(SimpleNamespace(into=into, name=name, id=id))
-
-
-@app.command("adopt")
-def _typer_adopt(
-    template: str = typer.Argument(..., help="Template source (local path or git URL)"),
-    ref: str | None = typer.Option(None, "--ref", help="Template VCS ref to render (tag/branch/commit)"),
-    answers_file: str | None = typer.Option(
-        None, "--answers", help="Path to the YAML answers file inferred for this repo",
-    ),
-    write: bool = typer.Option(
-        False, "--write", help="Write .copier-answers.yml into the repo (otherwise report-only)",
-    ),
-    force: bool = typer.Option(
-        False, "--force", help="Re-adopt even if this layer's answers file already exists",
-    ),
-    layer: str | None = typer.Option(
-        None, "--layer",
-        help="Record the link in this layer's answers file (default: base)",
-    ),
-) -> None:
-    _cmd_adopt(SimpleNamespace(
-        template=template, ref=ref, answers_file=answers_file, write=write, force=force, layer=layer,
-    ))
-
-
-@app.command("layer")
-def _typer_layer(
-    action: str = typer.Argument(..., help="Action: add or list"),
-    template: str | None = typer.Argument(None, help="Template source (add only)"),
-    as_layer: str | None = typer.Option(
-        None, "--as",
-        help="Layer name (default: the template's own _answers_file declaration)",
-    ),
-    ref: str | None = typer.Option(None, "--ref", help="Template VCS ref to apply (tag/branch/commit)"),
-    force: bool = typer.Option(
-        False, "--force", help="Retarget an existing layer to a different template",
-    ),
-    json_output: bool = typer.Option(False, "--json", help="Emit the listing as JSON"),
-) -> None:
-    """Manage the template layers of this repo (runs anywhere, like doctor)."""
-    if action == "add":
-        if template is None:
-            print("copyroom layer add requires a template source.", file=sys.stderr)
-            sys.exit(3)
-        _cmd_layer_add(SimpleNamespace(template=template, as_layer=as_layer, ref=ref, force=force))
-    elif action == "list":
-        _cmd_layer_list(SimpleNamespace(json=json_output))
-    else:
-        print(f"Unknown layer action '{action}'. Use 'add' or 'list'.", file=sys.stderr)
-        sys.exit(3)
-
-
-# --- Runs-anywhere commands (no mode gating, like doctor) ---
-
-
-# --- Workshop commands ---
-
-
-@app.command("registry")
-def _typer_registry(
-    action: str = typer.Argument(..., help="Registry action: list, show, validate, add"),
-    args: list[str] | None = typer.Argument(None, help="Template id (for show/add)"),
-    source: str | None = typer.Option(None, "--source", help="Template source for 'add' (local path or git URL)"),
-    scaffold: bool = typer.Option(False, "--scaffold", help="With 'add', also scaffold a scenarios/<id>/ skeleton"),
-) -> None:
-    _require_mode("registry")
-    _cmd_registry(SimpleNamespace(action=action, args=args or [], source=source, scaffold=scaffold))
-
-
-@app.command("render")
-def _typer_render(
-    template_id: str = typer.Argument(..., help="Template identifier"),
-    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
-) -> None:
-    _require_mode("render")
-    _cmd_render(SimpleNamespace(template_id=template_id, scenario_id=scenario_id))
-
-
-@app.command("test")
-def _typer_test(
-    template_id: str = typer.Argument(..., help="Template identifier"),
-    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
-) -> None:
-    _require_mode("test")
-    _cmd_test(SimpleNamespace(template_id=template_id, scenario_id=scenario_id))
-
-
-@app.command("golden")
-def _typer_golden(
-    template_id: str = typer.Argument(..., help="Template identifier"),
-    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
-    refresh: bool = typer.Option(
-        False, "--refresh", help="Refresh (overwrite) the golden snapshot with current output",
-    ),
-) -> None:
-    _require_mode("golden")
-    _cmd_golden(SimpleNamespace(template_id=template_id, scenario_id=scenario_id, refresh=refresh))
-
-
-@app.command("release-check")
-def _typer_release_check(
-    template_id: str = typer.Argument(..., help="Template identifier"),
-) -> None:
-    _require_mode("release-check")
-    _cmd_release_check(SimpleNamespace(template_id=template_id))
-
-
-@app.command("update-test")
-def _typer_update_test(
-    template_id: str = typer.Argument(..., help="Template identifier"),
-    scenario_id: str = typer.Argument(..., help="Scenario identifier"),
-    old_version: str = typer.Argument(..., help="Old template version"),
-    new_version: str = typer.Argument(..., help="New template version"),
-) -> None:
-    _require_mode("update-test")
-    _cmd_update_test(
-        SimpleNamespace(
-            template_id=template_id, scenario_id=scenario_id,
-            old_version=old_version, new_version=new_version,
-        )
+def _has_legacy_project_marker(path: Path) -> bool:
+    return (path / ".copier-answers.yml").is_file() or any(
+        marker.is_file() for marker in path.glob(".copier-answers.*.yml")
     )
 
 
-# --- Environment precondition check (runs anywhere, like bootstrap) ---
+def _source(path: Path) -> Path:
+    if not (path / "manifest.json").is_file():
+        _error(f"not a local Templateer source: {path}", 3)
+    return path
+
+
+@app.callback()
+def _root(
+    ctx: typer.Context,
+    mode: str | None = typer.Option(None, "--mode", help="Force project or workshop mode"),
+    version: bool = typer.Option(False, "--version", is_eager=True),
+) -> None:
+    global _MODE_OVERRIDE
+    if version:
+        from . import __version__
+
+        typer.echo(f"copyroom {__version__}")
+        raise typer.Exit()
+    if mode not in (None, "project", "workshop"):
+        _error("--mode must be 'project' or 'workshop'", 3)
+    _MODE_OVERRIDE = mode
+    ctx.obj = mode
+
+
+@app.command("new")
+def new_command(
+    source: Path = typer.Argument(..., help="Local Templateer source directory"),
+    target: Path = typer.Argument(Path("."), help="New project directory"),
+    answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Create a project from a trusted local source."""
+    from .local.workflow import new
+
+    _call(new, _source(source), target, answers, json_output=json_output)
+
+
+@app.command("update")
+def update_command(
+    out: Path | None = typer.Option(None, "--out", help="Preview workspace path"),
+    apply_preview: Path | None = typer.Option(None, "--apply", help="Apply this reviewed preview"),
+    source: Path | None = typer.Option(None, "--source", help="Local source override"),
+    answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
+    layer: str = typer.Option("base", "--layer", help="Layer to converge"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Create a project update preview or apply a reviewed preview."""
+    from .local.workflow import apply, preview
+
+    project = _project_root()
+    if apply_preview is not None:
+        if out is not None or source is not None or answers is not None:
+            _error("--apply cannot be combined with preview inputs", 3)
+        result = _call(apply, project, apply_preview, json_output=json_output)
+    else:
+        destination = out or (
+            project.parent / ".copyroom-previews"
+            / f"{project.name}-{uuid.uuid4().hex[:10]}"
+        )
+        result = _call(
+            preview, project, destination, source, answers, layer, json_output=json_output,
+        )
+    if isinstance(result, dict) and result.get("conflicts"):
+        raise typer.Exit(code=1)
+
+
+@preview_app.command("create")
+def preview_create(
+    project: Path = typer.Option(..., "--project", help="Managed project directory"),
+    out: Path = typer.Option(..., "--out", help="Preview workspace path"),
+    source: Path | None = typer.Option(None, "--source", help="Local source override"),
+    answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
+    layer: str = typer.Option("base", "--layer", help="Layer to converge"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import preview
+
+    _call(preview, project, out, source, answers, layer, json_output=json_output)
+
+
+@preview_app.command("list")
+def preview_list(
+    project: Path = typer.Option(..., "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import list_previews
+
+    _call(list_previews, project, json_output=json_output)
+
+
+@app.command("apply")
+def apply_command(
+    preview: Path = typer.Option(..., "--preview", help="Reviewed preview workspace"),
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import apply
+
+    _call(apply, project or _project_root(), preview, json_output=json_output)
+
+
+@app.command("discard")
+def discard_command(
+    preview: Path = typer.Option(..., "--preview", help="Preview workspace to discard"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import discard
+
+    _call(discard, preview, json_output=json_output)
+
+
+@app.command("inspect")
+def inspect_command(
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import inspect
+
+    _call(inspect, project or _project_root(), json_output=json_output)
+
+
+@app.command("status")
+def status_command(
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import status
+
+    report = _call(status, project or _project_root(), json_output=json_output)
+    if isinstance(report, dict) and (not report["ok"] or report["has_conflicts"]):
+        raise typer.Exit(code=1)
 
 
 @app.command("doctor")
-def _typer_doctor(
-    json_output: bool = typer.Option(False, "--json", help="Emit the report as JSON"),
+def doctor_command(json_output: bool = typer.Option(False, "--json", help="Emit a JSON report")) -> None:
+    """Check the Templateer and jj environment."""
+    from .local.workflow import doctor
+
+    report = _call(doctor, json_output=json_output)
+    if isinstance(report, dict) and not report["ok"]:
+        raise typer.Exit(code=2)
+
+
+@layer_app.command("add")
+def layer_add(
+    source: Path = typer.Option(..., "--source", help="Local Templateer source"),
+    answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
+    as_layer: str = typer.Option(..., "--as", help="New layer name"),
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
-    """Check the CopyRoom environment (Copier, git, cache). Runs anywhere."""
-    from .doctor import format_doctor_report, run_doctor
-    report = run_doctor()
-    if json_output:
-        typer.echo(json.dumps(report.to_dict(), indent=2))
+    from .local.workflow import add_layer
+
+    _call(add_layer, project or _project_root(), _source(source), answers, as_layer, json_output=json_output)
+
+
+@layer_app.command("list")
+def layer_list(
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workflow import list_layers
+
+    _call(list_layers, project or _project_root(), json_output=json_output)
+
+
+@app.command("generate")
+def generate_command(
+    template: str = typer.Option(..., "--template", help="Templateer artifact name"),
+    request: str = typer.Option(..., "--request", help="Explicit generation request"),
+    source: Path = typer.Option(..., "--source", help="Local Templateer source"),
+    model: str = typer.Option("openai:gpt-4.1-mini", "--model", help="Provider model name"),
+    context_file: Path | None = typer.Option(None, "--context", help="JSON project facts"),
+    max_attempts: int = typer.Option(3, "--max-attempts", min=1, max=10),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Call a model explicitly and freeze one validated artifact."""
+    from .local.generation import generate
+    from .local.source import read_json
+
+    context = read_json(context_file) if context_file else {}
+    _call(
+        generate, _project_root(), _source(source), template, request, model, context,
+        max_attempts, json_output=json_output,
+    )
+
+
+@app.command("refresh")
+def refresh_command(
+    layer: str = typer.Option(..., "--layer", help="Generated artifact owner"),
+    out: Path = typer.Option(..., "--out", help="Preview workspace path"),
+    request: str = typer.Option(..., "--request", help="Explicit refresh request"),
+    source: Path | None = typer.Option(None, "--source", help="Local source override"),
+    model: str = typer.Option("openai:gpt-4.1-mini", "--model", help="Provider model name"),
+    context_file: Path | None = typer.Option(None, "--context", help="JSON project facts"),
+    max_attempts: int = typer.Option(3, "--max-attempts", min=1, max=10),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Call a model explicitly and preview a new frozen artifact."""
+    from .local.generation import refresh
+    from .local.source import read_json
+
+    context = read_json(context_file) if context_file else {}
+    _call(
+        refresh, _project_root(), layer, out, request, source, model, context,
+        max_attempts, json_output=json_output,
+    )
+
+
+@app.command("adopt")
+def adopt_command(
+    source: Path = typer.Argument(..., help="Local Templateer source"),
+    answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
+    project: Path = typer.Option(Path("."), "--project", help="Existing project directory"),
+    write: bool = typer.Option(False, "--write", help="Record the source and initialize jj"),
+    template_only: str | None = typer.Option(None, "--template-only", help="Keep template-only paths"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Report drift or attach a local source to an existing project."""
+    from .local.manage import adopt
+
+    report = _call(
+        adopt, project, _source(source), answers, write, template_only,
+        json_output=json_output,
+    )
+    if isinstance(report, dict) and not write and not report["exact"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("templatize")
+def templatize_command(
+    target: Path = typer.Option(..., "--target", help="New local Templateer source directory"),
+    project: Path = typer.Option(Path("."), "--project", help="Project tree to extract"),
+    name: str | None = typer.Option(None, "--name", help="Default project name"),
+    parameterize: list[str] = typer.Option([], "--parameterize", help="Path to replace with project_name"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Extract a source and verify its exact golden tree."""
+    from .local.manage import templatize
+
+    _call(templatize, project, target, name, parameterize, json_output=json_output)
+
+
+@app.command("registry")
+def registry_command(
+    action: str = typer.Argument(..., help="list, show, validate, or add"),
+    template_id: str | None = typer.Argument(None, help="Template id for show or add"),
+    source: Path | None = typer.Option(None, "--source", help="Local source for add"),
+    scaffold: bool = typer.Option(False, "--scaffold", help="Create a default scenario file"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Read or update a local workshop registry."""
+    from .local.workshop import registry_add, registry_list, registry_show, registry_validate
+
+    if action == "list":
+        _call(registry_list, workshop_root=_workshop_root(), json_output=json_output)
+    elif action == "show" and template_id:
+        _call(registry_show, template_id, workshop_root=_workshop_root(), json_output=json_output)
+    elif action == "validate":
+        result = _call(registry_validate, workshop_root=_workshop_root(), json_output=json_output)
+        if isinstance(result, dict) and not result.get("ok", False):
+            for template_id, problem in result.get("problems", {}).items():
+                typer.echo(f"{template_id}: {problem}", err=True)
+            raise typer.Exit(code=1)
+    elif action == "add" and template_id and source:
+        _call(
+            registry_add, template_id, _source(source), scaffold,
+            workshop_root=_workshop_root(), json_output=json_output,
+        )
     else:
-        typer.echo(format_doctor_report(report))
-    raise typer.Exit(code=0 if report.ok else 2)   # 0 ok · 2 infra/config
+        if action not in {"list", "show", "validate", "add"}:
+            _error(
+                f"unknown registry action '{action}'; supported: list, show, validate, add",
+                3,
+            )
+        _error("use list, show ID, validate, or add ID --source PATH", 3)
 
 
-# ---------------------------------------------------------------------------
-# Main entry point
-# ---------------------------------------------------------------------------
+@app.command("render")
+def render_command(template_id: str, scenario_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    from .local.workshop import render_scenario
+
+    _call(render_scenario, template_id, scenario_id, workshop_root=_workshop_root(), json_output=json_output)
 
 
-def main(argv: Sequence[str] | None = None) -> None:
-    """Main entry point for the CopyRoom CLI.
+@app.command("test")
+def test_command(template_id: str, scenario_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    from .local.workshop import run_scenario_tests
 
-    Parameters
-    ----------
-    argv:
-        Command-line arguments. Defaults to ``sys.argv[1:]``.
-    """
-    app(args=argv)   # Typer/Click reads sys.argv when argv is None
+    _call(
+        run_scenario_tests, template_id, scenario_id, workshop_root=_workshop_root(),
+        quiet=json_output, json_output=json_output,
+    )
+
+
+@app.command("golden")
+def golden_command(
+    template_id: str,
+    scenario_id: str,
+    refresh: bool = typer.Option(False, "--refresh", help="Audit and replace the golden tree"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workshop import golden_diff
+
+    result = _call(
+        golden_diff, template_id, scenario_id, workshop_root=_workshop_root(),
+        refresh=refresh, json_output=json_output,
+    )
+    if isinstance(result, dict) and result.get("result") == "diff":
+        raise typer.Exit(code=1)
+
+
+@app.command("release-check")
+def release_check_command(
+    template_id: str, json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workshop import release_check
+
+    _call(
+        release_check, template_id, workshop_root=_workshop_root(),
+        quiet=json_output, json_output=json_output,
+    )
+
+
+@app.command("update-test")
+def update_test_command(
+    template_id: str,
+    scenario_id: str,
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    from .local.workshop import update_test
+
+    result = _call(update_test, template_id, scenario_id, workshop_root=_workshop_root(), json_output=json_output)
+    if isinstance(result, dict) and result.get("result") == "conflicts":
+        raise typer.Exit(code=1)
+
+
+@app.command("template-checkout")
+def template_checkout_command(template_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    from .local.workshop import template_checkout
+
+    _call(template_checkout, template_id, workshop_root=_workshop_root(), json_output=json_output)
+
+
+@app.command("template-test")
+def template_test_command(template_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    from .local.workshop import template_test
+
+    _call(template_test, template_id, workshop_root=_workshop_root(), json_output=json_output)
+
+
+@app.command("template-preview")
+def template_preview_command(
+    template_id: str,
+    project: Path = typer.Option(..., "--project", help="Managed project directory"),
+    out: Path = typer.Option(..., "--out", help="Preview workspace path"),
+    layer: str = typer.Option("base", "--layer", help="Project layer to converge"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    from .local.workshop import template_preview
+
+    _call(
+        template_preview, template_id, project, out, layer,
+        workshop_root=_workshop_root(), json_output=json_output,
+    )
+
+
+@app.command("template-discard")
+def template_discard_command(template_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    from .local.workshop import template_discard
+
+    _call(template_discard, workshop_root=_workshop_root(), json_output=json_output)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Run the public Templateer and jj command line."""
+    UsageError.exit_code = 3
+    app(args=argv)
 
 
 if __name__ == "__main__":

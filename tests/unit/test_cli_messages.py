@@ -1,45 +1,80 @@
-"""Unit tests for CLI message gating that don't need a real workflow run."""
+"""Public CLI mode and migration messages."""
 
 from __future__ import annotations
 
-import argparse
-import contextlib
-import io
+import builtins
+from pathlib import Path
 
-from copyroom import cli
-from copyroom.workshop.model import (
-    SimStatus,
-    UpdateSimulation,
-    UpdateSimulationResult,
-)
+import click
+from typer.testing import CliRunner
 
+from copyroom.cli import _usage_error_type, app
 
-def _run_update_test(monkeypatch, result: UpdateSimulationResult) -> str:
-    sim = UpdateSimulation(
-        template_id="t", scenario_id="s", old_version="v1", new_version="v2",
-        status=SimStatus.complete, result=result,
-    )
-    monkeypatch.setattr(cli, "run_update_simulation", lambda **kwargs: sim)
-    buf = io.StringIO()
-    args = argparse.Namespace(
-        template_id="t", scenario_id="s", old_version="v1", new_version="v2",
-    )
-    with contextlib.redirect_stdout(buf):
-        cli._cmd_update_test(args)
-    return buf.getvalue()
+runner = CliRunner()
 
 
-def test_update_test_conflict_not_reported_clean(monkeypatch) -> None:
-    """#P2-3: a conflicted update with passing checks is NOT 'applied cleanly'."""
-    out = _run_update_test(
-        monkeypatch,
-        UpdateSimulationResult(conflicts={"README.md"}, check_passed=True),
-    )
-    assert "applied cleanly" not in out
-    assert "had issues" in out
-    assert "README.md" in out
+def test_help_lists_public_local_commands() -> None:
+    result = runner.invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "templateer" in result.stdout.lower()
+    assert "new" in result.stdout
+    assert "apply" in result.stdout
+    assert not any(line.strip().startswith("local ") for line in result.stdout.splitlines())
 
 
-def test_update_test_clean_run_reported_clean(monkeypatch) -> None:
-    out = _run_update_test(monkeypatch, UpdateSimulationResult())
-    assert "applied cleanly" in out
+def test_usage_error_type_falls_back_to_public_click(monkeypatch) -> None:
+    original_import = builtins.__import__
+
+    def import_without_typer_click(name, *args, **kwargs):
+        if name == "typer._click.exceptions":
+            raise ModuleNotFoundError(name)
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", import_without_typer_click)
+
+    assert _usage_error_type() is click.exceptions.UsageError
+
+
+def test_legacy_project_marker_gives_migration_refusal(tmp_path: Path, monkeypatch) -> None:
+    (tmp_path / ".copier-answers.yml").write_text("{}\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["inspect"])
+
+    assert result.exit_code == 1
+    assert "legacy project markers need local adoption" in result.stderr
+
+
+def test_nested_project_marker_takes_precedence_over_outer_workshop(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    (tmp_path / "copyroom.yml").write_text("name: outer\ntemplates: {}\n", encoding="utf-8")
+    (tmp_path / "registry").mkdir()
+    (tmp_path / "scenarios").mkdir()
+    project = tmp_path / "nested-project"
+    project.mkdir()
+    (project / ".copyroom-local.json").write_text("{}\n", encoding="utf-8")
+    monkeypatch.chdir(project)
+
+    result = runner.invoke(app, ["registry", "list"])
+
+    assert result.exit_code == 1
+    assert "workshop command cannot run in project mode" in result.stderr
+
+
+def test_nested_workshop_marker_takes_precedence_over_outer_project(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    (tmp_path / ".copyroom-local.json").write_text("{}\n", encoding="utf-8")
+    workshop = tmp_path / "nested-workshop"
+    workshop.mkdir()
+    (workshop / "copyroom.yml").write_text("name: inner\ntemplates: {}\n", encoding="utf-8")
+    (workshop / "registry").mkdir()
+    (workshop / "scenarios").mkdir()
+    monkeypatch.chdir(workshop)
+
+    result = runner.invoke(app, ["inspect"])
+
+    assert result.exit_code == 1
+    assert "project command cannot run in workshop mode" in result.stderr

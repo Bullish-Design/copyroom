@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "command": [
+        "bash",
+        "-c",
+        "command -v jj; jj --version"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "/tmp/copyroom-devenv-path-6ln79v73/bin/jj\njj 0.43.0"
+    },
+    {
+      "command": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "jj 0.43.0"
+    },
+    {
+      "command": [
+        "bash",
+        "-c",
+        "command -v jj; jj --version"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "/tmp/copyroom-devenv-path-6ln79v73/bin/jj\njj 0.43.0"
+    },
+    {
+      "command": [
+        "devenv",
+        "shell",
+        "--",
+        "bash",
+        "-c",
+        "command -v jj; jj --version"
+      ],
+      "exit": 0,
+      "stderr": "\u2502   226 \u2502   if not paths.settings_path.exists():                               \u2502\n\u2502   227 \u2502   \u2502   return True                                                    \u2502\n\u2502                                                                              \u2502\n\u2502 /nix/store/s1fc2pj5w10a7qbksriy87vqzz8avf4s-mypi-agent-0.3.5/lib/python3.13/ \u2502\n\u2502 site-packages/mypi_agent/models.py:54 in agent_root                          \u2502\n\u2502                                                                              \u2502\n\u2502    51 \u2502   \u2502   if override:                                                   \u2502\n\u2502    52 \u2502   \u2502   \u2502   root = (self.project_root / override).resolve()            \u2502\n\u2502    53 \u2502   \u2502   \u2502   if root != self.project_root and self.project_root not in  \u2502\n\u2502 \u2771  54 \u2502   \u2502   \u2502   \u2502   raise RuntimeError(\"error: MYPI_AGENT_ROOT must stay w \u2502\n\u2502    55 \u2502   \u2502   \u2502   return root                                                \u2502\n\u2502    56 \u2502   \u2502   return self.project_root / \".agents\" / \"pi\"                    \u2502\n\u2502    57                                                                        \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\nRuntimeError: error: MYPI_AGENT_ROOT must stay within project root",
+      "stdout": "ok      copyroom:.agents  /home/andrew/Documents/Projects/copyroom/.agents\nok      copyroom:.claude/skills  /home/andrew/Documents/Projects/copyroom/.claude/skills\nok      copyroom:.envrc  /home/andrew/Documents/Projects/copyroom/.envrc\nok      copyroom:.loci  /home/andrew/Documents/Projects/copyroom/.loci\nok      copyroom:devenv.local.nix  /home/andrew/Documents/Projects/copyroom/devenv.local.nix\n\nallium-env setup needed: skills are not installed in /home/andrew/Documents/Projects/copyroom/.agents/skills\nRun: allium-install-codex-skills\nOptional: set allium.codexSkills.autoInstall = true to install automatically on shell entry.\n\nhello from copyroom\ngit version 2.54.0\nwarning: SecretSpec config exists but has no secrets defined.\n  Add API keys to secretspec.toml under [profiles.default]:\n    ANTHROPIC_API_KEY = { description = \"Anthropic API key for Pi\", required = false }\n    OPENAI_API_KEY = { description = \"OpenAI API key for Pi\", required = false }\n  Then run: secretspec check\nwarning: SecretSpec: some secrets are not yet configured.\n  Run: secretspec check\n\n  \u26a0\ufe0f  MYPI agent is not fully configured.\n     Run `mypi doctor` for details, or `mypi sync` to set up.\n\n  Quick reference:\n    mypi sync     \u2014 Bootstrap/sync the Pi agent\n    mypi doctor   \u2014 Check configuration status\n    mypi pi       \u2014 Run Pi (with SecretSpec secrets)\n    mypi agent    \u2014 Run Pi directly\n\n/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\njj 0.43.0"
+    },
+    {
+      "command": [
+        "bash",
+        "-c",
+        "jj status --ignore-working-copy"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "The working copy has no changes.\nWorking copy  (@) : wzurrlsr 4e970e8b (empty) (no description set)\nParent commit (@-): tmszyswp 7920bccd copyroom:project inputs"
+    }
+  ],
+  "devenv_root": "/home/andrew/Documents/Projects/copyroom",
+  "direct_file_exists": true,
+  "jj_binary": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+  "plain_subprocess_lookup": "/tmp/copyroom-devenv-path-6ln79v73/bin/jj",
+  "python": "3.13.14",
+  "wrapper": "/tmp/copyroom-devenv-path-6ln79v73/bin/jj",
+  "wrapper_calls_after_direct_file": [
+    "--version",
+    "--version",
+    "status --ignore-working-copy",
+    "status --ignore-working-copy"
+  ],
+  "wrapper_log_after_copyroom_jj": [
+    "--version",
+    "--version",
+    "status --ignore-working-copy",
+    "status --ignore-working-copy"
+  ],
+  "wrapper_log_before_copyroom_jj": [
+    "--version",
+    "--version",
+    "status --ignore-working-copy"
+  ]
+}

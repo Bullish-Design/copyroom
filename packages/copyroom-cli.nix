@@ -1,8 +1,17 @@
-{ lib, python313Packages }:
+{
+  lib,
+  buildPythonApplication,
+  hatchling,
+  pydantic,
+  pyyaml,
+  templateer,
+  tomlkit,
+  typer,
+}:
 
-python313Packages.buildPythonApplication {
+buildPythonApplication {
   pname = "copyroom";
-  version = "0.2.0";
+  version = "0.7.7";
 
   src = lib.fileset.toSource {
     root = ../.;
@@ -10,32 +19,28 @@ python313Packages.buildPythonApplication {
       ../pyproject.toml
       ../README.md
       ../src
-      ../demo
     ];
   };
   pyproject = true;
 
   build-system = [
-    python313Packages.hatchling
+    hatchling
   ];
 
   dependencies = [
-    python313Packages.copier
-    python313Packages.pyyaml
-    python313Packages.pydantic
+    pyyaml
+    pydantic
+    templateer
+    tomlkit
+    typer
   ];
 
-  # nixpkgs ships copier 9.11.x; copyroom's pyproject floors it at 9.15.1 to
-  # match the dev (uv) toolchain. The copier features CopyRoom relies on
-  # (`_subdirectory`, plain-dir working-tree rendering, `--data-file` /
-  # `--vcs-ref`) are stable across copier 9.x, so relax the floor for the Nix
-  # build rather than vendoring a newer copier into nixpkgs.
-  pythonRelaxDeps = [ "copier" ];
+  pythonRelaxDeps = [ "pydantic-ai-slim" ];
 
   pythonImportsCheck = [ "copyroom" ];
 
   meta = with lib; {
-    description = "Mode-aware CLI for template-driven project workflows, built on Copier.";
+    description = "Mode-aware CLI for local Templateer and jj project workflows.";
     license = licenses.mit;
     mainProgram = "copyroom";
     platforms = platforms.all;

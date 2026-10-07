@@ -1,0 +1,33 @@
+{
+  "active_path": "new changed\n",
+  "events_after_new_write": [],
+  "events_after_replace": [
+    {
+      "cookie": 0,
+      "mask": "0x100",
+      "name": "active.next",
+      "watch": 1
+    },
+    {
+      "cookie": 378088,
+      "mask": "0x40",
+      "name": "active.next",
+      "watch": 1
+    },
+    {
+      "cookie": 378088,
+      "mask": "0x80",
+      "name": "active",
+      "watch": 1
+    }
+  ],
+  "old_directory_watch": 2,
+  "old_open_handle": "old\n",
+  "old_path": "old\n",
+  "parent_watch": 1,
+  "platform": "Linux",
+  "replace_nonempty_directory": {
+    "errno": 39,
+    "name": "ENOTEMPTY"
+  }
+}

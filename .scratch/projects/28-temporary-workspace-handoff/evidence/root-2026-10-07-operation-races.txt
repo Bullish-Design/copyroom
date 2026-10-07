@@ -1,0 +1,475 @@
+ARTIFACT ROOT /tmp/jj-handoff-races-n7ytofag
+JJ VERSION jj 0.43.0
+UPDATE STALE HELP 0
+Update a workspace that has become stale
+
+See the [stale working copy documentation] for more information.
+
+[stale working copy documentation]: https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy
+
+Usage: jj workspace update-stale [OPTIONS]
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+Global Options:
+  -R, --repository <REPOSITORY>
+          Path to repository to operate on
+          
+          By default, Jujutsu searches for the closest .jj/ directory in an ancestor of the current
+          working directory.
+
+      --ignore-working-copy
+          Don't snapshot the working copy, and don't update it
+          
+          By default, Jujutsu snapshots the working copy at the beginning of every command. The
+          working copy is also updated at the end of the command, if the command modified the
+          working-copy commit (`@`). If you want to avoid snapshotting the working copy and instead
+          see a possibly stale working-copy commit, you can use `--ignore-working-copy`. This may be
+          useful e.g. in a command prompt, especially if you have another process that commits the
+          working copy.
+          
+          Loading the repository at a specific operation with `--at-operation` implies
+          `--ignore-working-copy`.
+
+      --no-integrate-operation
+          Run the command as usual but don't integrate any operations
+          
+          When this option is given, the operations will still be created as usual but they will not
+          be integrated to the operation log. The working copy will also not be updated.
+          
+          The command will print the resulting operation ID. You can pass that to e.g. `jj --at-op`
+          to inspect the resulting repo state, or you can pass it to `jj op restore` to restore the
+          repo to that state. You can also pass the ID to `jj op integrate` to integrate the
+          operation.
+          
+          Note that this does *not* prevent side effects outside the repo. For example, `jj git push
+          --no-integrate-operation` will still perform the push.
+
+      --ignore-immutable
+          Allow rewriting immutable commits
+          
+          By default, Jujutsu prevents rewriting commits in the configured set of immutable commits.
+          This option disables that check and lets you rewrite any commit but the root commit.
+          
+          This option only affects the check. It does not affect the `immutable_heads()` revset or
+          the `immutable` template keyword.
+
+      --at-operation <AT_OPERATION>
+          Operation to load the repo at
+          
+          Operation to load the repo at. By default, Jujutsu loads the repo at the most recent
+          operation, or at the merge of the divergent operations if any.
+          
+          You can use `--at-op=<operation ID>` to see what the repo looked like at an earlier
+          operation. For example `jj --at-op=<operation ID> st` will show you what `jj st` would
+          have shown you when the given operation had just finished. `--at-op=@` is pretty much the
+          same as the default except that divergent operations will never be merged.
+          
+          Use `jj op log` to find the operation ID you want. Any unambiguous prefix of the operation
+          ID is enough.
+          
+          When loading the repo at an earlier operation, the working copy will be ignored, as if
+          `--ignore-working-copy` had been specified.
+          
+          It is possible to run mutating commands when loading the repo at an earlier operation.
+          Doing that is equivalent to having run concurrent commands starting at the earlier
+          operation. There's rarely a reason to do that, but it is possible.
+          
+          [aliases: --at-op]
+
+      --debug
+          Enable debug logging
+
+      --color <WHEN>
+          When to colorize output
+          
+          [possible values: always, never, debug, auto]
+
+      --quiet
+          Silence non-primary command output
+          
+          For example, `jj file list` will still list files, but it won't tell you if the working
+          copy was snapshotted or if descendants were rebased.
+          
+          Warnings and errors will still be printed.
+
+      --no-pager
+          Disable the pager
+
+      --config <NAME=VALUE>
+          Additional configuration options (can be repeated)
+          
+          The name should be specified as TOML dotted keys. The value should be specified as a TOML
+          expression. If string value isn't enclosed by any TOML constructs (such as array
+          notation), quotes can be omitted.
+
+      --config-file <PATH>
+          Additional configuration files (can be repeated)
+EDIT HELP 0
+Sets the specified revision as the working-copy revision
+
+Note: it is [generally recommended] to instead use `jj new` and `jj squash`.
+
+[generally recommended]:
+https://docs.jj-vcs.dev/latest/FAQ#how-do-i-resume-working-on-an-existing-change
+
+Usage: jj edit [OPTIONS] <REVSET|-r <REVSET>>
+
+Arguments:
+  [REVSET]
+          The commit to edit [aliases: -r]
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+Global Options:
+  -R, --repository <REPOSITORY>
+          Path to repository to operate on
+          
+          By default, Jujutsu searches for the closest .jj/ directory in an ancestor of the current
+          working directory.
+
+      --ignore-working-copy
+          Don't snapshot the working copy, and don't update it
+          
+          By default, Jujutsu snapshots the working copy at the beginning of every command. The
+          working copy is also updated at the end of the command, if the command modified the
+          working-copy commit (`@`). If you want to avoid snapshotting the working copy and instead
+          see a possibly stale working-copy commit, you can use `--ignore-working-copy`. This may be
+          useful e.g. in a command prompt, especially if you have another process that commits the
+          working copy.
+          
+          Loading the repository at a specific operation with `--at-operation` implies
+          `--ignore-working-copy`.
+
+      --no-integrate-operation
+          Run the command as usual but don't integrate any operations
+          
+          When this option is given, the operations will still be created as usual but they will not
+          be integrated to the operation log. The working copy will also not be updated.
+          
+          The command will print the resulting operation ID. You can pass that to e.g. `jj --at-op`
+          to inspect the resulting repo state, or you can pass it to `jj op restore` to restore the
+          repo to that state. You can also pass the ID to `jj op integrate` to integrate the
+          operation.
+          
+          Note that this does *not* prevent side effects outside the repo. For example, `jj git push
+          --no-integrate-operation` will still perform the push.
+
+      --ignore-immutable
+          Allow rewriting immutable commits
+          
+          By default, Jujutsu prevents rewriting commits in the configured set of immutable commits.
+          This option disables that check and lets you rewrite any commit but the root commit.
+          
+          This option only affects the check. It does not affect the `immutable_heads()` revset or
+          the `immutable` template keyword.
+
+      --at-operation <AT_OPERATION>
+          Operation to load the repo at
+          
+          Operation to load the repo at. By default, Jujutsu loads the repo at the most recent
+          operation, or at the merge of the divergent operations if any.
+          
+          You can use `--at-op=<operation ID>` to see what the repo looked like at an earlier
+          operation. For example `jj --at-op=<operation ID> st` will show you what `jj st` would
+          have shown you when the given operation had just finished. `--at-op=@` is pretty much the
+          same as the default except that divergent operations will never be merged.
+          
+          Use `jj op log` to find the operation ID you want. Any unambiguous prefix of the operation
+          ID is enough.
+          
+          When loading the repo at an earlier operation, the working copy will be ignored, as if
+          `--ignore-working-copy` had been specified.
+          
+          It is possible to run mutating commands when loading the repo at an earlier operation.
+          Doing that is equivalent to having run concurrent commands starting at the earlier
+          operation. There's rarely a reason to do that, but it is possible.
+          
+          [aliases: --at-op]
+
+      --debug
+          Enable debug logging
+
+      --color <WHEN>
+          When to colorize output
+          
+          [possible values: always, never, debug, auto]
+
+      --quiet
+          Silence non-primary command output
+          
+          For example, `jj file list` will still list files, but it won't tell you if the working
+          copy was snapshotted or if descendants were rebased.
+          
+          Warnings and errors will still be printed.
+
+      --no-pager
+          Disable the pager
+
+      --config <NAME=VALUE>
+          Additional configuration options (can be repeated)
+          
+          The name should be specified as TOML dotted keys. The value should be specified as a TOML
+          expression. If string value isn't enclosed by any TOML constructs (such as array
+          notation), quotes can be omitted.
+
+      --config-file <PATH>
+          Additional configuration files (can be repeated)
+CONDITIONAL UPDATE STALE PROBE 2
+error: unexpected argument '--expected-operation' found
+
+  tip: a similar argument exists: '--at-operation'
+
+Usage: jj workspace update-stale --at-operation <AT_OPERATION>
+
+For more information, try '--help'.
+CONDITIONAL EDIT PROBE 2
+error: unexpected argument '--expected-current' found
+
+  tip: to pass '--expected-current' as a value, use '-- --expected-current'
+
+Usage: jj edit [OPTIONS] <REVSET|-r <REVSET>>
+
+For more information, try '--help'.
+
+CASE plain-file
+handoff exit 0 stdout  stderr Skipped rebase of 1 commits that were already in place
+Nothing changed.
+external plain write completed
+WORKSPACES exit 0
+default: nnpupsot 2d2f8393 handoff draft
+external: yylszrow 63bf2f42 (empty) (no description set)
+LOG exit 0
+nnpupsot race@example.invalid 2026-10-07 18:18:58 default@ 2d2f8393
+handoff draft
+yylszrow race@example.invalid 2026-10-07 18:18:58 external@ 63bf2f42
+(empty) (no description set)
+xusmtsto bullishdesignllc@gmail.com 2026-10-07 18:18:58 base c0ca37d3
+base
+zzzzzzzz root() 00000000
+OPS exit 0
+@  66a87f2a2e37 andrew@server default@ now, lasted 11 milliseconds
+│  snapshot working copy
+│  args: jj rebase -s @ -o base
+○  e60d6a5226f2 andrew@server external@ now, lasted 9 milliseconds
+│  create initial working-copy commit in workspace external
+│  args: jj workspace add --name external /tmp/jj-handoff-races-n7ytofag/plain-file/external
+○  38fabbbb7f55 andrew@server now, lasted 10 milliseconds
+│  add workspace 'external'
+○  41b412681156 andrew@server default@ now, lasted 10 milliseconds
+│  new empty commit
+│  args: jj new -m 'handoff draft'
+○  1ede98650f09 andrew@server default@ now, lasted 6 milliseconds
+│  create bookmark base pointing to commit c0ca37d31db55e8451a4ef7c3c4ef59fe9fa9732
+│  args: jj bookmark create base -r @
+○  66c35bca22c2 andrew@server default@ now, lasted 9 milliseconds
+│  describe commit 4d9cffa34c08b738e817c7aa6454f870f65e0fec
+│  args: jj describe -m base
+○  949e31dc7b97 andrew@server default@ now, lasted 9 milliseconds
+│  snapshot working copy
+│  args: jj describe -m base
+○  0da72ec2bbf0 andrew@server now, lasted 13 milliseconds
+│  add workspace 'default'
+○  000000000000 root()
+MAIN STATUS Working copy changes:
+A external.txt
+Working copy  (@) : nnpupsot 2d2f8393 handoff draft
+Parent commit (@-): xusmtsto c0ca37d3 base | base 
+MAIN EXTERNAL CONTENT plain external write
+
+CASE committed-change
+handoff exit 0 stdout  stderr Skipped rebase of 1 commits that were already in place
+Nothing changed.
+external exit 0 stdout  stderr Working copy  (@) now at: wusvwsrk 59821f6e external committed change
+Parent commit (@-)      : sukzqnzr 40fe48e8 base | base
+WORKSPACES exit 0
+default: rwtpnrnv 4667807e (empty) handoff draft
+external: wusvwsrk 59821f6e external committed change
+LOG exit 0
+wusvwsrk race@example.invalid 2026-10-07 18:18:59 external@ 59821f6e
+external committed change
+rwtpnrnv race@example.invalid 2026-10-07 18:18:59 default@ 4667807e
+(empty) handoff draft
+sukzqnzr bullishdesignllc@gmail.com 2026-10-07 18:18:59 base 40fe48e8
+base
+zzzzzzzz root() 00000000
+OPS exit 0
+@  83bd91e64764 andrew@server external@ now, lasted 9 milliseconds
+│  describe commit a195cd064c5248af72c37d83b7b5d79af0535914
+│  args: jj describe -m 'external committed change'
+○  98a320f0a1a0 andrew@server external@ now, lasted 9 milliseconds
+│  snapshot working copy
+│  args: jj describe -m 'external committed change'
+○  38688763c57f andrew@server external@ now, lasted 8 milliseconds
+│  create initial working-copy commit in workspace external
+│  args: jj workspace add --name external /tmp/jj-handoff-races-n7ytofag/committed-change/external
+○  1c70f2c11efb andrew@server now, lasted 10 milliseconds
+│  add workspace 'external'
+○  3997d7d36fe7 andrew@server default@ now, lasted 10 milliseconds
+│  new empty commit
+│  args: jj new -m 'handoff draft'
+○  14c6f2341a4b andrew@server default@ now, lasted 4 milliseconds
+│  create bookmark base pointing to commit 40fe48e8610704576b906ae638dbf9667b353db8
+│  args: jj bookmark create base -r @
+○  ec520d7c3632 andrew@server default@ now, lasted 9 milliseconds
+│  describe commit 975f96352eaa6ef22885f63ded5cc8a8f2caf7eb
+│  args: jj describe -m base
+○  2881e5d1f462 andrew@server default@ now, lasted 9 milliseconds
+│  snapshot working copy
+│  args: jj describe -m base
+○  c77a98301b22 andrew@server now, lasted 15 milliseconds
+│  add workspace 'default'
+○  000000000000 root()
+MAIN STATUS The working copy has no changes.
+Working copy  (@) : rwtpnrnv 4667807e (empty) handoff draft
+Parent commit (@-): sukzqnzr 40fe48e8 base | base 
+EXT CONTENT external committed content
+
+CASE bookmark-change
+handoff exit 0 stdout  stderr Skipped rebase of 1 commits that were already in place
+Nothing changed.
+external exit 0 stdout  stderr Warning: Target revision is empty.
+Created 1 bookmarks pointing to lntpyloz 8bf2d286 external-bookmark | (empty) (no description set)
+WORKSPACES exit 0
+default: rnmrutpk 9447ee44 (empty) handoff draft
+external: lntpyloz 8bf2d286 external-bookmark | (empty) (no description set)
+LOG exit 0
+lntpyloz race@example.invalid 2026-10-07 18:18:59 external-bookmark external@ 8bf2d286
+(empty) (no description set)
+rnmrutpk race@example.invalid 2026-10-07 18:18:59 default@ 9447ee44
+(empty) handoff draft
+xnurrlkv bullishdesignllc@gmail.com 2026-10-07 18:18:59 base cf840be9
+base
+zzzzzzzz root() 00000000
+OPS exit 0
+@  d23ffbac9de1 andrew@server external@ now, lasted 5 milliseconds
+│  point bookmark external-bookmark to commit 8bf2d2866b87a4190e3053ad617e95ba0851ec8e
+│  args: jj bookmark set external-bookmark -r @
+○  ff93b0a63cab andrew@server external@ now, lasted 17 milliseconds
+│  create initial working-copy commit in workspace external
+│  args: jj workspace add --name external /tmp/jj-handoff-races-n7ytofag/bookmark-change/external
+○  3320814507b9 andrew@server now, lasted 10 milliseconds
+│  add workspace 'external'
+○  5f51b7ab86b5 andrew@server default@ now, lasted 15 milliseconds
+│  new empty commit
+│  args: jj new -m 'handoff draft'
+○  dc9bd6bf7f68 andrew@server default@ now, lasted 5 milliseconds
+│  create bookmark base pointing to commit cf840be93192b4e17111190e976502917ac6fb71
+│  args: jj bookmark create base -r @
+○  3526cc84a44f andrew@server default@ now, lasted 8 milliseconds
+│  describe commit 911f95b0a54be16584204736dd0854add207db4f
+│  args: jj describe -m base
+○  17d44aaf6189 andrew@server default@ now, lasted 10 milliseconds
+│  snapshot working copy
+│  args: jj describe -m base
+○  0e0846d87589 andrew@server now, lasted 13 milliseconds
+│  add workspace 'default'
+○  000000000000 root()
+MAIN STATUS The working copy has no changes.
+Working copy  (@) : rnmrutpk 9447ee44 (empty) handoff draft
+Parent commit (@-): xnurrlkv cf840be9 base | base 
+
+CASE new-operation
+handoff exit 0 stdout  stderr Skipped rebase of 1 commits that were already in place
+Nothing changed.
+external exit 0 stdout  stderr Working copy  (@) now at: splppyrr d2091578 (empty) concurrent operation
+Parent commit (@-)      : lumssrrv e8a41366 (empty) (no description set)
+WORKSPACES exit 0
+default: tqkmtort e12da94c (empty) handoff draft
+external: splppyrr d2091578 (empty) concurrent operation
+LOG exit 0
+splppyrr race@example.invalid 2026-10-07 18:19:00 external@ d2091578
+(empty) concurrent operation
+lumssrrv race@example.invalid 2026-10-07 18:19:00 e8a41366
+(empty) (no description set)
+tqkmtort race@example.invalid 2026-10-07 18:19:00 default@ e12da94c
+(empty) handoff draft
+xnyuuqlo bullishdesignllc@gmail.com 2026-10-07 18:19:00 base 9ca2d5fb
+base
+zzzzzzzz root() 00000000
+OPS exit 0
+@  bfeb458f425c andrew@server external@ now, lasted 11 milliseconds
+│  new empty commit
+│  args: jj new -m 'concurrent operation'
+○  428ca98a0eb3 andrew@server external@ now, lasted 9 milliseconds
+│  create initial working-copy commit in workspace external
+│  args: jj workspace add --name external /tmp/jj-handoff-races-n7ytofag/new-operation/external
+○  31226e8ff8e4 andrew@server now, lasted 9 milliseconds
+│  add workspace 'external'
+○  c5664abe3582 andrew@server default@ now, lasted 11 milliseconds
+│  new empty commit
+│  args: jj new -m 'handoff draft'
+○  6adccce805f8 andrew@server default@ now, lasted 6 milliseconds
+│  create bookmark base pointing to commit 9ca2d5fb872f2222ca81e92aa8806c9f1e7aefa3
+│  args: jj bookmark create base -r @
+○  92bad3cdd59e andrew@server default@ now, lasted 8 milliseconds
+│  describe commit f7b70a681aa7c69a092f500bec8687685474da0d
+│  args: jj describe -m base
+○  feebc6d4cc11 andrew@server default@ now, lasted 9 milliseconds
+│  snapshot working copy
+│  args: jj describe -m base
+○  3d85747d690d andrew@server now, lasted 14 milliseconds
+│  add workspace 'default'
+○  000000000000 root()
+MAIN STATUS The working copy has no changes.
+Working copy  (@) : tqkmtort e12da94c (empty) handoff draft
+Parent commit (@-): xnyuuqlo 9ca2d5fb base | base 
+
+CASE concurrent-operation-branches; base op f90b271cd4b7
+rebase branch exit 0 Rebased 1 commits to destination
+Operation left uncommitted because --no-integrate-operation was requested: 0255f1fb7a41
+new branch exit 0 Operation left uncommitted because --no-integrate-operation was requested: ca13f86d8bc9
+integrate 0255f1fb7a41 exit 0 
+integrate ca13f86d8bc9 exit 0 The specified operation has been integrated with other existing operations.
+BRANCHED OPS Error: The working copy is stale (not updated since operation f90b271cd4b7).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+BRANCHED WORKSPACES Error: The working copy is stale (not updated since operation f90b271cd4b7).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+UPDATE STALE 0 Working copy  (@) now at: ptuyrvly 30559289 handoff draft with content
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 1 files
+Updated working copy to fresh commit 305592894cc5
+OPS AFTER RECOVERY @    5a8d2a1ec74d andrew@server default@ now, lasted 4 milliseconds
+├─╮  reconcile divergent operations
+│ │  args: jj op integrate ca13f86d8bc9
+○ │  ca13f86d8bc9 andrew@server external@ now, lasted 11 milliseconds
+│ │  new empty commit
+│ │  args: jj '--at-operation=f90b271cd4b7' --no-integrate-operation new -m 'parallel op'
+│ ○  0255f1fb7a41 andrew@server default@ now, lasted 17 milliseconds
+├─╯  rebase commit 4b8681103157eccd74ba3f9a48540a7dff4d5eef and descendants
+│    args: jj '--at-operation=f90b271cd4b7' --no-integrate-operation rebase -s @ -o 'root()'
+○  f90b271cd4b7 andrew@server external@ now, lasted 9 milliseconds
+│  create initial working-copy commit in workspace external
+│  args: jj workspace add --name external /tmp/jj-handoff-races-n7ytofag/concurrent-operation-branches/external
+○  4896ea34f7c7 andrew@server now, lasted 11 milliseconds
+│  add workspace 'external'
+○  250339e6fcfe andrew@server default@ now, lasted 9 milliseconds
+│  describe commit ffc503b74b88cc55070ae9956857b0c9a1b82f45
+│  args: jj describe -m 'handoff draft with content'
+○  d65d9525a5a3 andrew@server default@ now, lasted 10 milliseconds
+│  snapshot working copy
+│  args: jj describe -m 'handoff draft with content'
+○  d1faf8028016 andrew@server default@ now, lasted 14 milliseconds
+│  new empty commit
+│  args: jj new -m 'handoff draft'
+○  e5e6b37a76b5 andrew@server default@ now, lasted 5 milliseconds
+│  create bookmark base pointing to commit 5a37031366a8bb9a3ad8f4f4dbe745bb32273d7d
+│  args: jj bookmark create base -r @
+○  1ff65a94eb67 andrew@server default@ now, lasted 9 milliseconds
+│  describe commit bdf10280473ff2d42292eb3103e03941d7d83571
+│  args: jj describe -m base
+○  001db5c489a8 andrew@server default@ now, lasted 10 milliseconds
+│  snapshot working copy
+│  args: jj describe -m base
+○  0f3ec18a3d8a andrew@server now, lasted 15 milliseconds
+│  add workspace 'default'
+WORKSPACES AFTER RECOVERY default: ptuyrvly 30559289 handoff draft with content
+external: yxmxvylt 04fd2e9d (empty) parallel op
+
+RECOVERY CHECK: ordinary command races stayed usable; the deliberately unintegrated branch case required update-stale and recovered successfully

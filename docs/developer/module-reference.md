@@ -1,261 +1,59 @@
-# Module Reference
+# Module reference
 
-A file-by-file tour of `src/copyroom/`. Each entry says what the module owns and
-names the functions/types you'll touch most. See [architecture](architecture.md)
-for the layering and [state machines](state-machines.md) for the lifecycle
-pattern these modules share.
+Runtime modules live in `src/copyroom/`. This page lists the local workflow
+entry points.
 
-```
-src/copyroom/
-├── __init__.py          # __version__ = "0.6.0"
-├── __main__.py          # `python -m copyroom` → cli.main()
-├── cli.py               # Typer front end, dispatch, output, exit codes
-├── doctor.py            # environment precondition checks (`copyroom doctor`)
-├── session/             # mode detection + command gating
-├── project/             # new / update / layers
-├── template/            # template-checkout / template-test / template-preview
-├── workshop/            # render / test / golden / update-test
-├── release/             # release-check
-├── manage/              # templatize / adopt / layer add (bootstrap)
-└── _compat/             # subprocess boundary + shared primitives
-```
+## `local/composer.py`
 
----
+`compose(source, answers)` returns an immutable `RenderPlan`. The composer uses
+Templateer's `TemplateRegistry`, validates the normalized model, and maps each
+output to a path, file kind, exact bytes, mode, and owner. It rejects unsafe or
+colliding paths before writing.
 
-## Top level
+## `local/source.py`
 
-### `cli.py`
-The [Typer](https://typer.tiangolo.com/) front end. Key pieces:
-- `COPYROOM_DESCRIPTION` / `NO_MODE_FOUND_MESSAGE` — grouped help and the
-  unknown-mode diagnostic.
-- `app` — the `typer.Typer` application; `_root` is its callback (handles
-  `--mode`/`--version`, and shows help on a bare invocation).
-- `_typer_*` functions — one per command; each builds a `SimpleNamespace`
-  attribute-bag and delegates to the matching `_cmd_*` (the bridge that keeps the
-  handlers callable from tests). Mode-bound commands call `_require_mode` first;
-  bootstrap commands and `doctor` run anywhere.
-- `_require_mode(command)` — resolves mode and gates the command, reusing
-  `session/` (`_detect_and_report` → `dispatch`); prints + exits on failure.
-- `_detect_and_report(mode_override)` — resolves mode (honoring `--mode`) into a
-  `CLISession`; prints the diagnostic and exits on unknown mode.
-- `_cmd_*` functions — one thin handler per command: unpack args → call the domain
-  workflow → format output → set exit code.
-- `COMMAND_FN` — maps command name → handler (retained for reference/tests).
-- `main(argv)` — calls `app(args=argv)`; the console script and `python -m
-  copyroom` both route through it.
+Reads `.copyroom-local.json`, writes marker updates atomically, and saves source
+snapshots by digest under `.copyroom-local/sources/`. A project can replay a
+snapshot when its original source locator is unavailable.
 
-### `doctor.py`
-Environment precondition checks behind `copyroom doctor` — runs in any directory,
-no managed project required. `run_doctor()` returns a `DoctorReport` of
-`DoctorCheck`s (`copier` importable at a supported version, `git` on `PATH`, the
-template cache writable via `template/workspace._cache_root`, and the
-warn-level `template-source` layer check).
-`DoctorCheck.warn_only` marks advisory checks: a failed warn-only check prints
-`WARN` but never fails the report — flipping it to fail is a later decision.
-`format_doctor_report()` renders it as plain text. Exit 0 when all non-warn-only
-checks pass, 2 when any fails.
+## `local/jj.py`
 
-### `__main__.py`
-Enables `python -m copyroom`; just calls `cli.main()`.
+`JJ` wraps plain jj commands for local project repositories. `project_lock`
+serializes CopyRoom writes. The root repository still uses gitman.
 
----
+## `local/workflow.py`
 
-## `session/` — mode detection & gating
+- `new` composes a base layer, initializes jj, saves a source snapshot, and
+  writes the project marker.
+- `preview` renders a new layer revision and merges it with the active project
+  in a separate jj workspace.
+- `apply` verifies the recorded state and applies the reviewed preview tree.
+- `discard`, `list_previews`, `status`, and `inspect` support recovery and
+  review.
+- `add_layer` and `list_layers` manage independent output owners.
 
-### `session/model.py`
-- `CLIMode` (StrEnum) — `workshop`, `project` (template_repo/standalone reserved).
-- `SessionStatus` (StrEnum) — `mode_detecting → mode_detected →
-  command_running → command_complete | command_failed`, plus `unknown_mode`.
-- `VALID_SESSION_TRANSITIONS` — the session state graph.
-- `WORKSHOP_COMMANDS`, `PROJECT_COMMANDS`, `BOOTSTRAP_COMMANDS` — the command sets
-  per mode (bootstrap commands bypass detection).
-- `CLISession` (dataclass) — `status` + optional `mode`, with `advance()` routed
-  through a shared `StateMachine`.
+## `local/generation.py`
 
-### `session/detector.py`
-- `is_workshop(path)` — `copyroom.yml` + `registry/` + `scenarios/`.
-- `is_project(path)` — `.copier-answers.yml` or `copyroom.project.yml`.
-- `detect_mode(cwd)` — walks ancestors; closest marker wins; workshop wins a
-  same-directory tie; returns `None` for unknown.
-- `detect_workshop_root(cwd)` — finds the workshop root for workshop/release
-  commands so they work from any descendant.
+`generate` and `refresh` call Templateer's generation API after an explicit
+request. They validate the returned artifact and store its exact bytes and
+generation record. Normal updates replay those bytes.
 
-### `session/dispatcher.py`
-- `COMMAND_MODE_MAP` — command → required mode (built from the command sets).
-- `dispatch(command, session)` — returns `command_running` for a valid
-  mode/command pair, else `command_failed`. Pure gating; the CLI prints errors.
+## `local/manage.py`
 
----
+`adopt` compares an existing tree with a rendered source. Report-only mode
+writes nothing. Explicit adoption initializes jj and verifies that the project
+tree stays unchanged. `templatize` extracts a source and checks that it renders
+the original tree.
 
-## `project/` — `new`, `update`, and layers
+## `local/workshop.py`
 
-### `project/layers.py`
-The **layer** model: a repo can be managed by more than one template, each
-recorded in its own Copier answers file (`.copier-answers.yml` → the reserved
-`base` layer; `.copier-answers.<name>.yml` → `<name>`).
-- `answers_filename` / `layer_name_from_answers_file` — the name↔filename
-  bijection, refusing a name that could escape the project root.
-- `Layer` dataclass + `discover_layers` — discovery is a **glob**, never
-  configuration, so it cannot drift from what Copier recorded. A malformed
-  answers file yields an empty-metadata layer rather than an exception: listing
-  must not fail because one layer is broken.
-- `resolve_layer` — the named layer, or an error naming the layers that exist.
-- `template_default_layer` — the layer name a template declares via
-  `_answers_file`, so `layer add` needs no `--as`.
+Provides local registry operations, scenario renders, complete-tree golden
+checks, `devenv test`, candidate workspaces, and disposable update previews.
+Golden refresh runs Templateer's authoring audit first.
 
-### `project/model.py`
-- `CreationStatus` + `VALID_CREATION_TRANSITIONS` + `ProjectCreation` dataclass
-  (`initiated → target_verified → prompts_collected → copy_executed →
-  [post_create_run →] complete | failed`).
-- `UpdateStatus` + `VALID_UPDATE_TRANSITIONS` + `TemplateUpdate` dataclass
-  (`initiated → config_loaded → worktree_verified → [branch_created →]
-  update_executed → [post_update_run →] complete | failed`); carries
-  `conflicts`/`rejects` sets.
+## Public CLI
 
-### `project/create.py` (`copyroom new`)
-Rule functions `initiate` → `verify_target` → `collect_prompts` →
-`execute_copy` → `detect_post_create_commands` → `run_post_create_commands`, and
-the orchestrator `create_project(source, target_dir, answers_file, trust)`.
-Refuses non-empty targets; forwards Copier stderr on failure; runs post-create
-hooks only under `trust`.
-
-### `project/update.py` (`copyroom update`)
-Rule functions `initiate` → `load_config` (the single reader of the **layer's**
-answers file, extracting `_template`/`_commit`) → `no_update_available`
-→ `verify_worktree` (clean-tree gate) → `create_branch` (with `--branch`) →
-`execute_update` → `capture_conflicts` → `run_post_update_commands`, and the
-orchestrator `update_project(..., layer="base")`. Captures inline conflict markers
-and `*.rej` rejects (deliberately in separate sets to avoid double-counting).
-
-`update_all_layers(...)` converges every recorded layer to its own latest tag.
-It checks the worktree once up front and commits each layer's result before the
-next runs — Copier refuses a dirty destination, so this is a requirement, not a
-convenience — stopping rather than committing a layer that left conflicts.
-
----
-
-## `template/` — the agentic edit loop
-
-### `template/model.py`
-- `PreviewResult` / `ValidateResult` value types.
-- `CheckoutStatus` + `TemplateCheckout` (`initiated → source_resolved →
-  worktree_ready | failed`).
-- `PreviewStatus` + `TemplatePreview` (`initiated → sandbox_prepared →
-  update_simulated → diffed → complete | failed`).
-
-### `template/workspace.py` (`copyroom template-checkout`)
-The shared foundation for all three template commands:
-- `resolve_project_root` / `read_answers` — locate the project, read
-  `.copier-answers.yml` (also confirms you're in a Copier project).
-- `_cache_root` / `_template_cache_dir` — the cache layout
-  (`$COPYROOM_CACHE_DIR` or `$XDG_CACHE_HOME/copyroom/templates`).
-- `_looks_remote` / `_ensure_local_repo` — clone remote sources into cache; demand
-  local sources be git repos.
-- `checkout_template(...)` — reads `_src_path`, ensures a local repo, and
-  `git worktree add`s `copyroom/edit/<slug>`.
-
-### `template/validate.py` (`copyroom template-test`)
-`validate_template(...)` — re-resolves the worktree, commits pending edits onto
-the edit branch, `copier copy --vcs-ref <branch>` into a temp dir, runs an
-optional `--check` command. Returns a `ValidateResult`.
-
-### `template/preview.py` (`copyroom template-preview`)
-`run_preview(...)` — copies the project working tree into a sandbox, retargets the
-sandbox's answers at the edit repo, snapshots it, `copier update --vcs-ref
-<branch>`, diffs baseline→post-update, scans for inline conflict markers and
-`*.rej`, and writes `.copyroom/preview/<timestamp>.patch`. Applies nothing.
-
----
-
-## `workshop/` — the author's workbench
-
-### `workshop/model.py`
-Value types `GoldenDiffResult`, `UpdateSimulationResult`; entities
-`ScenarioRender`, `GoldenDiff`, `UpdateSimulation` with their status enums and
-transition tables.
-
-### `workshop/registry.py`
-The shared registry lookup (consolidated to kill four near-duplicate copies):
-- `resolve_template_source(workshop_root, template_id)` — `copyroom.yml`
-  (`templates`/`registry`) then `registry/<id>.yml`.
-- `load_checks(workshop_root, template_id)` — the template's `checks` list.
-- `require_workshop_root(workshop_root)` — default-resolve via
-  `detect_workshop_root`, raising if none.
-
-### `workshop/render.py` (`render` / `test`)
-`render_scenario(...)` — load scenario answers, `copier copy` into
-`generated/<id>/<scenario>/`, run registry checks. `test` is an alias.
-
-### `workshop/golden.py` (`golden` [`--refresh`])
-`golden_diff(...)` — render (or `reuse_generated`) then `tree_diff` against
-`golden/`. `refresh_golden(...)` — copy `generated/` → `golden/`.
-
-### `workshop/simulate.py` (`update-test`)
-`run_update_simulation(...)` — render old version into `.copyroom_sim/`, git
-snapshot, apply edits, `copier update --vcs-ref <new>`, capture conflicts/rejects,
-run checks. Uses a repo-local git identity so it works without a global one.
-
-### `workshop/edits.py`
-The `<scenario>-edits.yml` DSL: `load_edits` / `apply_edits` with `append`,
-`set-field` (YAML now, basic TOML), `create`, `patch` actions. `EditsParseError`
-on malformed files.
-
----
-
-## `release/` — the release gate
-
-### `release/check.py` (`release-check`)
-- `ReleaseCheck` dataclass + `ReleaseStatus` + transitions
-  (`initiated → matrix_run → checked → passed | failed`).
-- `run_release_check(...)` — orchestrator: capture worktree state first, discover
-  scenarios, run the render+test matrix, run golden diffs (reusing matrix renders),
-  resolve pass/fail.
-- `format_release_report(check)` — the human report.
-- `_check_worktree_clean` / `_is_git_repo` — git status (excluding `generated/`
-  and `.copyroom_sim/`) and the git-repo probe used for the `N/A` case.
-
----
-
-## `manage/` — bootstrap (templatize & adopt)
-
-### `manage/model.py`
-- `EXCLUDE_DIRS` — dirs never copied/compared (`.git`, `.jj`, `.copyroom`,
-  `generated`, caches, `.venv`, `node_modules`, plus machine/tool state
-  `.devenv`/`.direnv`/`.gitman`/`.testee`, …), shared by both commands.
-- `DriftResult` (adopt) and `Adoption` / `Templatization` entities + statuses.
-
-### `manage/templatize.py` (`copyroom templatize`)
-`templatize(...)` — scaffold the sibling template+workshop (`_scaffold`),
-verbatim-copy the repo into `template/`, snapshot it into `golden/<id>/default/`.
-Implements the verbatim-then-parameterize strategy; leaves a plain (non-git) dir.
-
-### `manage/adopt.py` (`copyroom adopt`)
-`adopt(...)` — resolve the template (reusing `template/workspace`'s
-clone/cache helpers), `copier copy` with inferred answers into a scratch dir,
-`tree_diff` against the repo, write a drift patch under `.copyroom/adopt/`, and
-(only with `--write`) copy the rendered answers file in. The already-managed
-refusal is **per layer**, and a non-base layer's drift drops the "repo-only" set
-(an overlay template is partial by construction).
-
-### `manage/layer.py` (`copyroom layer add` / `list`)
-`add_layer(...)` — the *other* way a repo comes under a template's management:
-where `adopt` records a link for files that are already there, this **puts the
-files there** (`copier copy --answers-file <layer>`). Derives the layer name from
-the template's own `_answers_file`, refuses to retarget an existing layer without
-`--force`, and reports every path that changed. Idempotence and file-level safety
-come from Copier (`_skip_if_exists`), not from this module.
-
----
-
-## `_compat/` — the subprocess boundary
-
-See [the `_compat` layer](compat-layer.md) for detail.
-
-| Module | Owns |
-|--------|------|
-| `copier.py` | `copier_copy` / `copier_update` subprocess wrappers (timeouts, `--quiet --defaults`, `--vcs-ref`). |
-| `gitutil.py` | Defensive git helpers: `clone`, `fetch`, `worktree_add`, `snapshot`, `commit_all`, `add_all_and_diff_cached`, `default_branch`, `normalize_source_url`. |
-| `shellcmd.py` | `run_hook_commands` — the trust-gated template-hook runner. |
-| `treediff.py` | `tree_diff` / `collect_files` — the shared comparison (excludes `.copier-answers*.yml`). |
-| `state_machine.py` | `StateMachine[S]` + `InvalidTransitionError`. |
-| `errors.py` | `CopyRoomError` (re-exported per workflow module). |
+`cli.py` contains one Typer application. Project commands require the local
+project marker. Workshop commands require `copyroom.yml`, `registry/`, and
+`scenarios/`. A legacy answer marker returns a migration error; CopyRoom does
+not rewrite it automatically.
