@@ -1,0 +1,186 @@
+$ 12-jj-render-merge: jj --version
+exit 0
+jj 0.45.1
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m existing project
+exit 0
+Working copy  (@) now at: quqmzlxo ab56c6d6 (empty) (no description set)
+Parent commit (@-)      : vyxvmnxw 44897079 existing project
+
+$ project: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+44897079b82b9aa999bfc9c877727fa6c6314d1b
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+ab56c6d6356d8fc283550da37adf2632de9da799
+DRIFT clean
+project-only README.md
+template-only template-only.txt
+
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+ab56c6d6356d8fc283550da37adf2632de9da799
+$ project: jj workspace add --name render -r root() /tmp/copyroom-jj-adopt-m1d1xrj7/clean/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: vsnwusss f53c109f (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+
+$ render-workspace: jj commit -m copyroom:render base T0
+exit 0
+Working copy  (@) now at: nktssnmp 9c9acfee (empty) (no description set)
+Parent commit (@-)      : vsnwusss 1d33979f copyroom:render base T0
+
+$ render-workspace: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+1d33979f4d0bb5276e7e72199670fe013704d968
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+ab56c6d6356d8fc283550da37adf2632de9da799
+$ project: jj new 44897079b82b9aa999bfc9c877727fa6c6314d1b 1d33979f4d0bb5276e7e72199670fe013704d968 -m adopt project
+exit 0
+Working copy  (@) now at: tkoswrkm a80bb6f9 (empty) adopt project
+Parent commit (@-)      : vyxvmnxw 44897079 existing project
+Parent commit (@-)      : vsnwusss 1d33979f copyroom:render base T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj restore --from 44897079b82b9aa999bfc9c877727fa6c6314d1b
+exit 0
+Working copy  (@) now at: tkoswrkm 8876764a adopt project
+Parent commit (@-)      : vyxvmnxw 44897079 existing project
+Parent commit (@-)      : vsnwusss 1d33979f copyroom:render base T0
+Added 0 files, modified 0 files, removed 1 files
+
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+8876764aa016907d50aeca0f1fa64950cd882ed6
+$ project: jj log --no-graph --ignore-working-copy -r parents(@) -T commit_id ++ "\n"
+exit 0
+1d33979f4d0bb5276e7e72199670fe013704d968
+44897079b82b9aa999bfc9c877727fa6c6314d1b
+
+$ render-workspace: jj commit -m copyroom:render base T1
+exit 0
+Working copy  (@) now at: mmlxxvkq 1a41479b (empty) (no description set)
+Parent commit (@-)      : nktssnmp fd96e613 copyroom:render base T1
+
+$ render-workspace: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+fd96e613752f0dc01dc018293ed036e567b050ec
+$ render-workspace: jj log --ignore-working-copy --no-graph -r fd96e613752f0dc01dc018293ed036e567b050ec- -T commit_id
+exit 0
+1d33979f4d0bb5276e7e72199670fe013704d968
+$ project: jj log --ignore-working-copy --no-graph -r heads(::8876764aa016907d50aeca0f1fa64950cd882ed6 & ::fd96e613752f0dc01dc018293ed036e567b050ec) -T commit_id
+exit 0
+1d33979f4d0bb5276e7e72199670fe013704d968
+$ project: jj new 8876764aa016907d50aeca0f1fa64950cd882ed6 fd96e613752f0dc01dc018293ed036e567b050ec -m update adopted project
+exit 0
+Working copy  (@) now at: pmlznwpm e92a3dba (empty) update adopted project
+Parent commit (@-)      : tkoswrkm 8876764a adopt project
+Parent commit (@-)      : nktssnmp fd96e613 copyroom:render base T1
+Added 0 files, modified 1 files, removed 0 files
+
+$ project: jj resolve --list
+exit 2
+Error: No conflicts found at this revision
+
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m existing project
+exit 0
+Working copy  (@) now at: wpowwuoz 43424085 (empty) (no description set)
+Parent commit (@-)      : ksqvuttn 7f4597e8 existing project
+
+$ project: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+7f4597e8cf28cefd8a8104f347d48fb2ec6f4140
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+434240858990ff54a892c4715f817d026c5e7941
+DRIFT conflict
+project-only README.md
+changed config.txt
+template-only template-only.txt
+
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+434240858990ff54a892c4715f817d026c5e7941
+$ project: jj workspace add --name render -r root() /tmp/copyroom-jj-adopt-m1d1xrj7/conflict/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: npoowpzs 791e035a (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+
+$ render-workspace: jj commit -m copyroom:render base T0
+exit 0
+Working copy  (@) now at: muwwlunw 3a4776bf (empty) (no description set)
+Parent commit (@-)      : npoowpzs 895929b7 copyroom:render base T0
+
+$ render-workspace: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+895929b7a1fdaad1b1ef9362e0a2cf5d323242d6
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+434240858990ff54a892c4715f817d026c5e7941
+$ project: jj new 7f4597e8cf28cefd8a8104f347d48fb2ec6f4140 895929b7a1fdaad1b1ef9362e0a2cf5d323242d6 -m adopt project
+exit 0
+Working copy  (@) now at: mlknnksm 2fb244ce (conflict) (empty) adopt project
+Parent commit (@-)      : ksqvuttn 7f4597e8 existing project
+Parent commit (@-)      : npoowpzs 895929b7 copyroom:render base T0
+Added 1 files, modified 1 files, removed 0 files
+Warning: There are unresolved conflicts at these paths:
+config.txt    2-sided conflict
+
+$ project: jj restore --from 7f4597e8cf28cefd8a8104f347d48fb2ec6f4140
+exit 0
+Working copy  (@) now at: mlknnksm 7302fc48 adopt project
+Parent commit (@-)      : ksqvuttn 7f4597e8 existing project
+Parent commit (@-)      : npoowpzs 895929b7 copyroom:render base T0
+Added 0 files, modified 1 files, removed 1 files
+
+$ project: jj log --ignore-working-copy --no-graph -r @ -T commit_id
+exit 0
+7302fc488d5bead338fc27e1181652fc56826e87
+$ project: jj log --no-graph --ignore-working-copy -r parents(@) -T commit_id ++ "\n"
+exit 0
+895929b7a1fdaad1b1ef9362e0a2cf5d323242d6
+7f4597e8cf28cefd8a8104f347d48fb2ec6f4140
+
+$ render-workspace: jj commit -m copyroom:render base T1
+exit 0
+Working copy  (@) now at: xntvswyv c95144dc (empty) (no description set)
+Parent commit (@-)      : muwwlunw e4fb81b9 copyroom:render base T1
+
+$ render-workspace: jj log --ignore-working-copy --no-graph -r @- -T commit_id
+exit 0
+e4fb81b905b0fa80c8697317d52340d79b1b92f8
+$ render-workspace: jj log --ignore-working-copy --no-graph -r e4fb81b905b0fa80c8697317d52340d79b1b92f8- -T commit_id
+exit 0
+895929b7a1fdaad1b1ef9362e0a2cf5d323242d6
+$ project: jj log --ignore-working-copy --no-graph -r heads(::7302fc488d5bead338fc27e1181652fc56826e87 & ::e4fb81b905b0fa80c8697317d52340d79b1b92f8) -T commit_id
+exit 0
+895929b7a1fdaad1b1ef9362e0a2cf5d323242d6
+$ project: jj new 7302fc488d5bead338fc27e1181652fc56826e87 e4fb81b905b0fa80c8697317d52340d79b1b92f8 -m update adopted project
+exit 0
+Working copy  (@) now at: ouotnpwn 7f2d9619 (conflict) (empty) update adopted project
+Parent commit (@-)      : mlknnksm 7302fc48 adopt project
+Parent commit (@-)      : muwwlunw e4fb81b9 copyroom:render base T1
+Added 0 files, modified 1 files, removed 0 files
+Warning: There are unresolved conflicts at these paths:
+config.txt    2-sided conflict
+
+$ project: jj resolve --list
+exit 0
+config.txt    2-sided conflict
+
+$ project: jj workspace forget render
+exit 0

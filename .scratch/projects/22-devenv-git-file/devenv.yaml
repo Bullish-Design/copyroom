@@ -1,0 +1,6 @@
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  local-template:
+    url: git+file:///home/andrew/Documents/Projects/copyroom/.scratch/projects/22-devenv-git-file/.devenv/state/template-repo?ref=main
+    flake: false

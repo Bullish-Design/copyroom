@@ -1,0 +1,87 @@
+{
+  "checks": [
+    "initial new rejects exact collision",
+    "rejected new creates no repository",
+    "new candidate sources stay outside target",
+    "initial new rejects prefix collision",
+    "prefix rejection creates no repository",
+    "accepted new records base paths",
+    "accepted new records generated paths",
+    "layer add exact classified",
+    "layer add exact keeps @",
+    "layer add exact keeps files",
+    "layer add exact candidate stayed outside project",
+    "layer add prefix classified",
+    "layer add prefix keeps @",
+    "layer add prefix keeps files",
+    "layer add prefix candidate stayed outside project",
+    "conditional seed is absent from overlay ownership",
+    "base config bytes remain",
+    "base update exact classified",
+    "base update exact keeps @",
+    "base update exact keeps files",
+    "base update exact candidate stayed outside project",
+    "base update prefix classified",
+    "base update prefix keeps @",
+    "base update prefix keeps files",
+    "base update prefix candidate stayed outside project",
+    "accepted base update changes base content",
+    "accepted base update adds its own path",
+    "generated refresh prefix classified",
+    "generated refresh prefix keeps @",
+    "generated refresh prefix keeps files",
+    "generated refresh prefix candidate stayed outside project",
+    "generated refresh exact classified",
+    "generated refresh exact keeps @",
+    "generated refresh exact keeps files",
+    "generated refresh exact candidate stayed outside project",
+    "accepted generated refresh records owner",
+    "accepted generated refresh changes bytes",
+    "unfrozen seed update classified",
+    "unfrozen seed update keeps @",
+    "unfrozen seed update keeps files",
+    "unfrozen seed update candidate stayed outside project",
+    "frozen omission survives overlay update",
+    "base still owns omitted path",
+    "overlay update applies other files",
+    "project marker records omitted path"
+  ],
+  "rejections": [
+    {
+      "case": "initial new",
+      "reason": "exact: base:README.md vs generated:README.md"
+    },
+    {
+      "case": "initial new prefix",
+      "reason": "file-directory: base:README.md vs generated:README.md/child"
+    },
+    {
+      "case": "layer add exact",
+      "reason": "exact: base:README.md vs overlay:README.md"
+    },
+    {
+      "case": "layer add prefix",
+      "reason": "file-directory: base:README.md vs overlay:README.md/child"
+    },
+    {
+      "case": "base update exact",
+      "reason": "exact: base:docs/guide.md vs overlay:docs/guide.md"
+    },
+    {
+      "case": "base update prefix",
+      "reason": "file-directory: base:docs vs overlay:docs/guide.md"
+    },
+    {
+      "case": "generated refresh prefix",
+      "reason": "file-directory: generated:docs vs overlay:docs/guide.md"
+    },
+    {
+      "case": "generated refresh exact",
+      "reason": "exact: base:config.toml vs generated:config.toml"
+    },
+    {
+      "case": "unfrozen seed update",
+      "reason": "exact: base:config.toml vs overlay:config.toml"
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+$ 20-templateer-jj-pilot: jj --version
+exit 0
+jj 0.45.1
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: pzpksnpq 83e8b988 (empty) (no description set)
+Parent commit (@-)      : msqllslz 1beb830b render T0
+
+$ project: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+1beb830b8ea0f9e4fb98ce8c52e53f3d5271e364
+$ project: jj commit -m project changes and render inputs
+exit 0
+Working copy  (@) now at: wzumqrxx 2d4a20a8 (empty) (no description set)
+Parent commit (@-)      : pzpksnpq 6d510b70 project changes and render inputs
+
+$ project: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+6d510b7051c22ec63b34c1e5d25423a91e35be6e
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+2d4a20a87eadbbe75ed462a0de72442f1c4f533f
+$ project: jj workspace add --name pilot-preview -r 1beb830b8ea0f9e4fb98ce8c52e53f3d5271e364 /tmp/copyroom-templateer-jj-2n3eduip/clean/preview-workspace
+exit 0
+Created workspace in "../preview-workspace"
+Working copy  (@) now at: uynrxklx 05a1a21a (empty) (no description set)
+Parent commit (@-)      : msqllslz 1beb830b render T0
+Added 5 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+2d4a20a87eadbbe75ed462a0de72442f1c4f533f
+$ preview-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: ostwlmkl 83b284a3 (empty) (no description set)
+Parent commit (@-)      : uynrxklx 25d287bd render T1
+
+$ preview-workspace: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+25d287bdbc0f2d573ff6b97640e30d9cfe4d2670
+$ preview-workspace: jj log --no-graph --ignore-working-copy -r heads(::6d510b7051c22ec63b34c1e5d25423a91e35be6e & ::25d287bdbc0f2d573ff6b97640e30d9cfe4d2670) -T commit_id
+exit 0
+1beb830b8ea0f9e4fb98ce8c52e53f3d5271e364
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+2d4a20a87eadbbe75ed462a0de72442f1c4f533f
+$ preview-workspace: jj new 6d510b7051c22ec63b34c1e5d25423a91e35be6e 25d287bdbc0f2d573ff6b97640e30d9cfe4d2670 -m preview
+exit 0
+Working copy  (@) now at: yqpzwxnk e94fdafa (empty) preview
+Parent commit (@-)      : pzpksnpq 6d510b70 project changes and render inputs
+Parent commit (@-)      : uynrxklx 25d287bd render T1
+Added 2 files, modified 1 files, removed 0 files
+
+$ preview-workspace: jj diff --from 6d510b7051c22ec63b34c1e5d25423a91e35be6e --to @
+exit 0
+Modified regular file config/project.yml:
+   1    1: project: "cedar-lab"
+   2     : description: "Local example with \"quotes\" and YAML: true"
+        2: description: "Local example with \"quotes\" and YAML: true"
+        3: revision: "v2"
+Modified regular file pyproject.toml:
+   1    1: [project]
+   2    2: name = "cedar-lab"
+   3    3: version = "0.1.1"
+   4    4: description = "Local example with \"quotes\" and YAML: true"
+   5     : requires-python = ">=3.13"
+        5: requires-python = ">=3.13"
+        6: 
+        7: classifiers = ["Development Status :: 3 - Alpha"]
+
+preview clean:
+Modified regular file config/project.yml:
+   1    1: project: "cedar-lab"
+   2     : description: "Local example with \"quotes\" and YAML: true"
+        2: description: "Local example with \"quotes\" and YAML: true"
+        3: revision: "v2"
+Modified regular file pyproject.toml:
+   1    1: [project]
+   2    2: name = "cedar-lab"
+   3    3: version = "0.1.1"
+   4    4: description = "Local example with \"quotes\" and YAML: true"
+   5     : requires-python = ">=3.13"
+        5: requires-python = ">=3.13"
+        6: 
+        7: classifiers = ["Development Status :: 3 - Alpha"]
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+2d4a20a87eadbbe75ed462a0de72442f1c4f533f
+$ preview-workspace: jj resolve --list
+exit 2
+Error: No conflicts found at this revision
+
+$ project: jj new 6d510b7051c22ec63b34c1e5d25423a91e35be6e 25d287bdbc0f2d573ff6b97640e30d9cfe4d2670 -m apply Templateer update
+exit 0
+Working copy  (@) now at: rostkmyo 66bbd2c2 (empty) apply Templateer update
+Parent commit (@-)      : pzpksnpq 6d510b70 project changes and render inputs
+Parent commit (@-)      : uynrxklx 25d287bd render T1
+Added 0 files, modified 2 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+66bbd2c288db30b8fe5acd16fc2044fbb51b9c7b
+$ project: jj commit -m save new render inputs
+exit 0
+Working copy  (@) now at: vwwswqkz 2f5f9d03 (empty) (no description set)
+Parent commit (@-)      : rostkmyo 450dbab2 save new render inputs
+
+$ project: jj resolve --list
+exit 2
+Error: No conflicts found at this revision
+
+$ project: jj workspace forget pilot-preview
+exit 0
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: vmqmmknu ff56555c (empty) (no description set)
+Parent commit (@-)      : mklmywvl 6aef2a3d render T0
+
+$ project: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+6aef2a3daf16fd2ef9dadbf95b420a669de28159
+$ project: jj commit -m project changes and render inputs
+exit 0
+Working copy  (@) now at: xuptxovv fc5b9ee3 (empty) (no description set)
+Parent commit (@-)      : vmqmmknu e1a05ec7 project changes and render inputs
+
+$ project: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+e1a05ec7d79cdf7c713f29db19f8bd0079fb9ffb
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fc5b9ee354443310eaf413dd571471bd16991bbc
+$ project: jj workspace add --name pilot-preview -r 6aef2a3daf16fd2ef9dadbf95b420a669de28159 /tmp/copyroom-templateer-jj-2n3eduip/conflict/preview-workspace
+exit 0
+Created workspace in "../preview-workspace"
+Working copy  (@) now at: tmywuvkz b624a3ab (empty) (no description set)
+Parent commit (@-)      : mklmywvl 6aef2a3d render T0
+Added 5 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fc5b9ee354443310eaf413dd571471bd16991bbc
+$ preview-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: mtyovvow 164bb622 (empty) (no description set)
+Parent commit (@-)      : tmywuvkz 470077a4 render T1
+
+$ preview-workspace: jj log --no-graph --ignore-working-copy -r @- -T commit_id
+exit 0
+470077a4642604bf297adf3c8df4aad5c4028f57
+$ preview-workspace: jj log --no-graph --ignore-working-copy -r heads(::e1a05ec7d79cdf7c713f29db19f8bd0079fb9ffb & ::470077a4642604bf297adf3c8df4aad5c4028f57) -T commit_id
+exit 0
+6aef2a3daf16fd2ef9dadbf95b420a669de28159
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fc5b9ee354443310eaf413dd571471bd16991bbc
+$ preview-workspace: jj new e1a05ec7d79cdf7c713f29db19f8bd0079fb9ffb 470077a4642604bf297adf3c8df4aad5c4028f57 -m preview
+exit 0
+Working copy  (@) now at: pkonwqts 09a06a71 (conflict) (empty) preview
+Parent commit (@-)      : vmqmmknu e1a05ec7 project changes and render inputs
+Parent commit (@-)      : tmywuvkz 470077a4 render T1
+Added 2 files, modified 1 files, removed 0 files
+Warning: There are unresolved conflicts at these paths:
+README.md    2-sided conflict
+
+$ preview-workspace: jj diff --from e1a05ec7d79cdf7c713f29db19f8bd0079fb9ffb --to @
+exit 0
+Created conflict in README.md:
+   1     : # Local cedar-lab
+        1: <<<<<<< conflict 1 of 1
+        2: %%%%%%% diff from: mklmywvl 6aef2a3d "render T0"
+        3: \\\\\\\        to: vmqmmknu e1a05ec7 "project changes and render inputs"
+        4: -# cedar-lab
+        5: +# Local cedar-lab
+        6: +++++++ tmywuvkz 470077a4 "render T1"
+        7: # Project cedar-lab
+        8: >>>>>>> conflict 1 of 1 ends
+   2    9: 
+   3   10: Local example with "quotes" and YAML: true
+Modified regular file config/project.yml:
+   1    1: project: "cedar-lab"
+   2     : description: "Local example with \"quotes\" and YAML: true"
+        2: description: "Local example with \"quotes\" and YAML: true"
+        3: revision: "v2"
+Modified regular file pyproject.toml:
+   1    1: [project]
+   2    2: name = "cedar-lab"
+   3    3: version = "0.1.0"
+   4    4: description = "Local example with \"quotes\" and YAML: true"
+   5     : requires-python = ">=3.13"
+        5: requires-python = ">=3.13"
+        6: 
+        7: classifiers = ["Development Status :: 3 - Alpha"]
+
+preview conflict:
+Created conflict in README.md:
+   1     : # Local cedar-lab
+        1: <<<<<<< conflict 1 of 1
+        2: %%%%%%% diff from: mklmywvl 6aef2a3d "render T0"
+        3: \\\\\\\        to: vmqmmknu e1a05ec7 "project changes and render inputs"
+        4: -# cedar-lab
+        5: +# Local cedar-lab
+        6: +++++++ tmywuvkz 470077a4 "render T1"
+        7: # Project cedar-lab
+        8: >>>>>>> conflict 1 of 1 ends
+   2    9: 
+   3   10: Local example with "quotes" and YAML: true
+Modified regular file config/project.yml:
+   1    1: project: "cedar-lab"
+   2     : description: "Local example with \"quotes\" and YAML: true"
+        2: description: "Local example with \"quotes\" and YAML: true"
+        3: revision: "v2"
+Modified regular file pyproject.toml:
+   1    1: [project]
+   2    2: name = "cedar-lab"
+   3    3: version = "0.1.0"
+   4    4: description = "Local example with \"quotes\" and YAML: true"
+   5     : requires-python = ">=3.13"
+        5: requires-python = ">=3.13"
+        6: 
+        7: classifiers = ["Development Status :: 3 - Alpha"]
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fc5b9ee354443310eaf413dd571471bd16991bbc
+$ preview-workspace: jj resolve --list
+exit 0
+README.md    2-sided conflict
+
+$ project: jj workspace forget pilot-preview
+exit 0

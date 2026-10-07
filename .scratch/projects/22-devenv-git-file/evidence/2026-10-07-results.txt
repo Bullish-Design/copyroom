@@ -1,0 +1,54 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 9.32ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 10.7ms
+Spike 12 — jj render/merge evaluation.
+  devenv test      run every spike-*.sh
+  spike-versions   record the toolchain
+  spike-clean      wipe /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/.devenv/state/spike
+Initialized repo in "."
+Working copy  (@) now at: kwzwmxnw 09589913 (empty) (no description set)
+Parent commit (@-)      : ynwmszoo ab7e4a82 template v1
+Created 1 bookmarks pointing to ynwmszoo ab7e4a82 main | template v1
+devenv: devenv 2.4.0+b904dcb (x86_64-linux)
+
+=== committed version one ===
+ab7e4a82e5ed060f123741d8bc180c4d332fe44b
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 41.3ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 24.9ms
+version one
+INPUT_PATH=/nix/store/19v3smcd5879rbv0fblrgpgmij1pcy3c-source
+74022d5daaf0893eaf7c0904e1f1489c53111a214471c65115fa923591f7a556  devenv.lock
+
+=== uncommitted edit; fresh evaluation ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 45.1ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 26.9ms
+version one
+INPUT_PATH=/nix/store/19v3smcd5879rbv0fblrgpgmij1pcy3c-source
+74022d5daaf0893eaf7c0904e1f1489c53111a214471c65115fa923591f7a556  devenv.lock
+Working copy  (@) now at: svswwvwv 3d9f72be (empty) (no description set)
+Parent commit (@-)      : kwzwmxnw 62c0f631 template v2
+Moved 1 bookmarks to kwzwmxnw 62c0f631 main* | template v2
+
+=== committed version two, before devenv update ===
+62c0f631b4cbe89607fd51f68024f22b5281297e
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 44.8ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 15.0ms
+version two
+INPUT_PATH=/nix/store/iax0xrzcs2vlhwhp9hsqq6lr986g7cmp-source
+74022d5daaf0893eaf7c0904e1f1489c53111a214471c65115fa923591f7a556  devenv.lock
+
+=== devenv update local-template ===
+74022d5daaf0893eaf7c0904e1f1489c53111a214471c65115fa923591f7a556  devenv.lock
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 26.5ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 16.9ms
+version two
+INPUT_PATH=/nix/store/iax0xrzcs2vlhwhp9hsqq6lr986g7cmp-source

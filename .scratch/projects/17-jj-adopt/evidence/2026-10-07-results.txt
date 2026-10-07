@@ -1,0 +1,42 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 8.26ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 10.5ms
+Spike 12 — jj render/merge evaluation.
+  devenv test      run every spike-*.sh
+  spike-versions   record the toolchain
+  spike-clean      wipe /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/.devenv/state/spike
+jj 0.45.1
+PASS clean: drift lists project-only path
+PASS clean: drift lists template-only path
+PASS clean: drift identifies changed path
+PASS clean: drift preserves active @
+PASS clean: drift preserves project bytes
+PASS clean: render T0 leaves active @
+PASS clean: adopted commit has P0 and T0 parents
+PASS clean: adopted tree equals original bytes
+PASS clean: adopted fingerprint equals original
+PASS clean: T1 parent is T0
+PASS clean: merge base is T0
+PASS clean: conflict result matches input
+PASS clean: project-only path survives update
+PASS clean: original template-only deletion survives update
+PASS clean: template update lands
+PASS conflict: drift lists project-only path
+PASS conflict: drift lists template-only path
+PASS conflict: drift identifies changed path
+PASS conflict: drift preserves active @
+PASS conflict: drift preserves project bytes
+PASS conflict: render T0 leaves active @
+PASS conflict: adopted commit has P0 and T0 parents
+PASS conflict: adopted tree equals original bytes
+PASS conflict: adopted fingerprint equals original
+PASS conflict: T1 parent is T0
+PASS conflict: merge base is T0
+PASS conflict: conflict result matches input
+PASS conflict: project-only path survives update
+PASS conflict: original template-only deletion survives update
+PASS conflict: project content remains in conflict
+PASS conflict: template content remains in conflict
+RESULT 31 checks passed
+evidence /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/../17-jj-adopt/evidence/2026-10-07-transcript.txt

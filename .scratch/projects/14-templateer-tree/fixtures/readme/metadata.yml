@@ -1,0 +1,19 @@
+name: readme
+description: Render the local README.
+output:
+  path: README.md
+  language: markdown
+schema:
+  module: schema
+  class: ProjectModel
+prompt:
+  file: prompt.md
+renderer:
+  engine: minijinja
+  file: template.j2
+validators:
+  - kind: command
+    command:
+      - python3
+      - -c
+      - "import sys; assert sys.stdin.read().startswith('# ')"

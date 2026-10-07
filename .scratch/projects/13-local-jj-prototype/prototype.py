@@ -117,16 +117,31 @@ def render(source: Path, answers: dict[str, object], out: Path) -> set[str]:
     return paths
 
 
-def overlay_generated(source: Path, out: Path) -> list[str]:
+def check_path_ownership(template_paths: set[str], generated_paths: list[str]) -> None:
+    for generated in generated_paths:
+        for template in template_paths:
+            if generated == template:
+                raise PrototypeError(
+                    f"exact output path collision: template and generated both own {generated}"
+                )
+            if generated.startswith(template + "/") or template.startswith(generated + "/"):
+                raise PrototypeError(
+                    f"file-directory output path collision: template {template}, generated {generated}"
+                )
+
+
+def overlay_generated(source: Path, out: Path, template_paths: set[str]) -> list[str]:
+    entries = source_files(source)
     paths: list[str] = []
-    for entry in source_files(source):
+    for entry in entries:
         relative = entry.relative_to(source)
         safe_parts(relative.parts, str(relative))
-        name = relative.as_posix()
+        paths.append(relative.as_posix())
+    check_path_ownership(template_paths, paths)
+    for entry, name in zip(entries, paths, strict=True):
         target = out / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(entry, target)
-        paths.append(name)
     return paths
 
 
@@ -229,8 +244,11 @@ def cmd_new(args: argparse.Namespace) -> int:
     answers = load_answers(args.answers)
     with tempfile.TemporaryDirectory(prefix="copyroom-local-") as temp:
         out = Path(temp)
-        render(source, answers, out)
-        generated = overlay_generated(args.generated.resolve(), out) if args.generated else []
+        template_paths = render(source, answers, out)
+        generated = (
+            overlay_generated(args.generated.resolve(), out, template_paths)
+            if args.generated else []
+        )
         executable = executable_paths(out, generated)
         digest = fingerprint(out)
         target.mkdir(parents=True, exist_ok=True)
@@ -275,17 +293,18 @@ def cmd_update(args: argparse.Namespace) -> int:
     project_head = commit_id(project, "@")
     with tempfile.TemporaryDirectory(prefix="copyroom-local-") as temp:
         out = Path(temp)
-        render(source, answers, out)
+        template_paths = render(source, answers, out)
         old_generation = data["generation"]
         if not isinstance(old_generation, dict):
             raise PrototypeError("saved generation is invalid")
         if args.generated:
-            generated = overlay_generated(args.generated.resolve(), out)
+            generated = overlay_generated(args.generated.resolve(), out, template_paths)
             executable = executable_paths(out, generated)
         else:
             generated = old_generation["paths"]
             if not isinstance(generated, list) or not all(isinstance(p, str) for p in generated):
                 raise PrototypeError("saved generated paths are invalid")
+            check_path_ownership(template_paths, generated)
             executable = old_generation["executable"]
             if not isinstance(executable, list) or not all(isinstance(p, str) for p in executable):
                 raise PrototypeError("saved generated modes are invalid")

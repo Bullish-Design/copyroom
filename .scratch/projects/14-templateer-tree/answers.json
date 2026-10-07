@@ -1,0 +1,6 @@
+{
+  "project_name": "cedar-lab",
+  "module": "cedar_lab",
+  "description": "Local example with \"quotes\" and YAML: true",
+  "python_version": "3.13"
+}

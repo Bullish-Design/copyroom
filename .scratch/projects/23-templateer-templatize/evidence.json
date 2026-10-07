@@ -1,0 +1,123 @@
+{
+  "checks": [
+    "extracts four Templateer text artifacts",
+    "classifies one binary for static copy",
+    "classifies one symlink for static copy",
+    "initial extraction matches full project tree",
+    "executable script mode survives",
+    "binary bytes survive",
+    "relative symlink survives",
+    "parameterized original still matches golden tree",
+    "probe changes exactly two text files",
+    "probe substitutes TOML project name",
+    "probe substitutes Markdown heading",
+    "probe preserves executable mode",
+    "probe preserves binary and symlink"
+  ],
+  "extraction_plan": [
+    {
+      "executable": false,
+      "kind": "templateer",
+      "language": "markdown",
+      "path": "README.md",
+      "template": "artifact_00"
+    },
+    {
+      "kind": "binary",
+      "path": "assets/pixel.bin",
+      "sha256": "2f87beacb6a71f75e3243ce005faf5d99405e02b5e729c7c9c216ef2e2a0544a"
+    },
+    {
+      "kind": "symlink",
+      "path": "docs/current",
+      "target": "../README.md"
+    },
+    {
+      "executable": false,
+      "kind": "templateer",
+      "language": "toml",
+      "path": "pyproject.toml",
+      "template": "artifact_05"
+    },
+    {
+      "executable": true,
+      "kind": "templateer",
+      "language": "text",
+      "path": "scripts/hello.sh",
+      "template": "artifact_07"
+    },
+    {
+      "executable": false,
+      "kind": "templateer",
+      "language": "python",
+      "path": "src/main.py",
+      "template": "artifact_09"
+    }
+  ],
+  "golden_manifest": {
+    "README.md": {
+      "executable": false,
+      "sha256": "5c0a7b4f47b3e77e3739911e72e7f111e902ba7069960ad119748dfa20c4872f",
+      "type": "file"
+    },
+    "assets/pixel.bin": {
+      "executable": false,
+      "sha256": "2f87beacb6a71f75e3243ce005faf5d99405e02b5e729c7c9c216ef2e2a0544a",
+      "type": "file"
+    },
+    "docs/current": {
+      "target": "../README.md",
+      "type": "symlink"
+    },
+    "pyproject.toml": {
+      "executable": false,
+      "sha256": "7539104e7eab62c1bc9c74c776b7995087cf216273927e350c8cf85a48b76f7f",
+      "type": "file"
+    },
+    "scripts/hello.sh": {
+      "executable": true,
+      "sha256": "978314444a75184790cb258498d2f8138e21f728476515ae0a4c18fd14faa758",
+      "type": "file"
+    },
+    "src/main.py": {
+      "executable": false,
+      "sha256": "bb4ab57582bed7189574763ed6b0316ee6063b003ce7bb9a8ba8a0139e47dad4",
+      "type": "file"
+    }
+  },
+  "probe_changed_paths": [
+    "README.md",
+    "pyproject.toml"
+  ],
+  "probe_manifest": {
+    "README.md": {
+      "executable": false,
+      "sha256": "81846390ec118fbcb0db018d3fb85ce08d078a40654bad3bd9c7fa7067388f3c",
+      "type": "file"
+    },
+    "assets/pixel.bin": {
+      "executable": false,
+      "sha256": "2f87beacb6a71f75e3243ce005faf5d99405e02b5e729c7c9c216ef2e2a0544a",
+      "type": "file"
+    },
+    "docs/current": {
+      "target": "../README.md",
+      "type": "symlink"
+    },
+    "pyproject.toml": {
+      "executable": false,
+      "sha256": "9b88ae476eb993ec765b98fc1315aa45fad086f4135b4ca0b94ddabce122dd6a",
+      "type": "file"
+    },
+    "scripts/hello.sh": {
+      "executable": true,
+      "sha256": "978314444a75184790cb258498d2f8138e21f728476515ae0a4c18fd14faa758",
+      "type": "file"
+    },
+    "src/main.py": {
+      "executable": false,
+      "sha256": "bb4ab57582bed7189574763ed6b0316ee6063b003ce7bb9a8ba8a0139e47dad4",
+      "type": "file"
+    }
+  }
+}

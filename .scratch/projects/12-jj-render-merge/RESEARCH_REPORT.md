@@ -13,7 +13,7 @@ run evidence.
 
 Command: `cd .scratch/projects/12-jj-render-merge && devenv test`
 
-Result: 73 spike assertions and 6 prototype tests passed. Ruff passed on the
+Result: 73 spike assertions and 9 prototype tests passed. Ruff passed on the
 prototype Python files. The tests used only temporary jj repositories. They
 did not change a managed CopyRoom project.
 
@@ -47,8 +47,11 @@ supplies a new snapshot.
 The first prototype test run failed two cases before jj initialization. The
 test answers lacked `project_name`, which the existing fixture uses. The
 renderer correctly rejected that undefined answer. The test now supplies all
-fixture answers. The focused rerun passed all six tests. The final `devenv
-test` run passed the full suite.
+fixture answers. The focused rerun passed all six tests. Three later tests
+confirmed that generated files cannot claim the same path as template files,
+including a file-directory prefix, during `new` or `update`. A rejected update
+left the active jj commit and project files unchanged. The final `devenv test`
+run passed the full suite.
 
 The first overlap hypothesis was that equal initial bytes gave both layers
 safe ownership. The deletion test rejected it. The chosen rule is one active

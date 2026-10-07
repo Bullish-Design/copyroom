@@ -1,0 +1,61 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 16.7ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 18.1ms
+Spike 12 — jj render/merge evaluation.
+  devenv test      run every spike-*.sh
+  spike-versions   record the toolchain
+  spike-clean      wipe /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/.devenv/state/spike
+devenv: devenv 2.4.0+b904dcb (x86_64-linux)
+
+=== path input: baseline with fresh evaluation ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 37.4ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 30.9ms
+template version one
+INPUT_PATH=/nix/store/pjvcsfdfsxvlqrnig6j1cnqq1bri97mm-source
+3f5efb2a98505ba906b128e9593dfe3f0b1d0495736ecfb80df79343d8b9f4b0  devenv.lock
+
+=== path input: normal shell after edit ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 16.0ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 12.5ms
+template version one
+INPUT_PATH=/nix/store/pjvcsfdfsxvlqrnig6j1cnqq1bri97mm-source
+
+=== path input: devenv update local-template ===
+3f5efb2a98505ba906b128e9593dfe3f0b1d0495736ecfb80df79343d8b9f4b0  devenv.lock
+
+=== path input: normal shell after update ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 21.5ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 21.5ms
+template version one
+INPUT_PATH=/nix/store/pjvcsfdfsxvlqrnig6j1cnqq1bri97mm-source
+
+=== path input: refresh evaluation cache ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 35.5ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 20.7ms
+template version two
+INPUT_PATH=/nix/store/nzljbm799mxrxmwznazai8bsmnr6wmry-source
+3f5efb2a98505ba906b128e9593dfe3f0b1d0495736ecfb80df79343d8b9f4b0  devenv.lock
+
+=== path input from local jj repository ===
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 22.1ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 20.4ms
+repo version one
+INPUT_PATH=/home/andrew/Documents/Projects/copyroom/.scratch/projects/19-devenv-local-input/.devenv/state/template-repo
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 18.7ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 18.0ms
+repo version two uncommitted
+INPUT_PATH=/home/andrew/Documents/Projects/copyroom/.scratch/projects/19-devenv-local-input/.devenv/state/template-repo
+ac312bb8fe1010ac37b8835bdbab3ab48fa9a14c9819dfb1348b407f62ae4ecf  devenv.lock

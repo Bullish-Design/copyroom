@@ -1,0 +1,427 @@
+$ 12-jj-render-merge: jj --version
+exit 0
+jj 0.45.1
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: ukmxznpy ed80d5c2 (empty) (no description set)
+Parent commit (@-)      : zzqmwvxl d9c81e87 render T0
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+d9c81e874080df7992138c0b0941ed187fbbac9f
+$ project: jj commit -m project work
+exit 0
+Working copy  (@) now at: pyzrvqyy a651bca6 (empty) (no description set)
+Parent commit (@-)      : ukmxznpy 6cbe19e9 project work
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+6cbe19e994005888a16fdcaba6065e44b1937cfd
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a651bca6c1d759408d9a71e90368c8075b9cc565
+$ project: jj workspace add --name render -r d9c81e874080df7992138c0b0941ed187fbbac9f /tmp/copyroom-jj-workspace-ilw1wacc/clean/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: qpwlxlok 153f42a1 (empty) (no description set)
+Parent commit (@-)      : zzqmwvxl d9c81e87 render T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a651bca6c1d759408d9a71e90368c8075b9cc565
+$ render-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: vqlrrnrw 0051b5f7 (empty) (no description set)
+Parent commit (@-)      : qpwlxlok 36439692 render T1
+
+$ render-workspace: jj log --no-graph -r @- -T commit_id
+exit 0
+3643969283fdd69fe9e85a5fdc63674b811c20d9
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a651bca6c1d759408d9a71e90368c8075b9cc565
+$ render-workspace: jj new 6cbe19e994005888a16fdcaba6065e44b1937cfd 3643969283fdd69fe9e85a5fdc63674b811c20d9 -m preview
+exit 0
+Working copy  (@) now at: qoswuyvx 84632c62 (empty) preview
+Parent commit (@-)      : ukmxznpy 6cbe19e9 project work
+Parent commit (@-)      : qpwlxlok 36439692 render T1
+Added 1 files, modified 0 files, removed 0 files
+
+$ render-workspace: jj diff --from 6cbe19e994005888a16fdcaba6065e44b1937cfd --to @
+exit 0
+Added regular file added.txt:
+        1: new template file
+Modified regular file config.txt:
+   1     : shared=old
+        1: shared=template
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a651bca6c1d759408d9a71e90368c8075b9cc565
+$ render-workspace: jj resolve --list
+exit 2
+Error: No conflicts found at this revision
+
+preview for clean:
+Added regular file added.txt:
+        1: new template file
+Modified regular file config.txt:
+   1     : shared=old
+        1: shared=template
+
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a651bca6c1d759408d9a71e90368c8075b9cc565
+$ project: jj workspace list
+exit 0
+default: . pyzrvqyy a651bca6 (empty) (no description set)
+
+$ project: jj workspace list
+exit 0
+default: . pyzrvqyy a651bca6 (empty) (no description set)
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: nupvxzlt 427b45ff (empty) (no description set)
+Parent commit (@-)      : lmsprloz 65422945 render T0
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+654229451b7539fbd22122074355980caf25d120
+$ project: jj commit -m project work
+exit 0
+Working copy  (@) now at: lxxpoqxt a3f7f572 (empty) (no description set)
+Parent commit (@-)      : nupvxzlt 00077416 project work
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+00077416499cff684a338ad7f66b91b2d9e9428e
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a3f7f572216124e32e9757bde534689a26e3ae7c
+$ project: jj workspace add --name render -r 654229451b7539fbd22122074355980caf25d120 /tmp/copyroom-jj-workspace-ilw1wacc/conflict/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: woxzxwzp a7bf4a34 (empty) (no description set)
+Parent commit (@-)      : lmsprloz 65422945 render T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a3f7f572216124e32e9757bde534689a26e3ae7c
+$ render-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: zwpwvluq 652e4d51 (empty) (no description set)
+Parent commit (@-)      : woxzxwzp 39a14dc0 render T1
+
+$ render-workspace: jj log --no-graph -r @- -T commit_id
+exit 0
+39a14dc0279e9d2877e426bc3afdc57f5d9ec7af
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a3f7f572216124e32e9757bde534689a26e3ae7c
+$ render-workspace: jj new 00077416499cff684a338ad7f66b91b2d9e9428e 39a14dc0279e9d2877e426bc3afdc57f5d9ec7af -m preview
+exit 0
+Working copy  (@) now at: osnponqs 5457f384 (conflict) (empty) preview
+Parent commit (@-)      : nupvxzlt 00077416 project work
+Parent commit (@-)      : woxzxwzp 39a14dc0 render T1
+Added 0 files, modified 1 files, removed 0 files
+Warning: There are unresolved conflicts at these paths:
+config.txt    2-sided conflict
+
+$ render-workspace: jj diff --from 00077416499cff684a338ad7f66b91b2d9e9428e --to @
+exit 0
+Added regular file added.txt:
+        1: new template file
+Created conflict in config.txt:
+   1     : shared=project
+        1: <<<<<<< conflict 1 of 1
+        2: %%%%%%% diff from: lmsprloz 65422945 "render T0"
+        3: \\\\\\\        to: nupvxzlt 00077416 "project work"
+        4: -shared=old
+        5: +shared=project
+        6: +++++++ woxzxwzp 39a14dc0 "render T1"
+        7: shared=template
+        8: >>>>>>> conflict 1 of 1 ends
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a3f7f572216124e32e9757bde534689a26e3ae7c
+$ render-workspace: jj resolve --list
+exit 0
+config.txt    2-sided conflict
+
+preview for conflict:
+Added regular file added.txt:
+        1: new template file
+Created conflict in config.txt:
+   1     : shared=project
+        1: <<<<<<< conflict 1 of 1
+        2: %%%%%%% diff from: lmsprloz 65422945 "render T0"
+        3: \\\\\\\        to: nupvxzlt 00077416 "project work"
+        4: -shared=old
+        5: +shared=project
+        6: +++++++ woxzxwzp 39a14dc0 "render T1"
+        7: shared=template
+        8: >>>>>>> conflict 1 of 1 ends
+
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+a3f7f572216124e32e9757bde534689a26e3ae7c
+$ project: jj workspace list
+exit 0
+default: . lxxpoqxt a3f7f572 (empty) (no description set)
+
+$ project: jj workspace list
+exit 0
+default: . lxxpoqxt a3f7f572 (empty) (no description set)
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: mzlsmmsz 6d179d0f (empty) (no description set)
+Parent commit (@-)      : nrtvnkrk e2f207c8 render T0
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+e2f207c84ba56ef174c5c6db15976f80a98cacab
+$ project: jj commit -m project work
+exit 0
+Working copy  (@) now at: tuywnkvq fbce4617 (empty) (no description set)
+Parent commit (@-)      : mzlsmmsz 7e08b052 project work
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+7e08b0528e8a6c3944022393afeecd8f720b4440
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fbce46176ce709992b12336d4645b7c058d39422
+$ project: jj workspace add --name render -r e2f207c84ba56ef174c5c6db15976f80a98cacab /tmp/copyroom-jj-workspace-ilw1wacc/preflight-failure/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: lvluvypr 8999b662 (empty) (no description set)
+Parent commit (@-)      : nrtvnkrk e2f207c8 render T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fbce46176ce709992b12336d4645b7c058d39422
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+fbce46176ce709992b12336d4645b7c058d39422
+$ project: jj workspace list
+exit 0
+default: . tuywnkvq fbce4617 (empty) (no description set)
+
+$ project: jj workspace list
+exit 0
+default: . tuywnkvq fbce4617 (empty) (no description set)
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: ptoxmxrv 242ed0dc (empty) (no description set)
+Parent commit (@-)      : yulsvnup 4c731cd8 render T0
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+4c731cd8d6b69bc3fa7243a1467c5a3b814bff57
+$ project: jj commit -m project work
+exit 0
+Working copy  (@) now at: zrrzwwus 31ed1735 (empty) (no description set)
+Parent commit (@-)      : ptoxmxrv 5abbdca0 project work
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+5abbdca0cab5122dfd48be4fb418c573f998a140
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+31ed1735363229eef936c56737bfa9bb4ef68bfa
+$ project: jj workspace add --name render -r 4c731cd8d6b69bc3fa7243a1467c5a3b814bff57 /tmp/copyroom-jj-workspace-ilw1wacc/after-render-failure/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: ptlmspvl 9a0f7282 (empty) (no description set)
+Parent commit (@-)      : yulsvnup 4c731cd8 render T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+31ed1735363229eef936c56737bfa9bb4ef68bfa
+$ render-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: lzrsmzup 113f25ad (empty) (no description set)
+Parent commit (@-)      : ptlmspvl 597154b6 render T1
+
+$ render-workspace: jj log --no-graph -r @- -T commit_id
+exit 0
+597154b6483547c333a0f8870324793cabbf43d0
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+31ed1735363229eef936c56737bfa9bb4ef68bfa
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+31ed1735363229eef936c56737bfa9bb4ef68bfa
+$ project: jj workspace list
+exit 0
+default: . zrrzwwus 31ed1735 (empty) (no description set)
+
+$ project: jj workspace list
+exit 0
+default: . zrrzwwus 31ed1735 (empty) (no description set)
+
+$ project: jj git init --colocate
+exit 0
+Initialized repo in "."
+
+$ project: jj commit -m render T0
+exit 0
+Working copy  (@) now at: ruvpqkyx e8cdb30c (empty) (no description set)
+Parent commit (@-)      : nvoxsrox f9be9b34 render T0
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+f9be9b344068ea491837c3a5b35e4337e92c9e24
+$ project: jj commit -m project work
+exit 0
+Working copy  (@) now at: nnmuszmt 683eee97 (empty) (no description set)
+Parent commit (@-)      : ruvpqkyx 3c1ce6a5 project work
+
+$ project: jj log --no-graph -r @- -T commit_id
+exit 0
+3c1ce6a5491448e55470507d41ebd9279b8fee89
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ project: jj workspace add --name render -r f9be9b344068ea491837c3a5b35e4337e92c9e24 /tmp/copyroom-jj-workspace-ilw1wacc/after-apply-failure/render-workspace
+exit 0
+Created workspace in "../render-workspace"
+Working copy  (@) now at: kyzwuvpn 1ce87fe1 (empty) (no description set)
+Parent commit (@-)      : nvoxsrox f9be9b34 render T0
+Added 1 files, modified 0 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ render-workspace: jj commit -m render T1
+exit 0
+Working copy  (@) now at: ysorwtsk 880a64e8 (empty) (no description set)
+Parent commit (@-)      : kyzwuvpn e42ca95b render T1
+
+$ render-workspace: jj log --no-graph -r @- -T commit_id
+exit 0
+e42ca95bc9b163ebf328686bd9529051ca5c9982
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ render-workspace: jj new 3c1ce6a5491448e55470507d41ebd9279b8fee89 e42ca95bc9b163ebf328686bd9529051ca5c9982 -m preview
+exit 0
+Working copy  (@) now at: wrstnmkl e0ef8580 (empty) preview
+Parent commit (@-)      : ruvpqkyx 3c1ce6a5 project work
+Parent commit (@-)      : kyzwuvpn e42ca95b render T1
+Added 1 files, modified 0 files, removed 0 files
+
+$ render-workspace: jj diff --from 3c1ce6a5491448e55470507d41ebd9279b8fee89 --to @
+exit 0
+Added regular file added.txt:
+        1: new template file
+Modified regular file config.txt:
+   1     : shared=old
+        1: shared=template
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ render-workspace: jj resolve --list
+exit 2
+Error: No conflicts found at this revision
+
+preview for after-apply-failure:
+Added regular file added.txt:
+        1: new template file
+Modified regular file config.txt:
+   1     : shared=old
+        1: shared=template
+
+$ project: jj op log --at-op=@ --ignore-working-copy --no-graph -n 1 -T id
+exit 0
+093b6db9f5e60a6a21398c5293579e25a0c9d19d892ff5dde6ed185d7d6c8cd32fee7e23e2238cae2232a7e2e1a0fe7489b4e6156de232532284e3560f62eca2
+$ project: jj new 3c1ce6a5491448e55470507d41ebd9279b8fee89 e42ca95bc9b163ebf328686bd9529051ca5c9982 -m apply update
+exit 0
+Working copy  (@) now at: yqynvvkx e11ce8aa (empty) apply update
+Parent commit (@-)      : ruvpqkyx 3c1ce6a5 project work
+Parent commit (@-)      : kyzwuvpn e42ca95b render T1
+Added 1 files, modified 1 files, removed 0 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+e11ce8aa9657954bbd4479488c541965f98764e9
+$ project: jj commit -m save inputs
+exit 0
+Working copy  (@) now at: wwvxykqq aab553c4 (empty) (no description set)
+Parent commit (@-)      : yqynvvkx 1d7912f3 save inputs
+
+$ project: jj op restore 093b6db9f5e60a6a21398c5293579e25a0c9d19d892ff5dde6ed185d7d6c8cd32fee7e23e2238cae2232a7e2e1a0fe7489b4e6156de232532284e3560f62eca2
+exit 0
+Restored to operation: 093b6db9f5e6 (2026-10-07 09:51:39) new empty commit
+Working copy  (@) now at: nnmuszmt 683eee97 (empty) (no description set)
+Parent commit (@-)      : ruvpqkyx 3c1ce6a5 project work
+Added 0 files, modified 1 files, removed 2 files
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ project: jj workspace forget render
+exit 0
+
+$ project: jj log --no-graph --ignore-working-copy -r @ -T commit_id
+exit 0
+683eee97b172cc223178d67570cf2017c4e3b3df
+$ project: jj workspace list
+exit 0
+default: . nnmuszmt 683eee97 (empty) (no description set)
+
+$ project: jj workspace list
+exit 0
+default: . nnmuszmt 683eee97 (empty) (no description set)
+
+$ prototype new --template /tmp/copyroom-jj-workspace-ilw1wacc/prototype-origin/template --target /tmp/copyroom-jj-workspace-ilw1wacc/prototype-origin/project --answers /tmp/copyroom-jj-workspace-ilw1wacc/prototype-origin/answers.json
+exit 0
+result created /tmp/copyroom-jj-workspace-ilw1wacc/prototype-origin/project
+
+$ prototype update --project /tmp/copyroom-jj-workspace-ilw1wacc/prototype-moved/project
+exit 2
+error: source must be a local directory: /tmp/copyroom-jj-workspace-ilw1wacc/prototype-origin/template
+
+$ prototype update --project /tmp/copyroom-jj-workspace-ilw1wacc/prototype-moved/project --template /tmp/copyroom-jj-workspace-ilw1wacc/prototype-moved/template
+exit 0
+result updated /tmp/copyroom-jj-workspace-ilw1wacc/prototype-moved/project
+render 4a95e7c851f0e62347aa2ac2854ed3b67c695e36
+conflicts 0

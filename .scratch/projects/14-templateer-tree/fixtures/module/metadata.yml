@@ -1,0 +1,13 @@
+name: module
+description: Render the local Python module.
+output:
+  path: src/{{ module }}/__init__.py
+  language: python
+schema:
+  module: schema
+  class: ProjectModel
+prompt:
+  file: prompt.md
+renderer:
+  engine: minijinja
+  file: template.j2

@@ -1,0 +1,89 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 20.3ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 16.6ms
+Spike 12 — jj render/merge evaluation.
+  devenv test      run every spike-*.sh
+  spike-versions   record the toolchain
+  spike-clean      wipe /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/.devenv/state/spike
+jj 0.45.1
+PASS clean: workspace add keeps active @
+PASS clean: workspace add keeps active files
+PASS clean: render keeps active @
+PASS clean: render keeps active files
+PASS clean: preview shows template change
+PASS clean: preview shows added file
+PASS clean: preview keeps active @
+PASS clean: preview keeps active files
+PASS clean: conflict result matches input
+PASS clean: local file survives preview
+PASS clean: cleanup keeps active @
+PASS clean: cleanup keeps active files
+PASS clean: cleanup removes workspace
+PASS clean: active workspace stays registered
+PASS clean: render workspace unregistered
+PASS conflict: workspace add keeps active @
+PASS conflict: workspace add keeps active files
+PASS conflict: render keeps active @
+PASS conflict: render keeps active files
+PASS conflict: preview shows template change
+PASS conflict: preview shows added file
+PASS conflict: preview keeps active @
+PASS conflict: preview keeps active files
+PASS conflict: conflict result matches input
+PASS conflict: project side remains in conflict
+PASS conflict: template side remains in conflict
+PASS conflict: cleanup keeps active @
+PASS conflict: cleanup keeps active files
+PASS conflict: cleanup removes workspace
+PASS conflict: active workspace stays registered
+PASS conflict: render workspace unregistered
+PASS preflight-failure: workspace add keeps active @
+PASS preflight-failure: workspace add keeps active files
+PASS preflight-failure: expected failure injected
+PASS preflight-failure: cleanup keeps active @
+PASS preflight-failure: cleanup keeps active files
+PASS preflight-failure: cleanup removes workspace
+PASS preflight-failure: active workspace stays registered
+PASS preflight-failure: render workspace unregistered
+PASS after-render-failure: workspace add keeps active @
+PASS after-render-failure: workspace add keeps active files
+PASS after-render-failure: render keeps active @
+PASS after-render-failure: render keeps active files
+PASS after-render-failure: expected failure injected
+PASS after-render-failure: cleanup keeps active @
+PASS after-render-failure: cleanup keeps active files
+PASS after-render-failure: cleanup removes workspace
+PASS after-render-failure: active workspace stays registered
+PASS after-render-failure: render workspace unregistered
+PASS after-apply-failure: workspace add keeps active @
+PASS after-apply-failure: workspace add keeps active files
+PASS after-apply-failure: render keeps active @
+PASS after-apply-failure: render keeps active files
+PASS after-apply-failure: preview shows template change
+PASS after-apply-failure: preview shows added file
+PASS after-apply-failure: preview keeps active @
+PASS after-apply-failure: preview keeps active files
+PASS after-apply-failure: conflict result matches input
+PASS after-apply-failure: local file survives preview
+PASS after-apply-failure: apply changes active @
+PASS after-apply-failure: apply changes active files
+PASS after-apply-failure: marker commit changes active files
+PASS after-apply-failure: operation restore recovers active @
+PASS after-apply-failure: operation restore recovers active files
+PASS after-apply-failure: expected failure injected
+PASS after-apply-failure: cleanup keeps active @
+PASS after-apply-failure: cleanup keeps active files
+PASS after-apply-failure: cleanup removes workspace
+PASS after-apply-failure: active workspace stays registered
+PASS after-apply-failure: render workspace unregistered
+PASS relocation: saved absolute template path breaks
+PASS relocation: relative sibling template path resolves
+PASS relocation: project alone lacks sibling template
+PASS prototype relocation: create succeeds
+PASS prototype relocation: saved absolute source fails
+PASS prototype relocation: failure names missing local source
+PASS prototype relocation: explicit source recovers
+PASS prototype relocation: updated content appears
+RESULT 78 checks passed
+evidence /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/../15-jj-workspace/evidence/2026-10-07-transcript.txt

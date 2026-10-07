@@ -1,0 +1,6 @@
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  local-template:
+    url: path:../.devenv/state/template-repo
+    flake: false

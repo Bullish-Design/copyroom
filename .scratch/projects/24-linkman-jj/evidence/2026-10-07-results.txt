@@ -1,0 +1,46 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 19.7ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 18.0ms
+Spike 12 — jj render/merge evaluation.
+  devenv test      run every spike-*.sh
+  spike-versions   record the toolchain
+  spike-clean      wipe /home/andrew/Documents/Projects/copyroom/.scratch/projects/12-jj-render-merge/.devenv/state/spike
+jj 0.45.1
+PASS project-a: Linkman applied link
+PASS project-a: target content visible
+PASS project-a: link has declared target
+PASS project-a: jj tracks link path
+PASS project-a: jj stores symlink and target path
+PASS project-b: Linkman applied link
+PASS project-b: target content visible
+PASS project-b: link has declared target
+PASS project-b: jj tracks link path
+PASS project-b: jj stores symlink and target path
+PASS project-a: shared edit propagates
+PASS project-a: shared edit leaves jj @ unchanged
+PASS project-a: Linkman remains clean
+PASS project-b: shared edit propagates
+PASS project-b: shared edit leaves jj @ unchanged
+PASS project-b: Linkman remains clean
+PASS project-a: source move breaks link
+PASS project-a: Linkman check sees raw link as correct
+PASS project-a: apply does not repair missing target
+PASS project-b: source move breaks link
+PASS project-b: Linkman check sees raw link as correct
+PASS project-b: apply does not repair missing target
+PASS project-a: changed declaration repoints link
+PASS project-a: repointed content visible
+PASS project-b: changed declaration repoints link
+PASS project-b: repointed content visible
+PASS template omits Linkman path at v1
+PASS template omits Linkman path at v2
+PASS prototype update lands template content
+PASS prototype update keeps project-owned link
+PASS prototype update keeps target content
+PASS Linkman check is clean after template update
+PASS Linkman refuses a template-owned regular file
+PASS Linkman preserves template-owned bytes
+PASS collision leaves regular file in place
+RESULT 35 checks passed
+evidence /home/andrew/Documents/Projects/copyroom/.scratch/projects/24-linkman-jj/evidence/2026-10-07-transcript.txt

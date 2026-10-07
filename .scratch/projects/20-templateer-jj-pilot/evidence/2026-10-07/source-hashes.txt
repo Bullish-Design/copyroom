@@ -1,0 +1,5 @@
+753834583efd39e7a2be5aa4e26863ddd0bfdb2c00edf26cd44da619aac99f88  .scratch/projects/20-templateer-jj-pilot/pilot.py
+0da288610925c1134a9390679fa826e3ff68d97730514fd0ad0e7f0b1909c4f1  .scratch/projects/20-templateer-jj-pilot/jj.toml
+6ade276fc286f62dbe57a0ad4f2611affddebae1796bb42e39dc3fd5ec498bed  .scratch/projects/14-templateer-tree/spike.py
+ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2  .scratch/projects/14-templateer-tree/manifest.json
+20923830a75bbf68896aa1c337dfbb8dd445893e82c0dcd942a0e806b45f5e6c  .scratch/projects/14-templateer-tree/answers.json

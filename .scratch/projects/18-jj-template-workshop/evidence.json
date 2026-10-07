@@ -1,0 +1,286 @@
+{
+  "checks": [
+    "template edit stays in candidate workspace",
+    "template active revision stays at v1",
+    "scenario render matches full-tree golden",
+    "scenario golden checks every rendered path",
+    "update-test reports no conflict",
+    "update-test receives template change",
+    "update-test keeps project edit",
+    "update-test receives added file",
+    "preview diff names candidate changes",
+    "preview leaves active project files unchanged",
+    "preview leaves active project revision unchanged",
+    "preview leaves active template files unchanged",
+    "preview cleanup keeps active project",
+    "preview cleanup keeps active template",
+    "explicit template apply changes active template",
+    "explicit project apply reports no conflict",
+    "explicit project apply receives template change",
+    "explicit project apply keeps local edit",
+    "explicit project apply matches preview file"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "jj",
+        "git",
+        "init",
+        "--colocate"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "Initialized repo in \".\"\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "commit",
+        "-m",
+        "template v1"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "Working copy  (@) now at: lmzkyzkn 2a6ff350 (empty) (no description set)\nParent commit (@-)      : pvlkpklp 28dfd8fa template v1\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "log",
+        "--no-graph",
+        "--ignore-working-copy",
+        "-r",
+        "@",
+        "-T",
+        "commit_id"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "2a6ff350e9bf0ba01f59a208e9d824713409965c"
+    },
+    {
+      "argv": [
+        "/nix/store/ryw9m7wxz56qjn4g9x5c7ic56l2x8p1b-devenv-profile/bin/python3",
+        "/home/andrew/Documents/Projects/copyroom/.scratch/projects/13-local-jj-prototype/prototype.py",
+        "new",
+        "--template",
+        "/tmp/copyroom-workshop-i1zkil7p/template/files",
+        "--target",
+        "/tmp/copyroom-workshop-i1zkil7p/project",
+        "--answers",
+        "/tmp/copyroom-workshop-i1zkil7p/scenario.json"
+      ],
+      "cwd": "copyroom-workshop-i1zkil7p",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "result created /tmp/copyroom-workshop-i1zkil7p/project\n"
+    },
+    {
+      "argv": [
+        "jj",
+        "commit",
+        "-m",
+        "project edits template-owned file"
+      ],
+      "cwd": "project",
+      "exit": 0,
+      "stderr": "Working copy  (@) now at: toupntrw 6ba0dc8f (empty) (no description set)\nParent commit (@-)      : usttomwr 3a8dd508 project edits template-owned file\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "log",
+        "--no-graph",
+        "--ignore-working-copy",
+        "-r",
+        "@",
+        "-T",
+        "commit_id"
+      ],
+      "cwd": "project",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "6ba0dc8f198539eefef727ed5262e25379e2d1c3"
+    },
+    {
+      "argv": [
+        "jj",
+        "workspace",
+        "add",
+        "--name",
+        "candidate",
+        "-r",
+        "@",
+        "/tmp/copyroom-workshop-i1zkil7p/template-candidate"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "Created workspace in \"../template-candidate\"\nWorking copy  (@) now at: pkmurplt a874b9b3 (empty) (no description set)\nParent commit (@-)      : lmzkyzkn 2a6ff350 (empty) (no description set)\nAdded 2 files, modified 0 files, removed 0 files\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "commit",
+        "-m",
+        "template candidate v2"
+      ],
+      "cwd": "template-candidate",
+      "exit": 0,
+      "stderr": "Working copy  (@) now at: ntnywkrr 29ae6b2c (empty) (no description set)\nParent commit (@-)      : pkmurplt fcc76226 template candidate v2\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "log",
+        "--no-graph",
+        "--ignore-working-copy",
+        "-r",
+        "@-",
+        "-T",
+        "commit_id"
+      ],
+      "cwd": "template-candidate",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "fcc7622638a36ef38aa3fb424a3e658731a691da"
+    },
+    {
+      "argv": [
+        "jj",
+        "log",
+        "--no-graph",
+        "--ignore-working-copy",
+        "-r",
+        "@",
+        "-T",
+        "commit_id"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "2a6ff350e9bf0ba01f59a208e9d824713409965c"
+    },
+    {
+      "argv": [
+        "jj",
+        "workspace",
+        "add",
+        "--name",
+        "preview",
+        "-r",
+        "@",
+        "/tmp/copyroom-workshop-i1zkil7p/project-preview"
+      ],
+      "cwd": "project",
+      "exit": 0,
+      "stderr": "Created workspace in \"../project-preview\"\nWorking copy  (@) now at: rluxotsv 5d4ce0ce (empty) (no description set)\nParent commit (@-)      : toupntrw 6ba0dc8f (empty) (no description set)\nAdded 3 files, modified 0 files, removed 0 files\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/nix/store/ryw9m7wxz56qjn4g9x5c7ic56l2x8p1b-devenv-profile/bin/python3",
+        "/home/andrew/Documents/Projects/copyroom/.scratch/projects/13-local-jj-prototype/prototype.py",
+        "update",
+        "--project",
+        "/tmp/copyroom-workshop-i1zkil7p/project-preview",
+        "--template",
+        "/tmp/copyroom-workshop-i1zkil7p/template-candidate/files"
+      ],
+      "cwd": "copyroom-workshop-i1zkil7p",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "result updated /tmp/copyroom-workshop-i1zkil7p/project-preview\nrender 28d0f10d75832c29b9b1744610bac67ea60d0ecc\nconflicts 0\n"
+    },
+    {
+      "argv": [
+        "jj",
+        "diff",
+        "--from",
+        "6ba0dc8f198539eefef727ed5262e25379e2d1c3",
+        "--to",
+        "@"
+      ],
+      "cwd": "project-preview",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "Modified regular file .copyroom-local.json:\n    ...\n   9    9:   },\n  10   10:   \"layer\": \"base\",\n  11   11:   \"project_id\": \"c6b50a4b751f4a1bb1281ba9f6885df5\",\n  12     :   \"render_fingerprint\": \"f0d2401708d700be55ae0dfda4a27446905c69c98f7c52ac22bf2c5beaf7e9ab\",\n  13     :   \"revision\": 0,\n       12:   \"render_fingerprint\": \"0e7a8b3a3ca433da6a0de88e9f06a93c2a19fc8e8ba7bf35d2a4ae303169365f\",\n       13:   \"revision\": 1,\n  14   14:   \"schema\": 1,\n  15     :   \"template\": \"/tmp/copyroom-workshop-i1zkil7p/template/files\"\n       15:   \"template\": \"/tmp/copyroom-workshop-i1zkil7p/template-candidate/files\"\n  16   16: }\nAdded regular file checks/ready.txt:\n        1: ready=demo\nModified regular file src/demo/config.txt:\n   1     : version=1\n        1: version=2\n   2    2: \n   3    3: name=demo\n   4    4: \n   5    5: owner=project\n"
+    },
+    {
+      "argv": [
+        "jj",
+        "log",
+        "--no-graph",
+        "--ignore-working-copy",
+        "-r",
+        "@",
+        "-T",
+        "commit_id"
+      ],
+      "cwd": "project",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "6ba0dc8f198539eefef727ed5262e25379e2d1c3"
+    },
+    {
+      "argv": [
+        "jj",
+        "workspace",
+        "forget",
+        "preview"
+      ],
+      "cwd": "project",
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "jj",
+        "new",
+        "fcc7622638a36ef38aa3fb424a3e658731a691da",
+        "-m",
+        "apply template candidate"
+      ],
+      "cwd": "template",
+      "exit": 0,
+      "stderr": "Working copy  (@) now at: rwpylonu 7ffa3ac6 (empty) apply template candidate\nParent commit (@-)      : pkmurplt fcc76226 template candidate v2\nAdded 1 files, modified 1 files, removed 0 files\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/nix/store/ryw9m7wxz56qjn4g9x5c7ic56l2x8p1b-devenv-profile/bin/python3",
+        "/home/andrew/Documents/Projects/copyroom/.scratch/projects/13-local-jj-prototype/prototype.py",
+        "update",
+        "--project",
+        "/tmp/copyroom-workshop-i1zkil7p/project",
+        "--template",
+        "/tmp/copyroom-workshop-i1zkil7p/template/files"
+      ],
+      "cwd": "copyroom-workshop-i1zkil7p",
+      "exit": 0,
+      "stderr": "",
+      "stdout": "result updated /tmp/copyroom-workshop-i1zkil7p/project\nrender 2f88ebed3b2c6b3e2febc9a15f8e56dbf4250bdc\nconflicts 0\n"
+    }
+  ],
+  "golden_manifest": {
+    "README.md": [
+      "582f7d2bee1393f1b095a21ce4d43cbccd1ad2e52a08ddff801847902e42fd6a",
+      false
+    ],
+    "checks/ready.txt": [
+      "8af3c766596bbc81763570d075693ec775001a55e2678f6ab675325119ba3336",
+      false
+    ],
+    "src/demo/config.txt": [
+      "b23b875c7e7bdbe9b9e1676c4c3e1b1c37486e0753e47fb686cbb6ff44692e1d",
+      false
+    ]
+  },
+  "template_candidate_revision": "fcc7622638a36ef38aa3fb424a3e658731a691da"
+}

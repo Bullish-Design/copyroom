@@ -24,7 +24,7 @@ root
 
 jj computes `merge-base(P, T1) = T0` from the graph. Nothing records it.
 
-## Questions and results — all passed (73 assertions and 6 prototype tests)
+## Questions and results — all passed (73 assertions and 9 prototype tests)
 
 | # | Question | Result |
 |---|----------|--------|

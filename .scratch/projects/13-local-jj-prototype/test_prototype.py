@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,17 @@ class PrototypeTests(unittest.TestCase):
         if generated:
             args.extend(["--generated", str(generated)])
         return self.cli(*args, expected=expected)
+
+    def project_state(self) -> tuple[str, dict[str, tuple[bytes, int]]]:
+        head = self.jj("log", "--no-graph", "--ignore-working-copy", "-r", "@", "-T", "commit_id").strip()
+        tree = {
+            path.relative_to(self.project).as_posix(): (
+                path.read_bytes(), stat.S_IMODE(path.stat().st_mode)
+            )
+            for path in self.project.rglob("*")
+            if path.is_file() and not {".jj", ".git"} & set(path.relative_to(self.project).parts)
+        }
+        return head, tree
 
     def test_two_updates_preserve_project_edits(self) -> None:
         self.create(FIXTURES / "base-v1")
@@ -113,6 +125,73 @@ class PrototypeTests(unittest.TestCase):
         marker = json.loads((self.project / ".copyroom-local.json").read_text(encoding="utf-8"))
         self.assertTrue(marker["generation"]["enabled"])
         self.assertEqual(marker["generation"]["paths"], ["llm.txt"])
+
+    def test_new_rejects_generated_exact_and_prefix_collisions_before_init(self) -> None:
+        source = self.root / "template"
+        (source / "docs").mkdir(parents=True)
+        (source / "README.md").write_text("template\n", encoding="utf-8")
+        (source / "docs" / "guide.md").write_text("guide\n", encoding="utf-8")
+        for label, generated_path, expected in (
+            ("exact", "README.md", "exact output path collision"),
+            ("child", "README.md/child.txt", "file-directory output path collision"),
+            ("parent", "docs", "file-directory output path collision"),
+        ):
+            with self.subTest(label=label):
+                generated = self.root / f"generated-{label}"
+                target = generated / generated_path
+                target.parent.mkdir(parents=True)
+                target.write_text("generated\n", encoding="utf-8")
+                report = self.cli(
+                    "new", "--template", str(source), "--target", str(self.project),
+                    "--answers", str(self.answers), "--generated", str(generated),
+                    expected=2,
+                )
+                self.assertIn(expected, report)
+                self.assertFalse(self.project.exists())
+
+    def test_generated_refresh_collision_preserves_project_state(self) -> None:
+        source = self.root / "template"
+        source.mkdir()
+        (source / "base.txt").write_text("template\n", encoding="utf-8")
+        original = self.root / "generated-original"
+        original.mkdir()
+        (original / "frozen.txt").write_text("frozen\n", encoding="utf-8")
+        self.create(source, original)
+        before = self.project_state()
+        for label, generated_path, expected in (
+            ("exact", "base.txt", "exact output path collision"),
+            ("child", "base.txt/child.txt", "file-directory output path collision"),
+        ):
+            with self.subTest(label=label):
+                generated = self.root / f"refresh-{label}"
+                target = generated / generated_path
+                target.parent.mkdir(parents=True)
+                target.write_text("refresh\n", encoding="utf-8")
+                report = self.update(source, generated, expected=2)
+                self.assertIn(expected, report)
+                self.assertEqual(self.project_state(), before)
+
+    def test_reused_generated_path_collision_preserves_project_state(self) -> None:
+        source = self.root / "template-v1"
+        source.mkdir()
+        (source / "base.txt").write_text("template\n", encoding="utf-8")
+        original = self.root / "generated"
+        original.mkdir()
+        (original / "frozen.txt").write_text("frozen\n", encoding="utf-8")
+        self.create(source, original)
+        before = self.project_state()
+        for label, template_path, expected in (
+            ("exact", "frozen.txt", "exact output path collision"),
+            ("child", "frozen.txt/child.txt", "file-directory output path collision"),
+        ):
+            with self.subTest(label=label):
+                next_source = self.root / f"template-{label}"
+                target = next_source / template_path
+                target.parent.mkdir(parents=True)
+                target.write_text("template now owns this\n", encoding="utf-8")
+                report = self.update(next_source, expected=2)
+                self.assertIn(expected, report)
+                self.assertEqual(self.project_state(), before)
 
     def test_same_output_is_no_change(self) -> None:
         source = FIXTURES / "base-v1"

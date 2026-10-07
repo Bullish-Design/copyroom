@@ -7,10 +7,10 @@ Q8 PASS  an undefined variable is a hard error (strict undefined)
 
 spike-00-determinism.sh: 6 passed, 0 failed
 render: 4 file(s) base-v1 -> .
------ note  T0 = 2472e331a4620b8f654e1fd76c5789baa5e47c0c
------ note  P  = e0577935e290e3fad0004d6035d6acdf4edb179d
+----- note  T0 = f3fd74427ca48ee590beed03144eb30caffc65ee
+----- note  P  = 4de089f2a54bf4b4054be6e15434b7ec92d2dcc9
 render: 4 file(s) base-v2 -> .
------ note  T1 = 525c1a5aff54035744063e96804740edcb91d322
+----- note  T1 = a245651d9ef2cbe1f7c7e3448421c4d1fd2870cc
 Q1 PASS  T1 holds template files only (no project-only paths)
 Q1 PASS  T1's parent is T0 (identity, not just arity)
 Q2 PASS  jj computes merge-base(P, T1) = T0
@@ -72,7 +72,7 @@ Q5 PASS  can start new work on top of an unresolved conflict
 spike-04-conflict.sh: 9 passed, 0 failed
 render: 4 file(s) base-v1 -> .
 render: 4 file(s) base-v2 -> .
------ note  op before merge = fae789e83c24
+----- note  op before merge = c541d5a63e17
 Q6 PASS  the merge actually changed the working copy (preview has something to show)
 ----- note  jj diff --from <trunk> --to @ — what a preview would actually show:
 -----       D .github/workflows/ci.yml
@@ -139,8 +139,8 @@ Q10 PASS  unrelated overlay file still lands
 Q10 PASS  nearby edits produce a recorded three-sided conflict
 
 spike-08-layer-overlap.sh: 5 passed, 0 failed
-......
+.........
 ----------------------------------------------------------------------
-Ran 6 tests in 5.735s
+Ran 9 tests in 6.986s
 
 OK

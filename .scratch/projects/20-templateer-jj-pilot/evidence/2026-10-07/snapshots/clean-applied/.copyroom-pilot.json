@@ -1,0 +1,10 @@
+{
+  "answers_digest": "20923830a75bbf68896aa1c337dfbb8dd445893e82c0dcd942a0e806b45f5e6c",
+  "composer_digest": "6ade276fc286f62dbe57a0ad4f2611affddebae1796bb42e39dc3fd5ec498bed",
+  "manifest_digest": "ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2",
+  "revision": 1,
+  "schema": 1,
+  "source": "/tmp/copyroom-templateer-jj-2n3eduip/clean/template-v2",
+  "source_digest": "0793cfcf7cc28bc4f8d0d6116430faed0736b4e4be13fd58c371f536aa02bd77",
+  "templateer_version": "0.4.1"
+}

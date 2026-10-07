@@ -1,0 +1,13 @@
+name: settings
+description: Render local YAML settings.
+output:
+  path: config/project.yml
+  language: yaml
+schema:
+  module: schema
+  class: ProjectModel
+prompt:
+  file: prompt.md
+renderer:
+  engine: minijinja
+  file: template.j2

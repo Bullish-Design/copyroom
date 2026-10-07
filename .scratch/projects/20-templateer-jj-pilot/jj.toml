@@ -1,0 +1,8 @@
+[user]
+name = "CopyRoom Pilot"
+email = "pilot@example.invalid"
+
+[ui]
+paginate = "never"
+color = "never"
+default-command = "status"
