@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+#
+# Spike 12 — evaluation environment for "jj replaces Copier's three-way merge".
+#
+# This is a NESTED, isolated devenv. It is deliberately not an `imports: - ./dev`
+# consumer of the repo's own shell:
+#
+#   - the spike needs `jj`, which CopyRoom's dev shell does not carry;
+#   - the spike must NOT see `copier`, so a passing result cannot be Copier's
+#     work by accident;
+#   - a finding must be a property of the pinned toolchain, not of whatever the
+#     contributor's machine happens to have.
+#
+# Enter it from this directory: `devenv shell`
+# Run the spike:               `devenv test`
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  nixpkgs-python:
+    url: github:cachix/nixpkgs-python
+
+  # --- Not yet exercised ---------------------------------------------------
+  # Experiment 2 of the design: a template as a devenv input, so devenv.lock
+  # records the exact revision rendered from. That would replace `_src_path`,
+  # `_commit`, semver tag scanning and `git ls-remote` with Nix's own locking.
+  # Uncomment once experiment 1 (jj merge-base) passes; a local path proves the
+  # local-files-only claim.
+  #
+  # spike-template:
+  #   url: path:./fixtures/template
+  #   flake: false
+
+imports: []

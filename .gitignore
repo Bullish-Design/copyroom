@@ -3,9 +3,11 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# Personal Dev Environment:
+# Local devenv state. The **/ patterns also cover nested scratch projects.
 .devenv/**
+**/.devenv/
 .direnv/**
+**/.direnv/
 #.tmuxp.yaml
 .python-version
 devenv.lock
