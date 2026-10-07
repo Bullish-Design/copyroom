@@ -5,6 +5,9 @@ Environment: **jj 0.45.1**, Git 2.55.0, Python 3.13.14, in an isolated nested
 devenv with `copier` deliberately absent. Recorded per run to
 `$SPIKE_WORK/toolchain.txt`.
 
+The dated [research report](RESEARCH_REPORT.md) records the second-update,
+overlapping-layer, and local prototype results with a saved test transcript.
+
 The design under test models a template render as a commit:
 
 ```
@@ -21,7 +24,7 @@ root
 
 jj computes `merge-base(P, T1) = T0` from the graph. Nothing records it.
 
-## Questions and results — all passed (57 assertions)
+## Questions and results — all passed (73 assertions and 6 prototype tests)
 
 | # | Question | Result |
 |---|----------|--------|
@@ -32,29 +35,34 @@ jj computes `merge-base(P, T1) = T0` from the graph. Nothing records it.
 | Q4 | Does a file deleted between v1 and v2 get removed from trunk? | Yes (case A, untouched). Case B (project modified it) is a surfaced delete/modify conflict, with the project's edit preserved inside the markers. |
 | Q5 | Is a conflict recorded in the commit, leaving other ops usable? | Yes. `conflicts()` matches the commit; `jj resolve --list` is authoritative. **Nothing was blocked** — status, log, diff, op log, new, commit, squash, rebase, describe all worked unresolved. |
 | Q6 | Does jj reverse a merge completely? | Yes, byte-for-byte, via both `jj undo` and `jj op restore <id>`. Verified for content, modes, and absence of leftover paths — including from a *conflicted* merge. |
-| Q7 | Does an n-parent merge converge layers, order-free? | Yes. A 3-parent merge converges two layers cleanly; both orders produce byte-identical trees. Converging one layer leaves the other at v1. |
+| Q7 | Does an n-parent merge converge layers with separate paths? | Yes. A 3-parent merge converges two layers cleanly; both orders produce byte-identical trees. Converging one layer leaves the other at v1. |
+| Q9 | Does a second update use T1 as its merge base? | Yes. T2 is a child of T1, the second merge base is T1, and project edits before and after the first update survive. A marked render-head query finds T1 and then T2. |
+| Q10 | Can two layers safely own the same path? | No. One layer can delete the shared file without a conflict while the other still renders it. Nearby edits from the project and both layers can record a three-sided conflict. |
 
 ## What this establishes
 
 The design holds on every gate. These stop being code and become graph
 properties:
 
-1. **`_commit` in the answers file** → `merge-base`. The DAG knows which render
-   is an ancestor of trunk.
+1. **`_commit` in the answers file** → `merge-base`. The DAG supplies the merge
+   base after the tool identifies the current render head. A stable per-layer
+   commit marker or ref must identify that head; the graph alone cannot name it.
 2. **The clean-worktree guard** → unnecessary. jj has no dirty mid-operation
    state to protect.
 3. **The `.rej` scanner and the inline `<<<<<<<` scan** → `jj resolve --list`
    and the `conflicts()` revset. A report can *ask* jj instead of parsing files.
 4. **The preview sandbox** (temp copy, `_src_path` rewrite, baseline `git init`,
    patch emission) → `jj new P T1`, `jj diff --from P --to @`, `jj op restore`.
-5. **Layer ordering and the commit-between-layers hack in `--all-layers`** →
-   one n-parent merge. Independent convergence falls out of the graph, with no
-   `-a` flag involved.
+5. **The commit-between-layers hack in `--all-layers`** → one n-parent merge
+   when layers own separate paths. Independent convergence holds for those
+   paths. Shared paths need an ownership rule.
 
 ## Caveats and limits found
 
-- **Fixture layers touch disjoint files.** Q7 does not show what happens when
-  two layers edit the same path.
+- **Each path needs one owner.** Q10 shows that two layer renders with the same
+  initial bytes can merge cleanly, then lose a file when one layer deletes it.
+  A prototype should reject overlap before scaffold or update. A conditional
+  seed must stay absent from the second layer's render line on later updates.
 - **Q7 assumes the two layers are separate root-level lines.** Real layer
   templates may need a shared scaffold ancestor.
 - **A conflicted commit's descendants stay conflicted** until resolved. The
@@ -70,6 +78,9 @@ properties:
 - **Q8 proves the renderer's bytes, not jj tree-id equality.** Equality is
   expected, since jj tree ids derive from file bytes plus the exec bit, but it
   was not measured.
+- **Gitman does not expose this graph workflow.** The separate local prototype
+  calls jj only in disposable repos. Integration with managed project repos
+  needs gitman support for render lines and merges.
 
 ## Environment traps found — both nearly produced confident wrong answers
 

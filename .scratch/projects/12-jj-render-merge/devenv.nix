@@ -19,6 +19,8 @@
 #   Q6  Does `jj undo` fully reverse the merge? (preview-only, no sandbox)
 #   Q7  Does an n-parent merge converge two layers at once, order-free?
 #   Q8  Is render(template, answers) byte-identical across runs? (load-bearing)
+#   Q9  Does a second update use the first render as its merge base?
+#   Q10 What happens when two layers own the same path?
 {
   pkgs,
   config,
@@ -181,6 +183,7 @@
     export PATH="$DEVENV_PROFILE/bin"
     spike-versions
     mkdir -p "$SPIKE_WORK"
+    : > "$SPIKE_WORK/transcript.txt"
 
     shopt -s nullglob
     scripts=("$DEVENV_ROOT"/spike-*.sh)

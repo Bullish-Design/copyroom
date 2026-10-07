@@ -1,0 +1,146 @@
+Q8 PASS  render(base-v1) is byte-identical across two runs
+Q8 PASS  render(base-v2) is byte-identical across two runs
+Q8 PASS  base-v1 and base-v2 render differently (fixtures are meaningful)
+Q8 PASS  a path segment is templated (src/demo_app/)
+Q8 PASS  no literal brace path survives
+Q8 PASS  an undefined variable is a hard error (strict undefined)
+
+spike-00-determinism.sh: 6 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+----- note  T0 = 2472e331a4620b8f654e1fd76c5789baa5e47c0c
+----- note  P  = e0577935e290e3fad0004d6035d6acdf4edb179d
+render: 4 file(s) base-v2 -> .
+----- note  T1 = 525c1a5aff54035744063e96804740edcb91d322
+Q1 PASS  T1 holds template files only (no project-only paths)
+Q1 PASS  T1's parent is T0 (identity, not just arity)
+Q2 PASS  jj computes merge-base(P, T1) = T0
+----- note  this is the field that replaces _commit in the answers file
+Q1 PASS  the merge commit has 2 parents
+Q1 PASS  the merge is clean (both jj signals agree)
+Q1 PASS  project-only file survived the merge
+Q1 PASS  project-only file survived the merge
+Q1 PASS  template v2 change landed (ruff line-length 120)
+Q1 PASS  template v1 value is gone (line-length 100)
+Q1 PASS  template v2 addition landed ([tool.ty])
+Q1 PASS  template v2 new file landed (justfile)
+Q1 PASS  unchanged template file still present
+
+spike-01-subtree-merge.sh: 12 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q3 PASS  non-overlapping edits to the same file merge without conflict
+Q3 PASS  the project's hand-written line survived
+Q3 PASS  the template's v2 line landed
+Q3 PASS  the shared v1 line is still present
+----- note  README.md after the merge:
+-----       # demo-app
+-----       
+-----       Managed by the base template.
+-----       
+-----       Generated from the base template.
+-----       
+-----       Project-specific note, hand-written.
+
+spike-02-local-edit.sh: 4 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+Q4 PASS  v1 shipped the CI workflow
+render: 4 file(s) base-v2 -> .
+Q4 PASS  T1 no longer tracks the file the template dropped
+Q4 PASS  case A merged cleanly
+Q4 PASS  case A: the dropped file is gone from trunk
+Q4 PASS  case A: unrelated project work untouched
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q4 PASS  case B: delete/modify is reported as a conflict, not silently resolved
+----- note  jj resolve --list:
+-----       .github/workflows/ci.yml    2-sided conflict including 1 deletion
+
+spike-03-template-deletion.sh: 6 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q5 PASS  jj new succeeded despite a content conflict (no aborted operation)
+Q5 PASS  the conflict is recorded and listed by jj resolve --list
+Q5 PASS  the commit itself is marked conflicted (conflicts() matches it)
+Q5 PASS  working copy materialises conflict markers (expected; report can scan)
+----- note  a reporting command can still detect markers, as CopyRoom does today
+Q5 PASS  usable while conflicted: jj status
+Q5 PASS  usable while conflicted: jj log -r ::@ --no-graph -T commit_id
+Q5 PASS  usable while conflicted: jj diff --summary
+Q5 PASS  usable while conflicted: jj op log
+Q5 PASS  can start new work on top of an unresolved conflict
+
+spike-04-conflict.sh: 9 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+----- note  op before merge = fae789e83c24
+Q6 PASS  the merge actually changed the working copy (preview has something to show)
+----- note  jj diff --from <trunk> --to @ — what a preview would actually show:
+-----       D .github/workflows/ci.yml
+-----       M README.md
+-----       A justfile
+-----       M pyproject.toml
+Q6 PASS  jj undo restores @ to the pre-merge commit
+Q6 PASS  jj undo restores the working copy byte-for-byte
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q6 PASS  jj op restore <id> accepts a named pre-merge operation
+Q6 PASS  op restore returns @ to the pre-merge commit
+Q6 PASS  op restore returns the working copy byte-for-byte
+
+spike-05-undo.sh: 6 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+render: 2 file(s) overlay-v1 -> .
+render: 4 file(s) base-v2 -> .
+render: 3 file(s) overlay-v2 -> .
+Q7 PASS  the scaffold commit has 2 parents (two layers)
+Q7 PASS  the convergence commit has 3 parents
+Q7 PASS  a 3-parent convergence of two independent layers is clean
+Q7 PASS  base layer reached v2
+Q7 PASS  base layer v2 file landed
+Q7 PASS  overlay layer reached v2
+Q7 PASS  overlay layer v2 file landed
+Q7 PASS  project work survived both layers
+Q7 PASS  base layer deletion applied
+render: 4 file(s) base-v1 -> .
+render: 2 file(s) overlay-v1 -> .
+render: 4 file(s) base-v2 -> .
+render: 3 file(s) overlay-v2 -> .
+Q7 PASS  convergence is order-free (identical trees)
+render: 4 file(s) base-v1 -> .
+render: 2 file(s) overlay-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q7 PASS  converging one layer alone is clean
+Q7 PASS  the converged layer advanced
+Q7 PASS  the OTHER layer stayed at v1 (isolation)
+Q7 PASS  the other layer's v2 file did not appear
+----- note  this is the independent-convergence invariant, with no -a flag involved
+
+spike-06-layers.sh: 14 passed, 0 failed
+render: 4 file(s) base-v1 -> .
+render: 4 file(s) base-v2 -> .
+Q9 PASS  first update is clean
+Q9 PASS  one marked render head is T1
+render: 5 file(s) base-v3 -> .
+Q9 PASS  T2 is a child of T1
+Q9 PASS  second merge base is T1
+Q9 PASS  second update is clean
+Q9 PASS  v3 template change landed
+Q9 PASS  v3 template file landed
+Q9 PASS  first project edit survived
+Q9 PASS  second project edit survived
+Q9 PASS  project-only file survived
+Q9 PASS  marked render head advanced to T2
+
+spike-07-repeat-update.sh: 11 passed, 0 failed
+Q10 PASS  identical shared files scaffold cleanly
+Q10 PASS  overlapping deletion has no jj conflict
+Q10 PASS  one layer deletes the other layer's unchanged file
+Q10 PASS  unrelated overlay file still lands
+Q10 PASS  nearby edits produce a recorded three-sided conflict
+
+spike-08-layer-overlap.sh: 5 passed, 0 failed
+......
+----------------------------------------------------------------------
+Ran 6 tests in 5.735s
+
+OK

@@ -1,0 +1,5 @@
+jj       jj 0.45.1
+git      git version 2.55.0
+python   Python 3.13.14
+JJ_CONFIG=/nix/store/2pd1qanrw0vbsh5j841g6419f1ygr2ka-jj-spike.toml
+copier   absent (as intended)
