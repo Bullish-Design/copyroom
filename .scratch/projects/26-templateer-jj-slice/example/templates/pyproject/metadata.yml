@@ -1,0 +1,13 @@
+name: pyproject
+description: Render local project metadata.
+output:
+  path: pyproject.toml
+  language: toml
+schema:
+  module: schema
+  class: ProjectModel
+prompt:
+  file: prompt.md
+renderer:
+  engine: minijinja
+  file: template.j2

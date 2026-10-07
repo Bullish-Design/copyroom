@@ -1,0 +1,23 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 28.0ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 21.2ms
+result created /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5/project
+render 6fd4d586ecf7936930d652c0c6b9323249e7bdc2
+result preview /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5/preview
+render d9c3a43efb3dd3141bf7100f1d1591c0bc61ad58
+conflicts 0
+Modified regular file config/project.yml:
+   1    1: project: "cedar-lab"
+   2     : description: "Local example with \"quotes\" and YAML: true"
+        2: description: "Local example with \"quotes\" and YAML: true"
+        3: revision: "v2"
+result updated /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5/project
+render d9c3a43efb3dd3141bf7100f1d1591c0bc61ad58
+project /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5/project
+source /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5/source
+source_digest bcd8b48c7fba9706be76fea2d62ac1fb8df57b8fa35c9dbcee856b665ab5e199
+revision 1
+render d9c3a43efb3dd3141bf7100f1d1591c0bc61ad58
+conflicts 0
+demo /home/andrew/Documents/Projects/copyroom/.scratch/projects/26-templateer-jj-slice/.devenv/state/slice-walkthrough-j9lyP5

@@ -1,0 +1,4 @@
+{
+  "templates": ["pyproject", "readme", "module", "about", "settings"],
+  "executable": ["scripts/about.py"]
+}

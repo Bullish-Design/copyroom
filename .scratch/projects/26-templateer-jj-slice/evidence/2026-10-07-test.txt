@@ -1,0 +1,20 @@
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 39.3ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 22.1ms
+• Running devenv:enterTest
+✓ Running devenv:enterTest in 2.39µs (no command)
+  test_apply_uses_the_previewed_render_after_source_changes (test_slice.SliceFlowTests.test_apply_uses_the_previewed_render_after_source_changes) ... ok
+  test_conflict_stays_in_preview (test_slice.SliceFlowTests.test_conflict_stays_in_preview) ... ok
+  test_controlled_apply_failure_restores_the_active_project (test_slice.SliceFlowTests.test_controlled_apply_failure_restores_the_active_project) ... ok
+  test_new_preview_update_and_second_update (test_slice.SliceFlowTests.test_new_preview_update_and_second_update) ... ok
+  test_new_rejects_two_templates_with_one_output_path (test_slice.SliceFlowTests.test_new_rejects_two_templates_with_one_output_path) ... ok
+  test_source_change_without_output_change_records_a_render (test_slice.SliceFlowTests.test_source_change_without_output_change_records_a_render) ... ok
+  test_source_override_and_new_answers (test_slice.SliceFlowTests.test_source_override_and_new_answers) ... ok
+  test_source_templates_symlink_is_rejected_before_new (test_slice.SliceFlowTests.test_source_templates_symlink_is_rejected_before_new) ... ok
+  test_stale_preview_and_new_path_ownership (test_slice.SliceFlowTests.test_stale_preview_and_new_path_ownership) ... ok
+  
+  ----------------------------------------------------------------------
+  Ran 9 tests in 26.600s
+  
+  OK

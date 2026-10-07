@@ -1,0 +1,13 @@
+name: about
+description: Render an executable Python script.
+output:
+  path: scripts/about.py
+  language: python
+schema:
+  module: schema
+  class: ProjectModel
+prompt:
+  file: prompt.md
+renderer:
+  engine: minijinja
+  file: template.j2
