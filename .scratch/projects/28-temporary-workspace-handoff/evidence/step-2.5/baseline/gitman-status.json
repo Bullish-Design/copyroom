@@ -1,0 +1,134 @@
+{
+  "repo_root": "/home/andrew/Documents/Projects/copyroom",
+  "colocated_git": true,
+  "trunk": {
+    "name": "main",
+    "change_id": "wslwtuovrlnknovtkvzrruwxqostwkqx",
+    "commit_id": "0e53915dc7dfdeedc7e3e2fd3c07e758acc4ed6a",
+    "remote": "origin",
+    "relation": "in-sync",
+    "behind_remote": 0,
+    "ahead_remote": 0
+  },
+  "current_lane": "handoff-step-2-5-a",
+  "lanes": [
+    {
+      "name": "handoff-step-2-5-a",
+      "base": null,
+      "depth": 0,
+      "orphaned": false,
+      "state": "draft",
+      "head": {
+        "change_id": "xyqzpqrwrrtzlllwkyponlpvwxnqsxwu",
+        "commit_id": "eaa360b6d6bc87784847206f0a8ef07efee4507a",
+        "description": "",
+        "empty": false,
+        "conflict": false,
+        "bookmarks": [
+          "handoff-step-2-5-a"
+        ],
+        "files_changed": 7,
+        "insertions": 1300,
+        "deletions": 0
+      },
+      "workspace": null,
+      "conflict": false,
+      "non_linear": false,
+      "divergent": false,
+      "ahead": 1,
+      "behind": 0,
+      "change_count": 1,
+      "insertions": 1300,
+      "deletions": 0,
+      "files_changed": 7,
+      "pr": null,
+      "created_at": "2026-10-08T12:37:24-04:00",
+      "updated_at": "2026-10-08T12:43:35-04:00"
+    }
+  ],
+  "conflicts": [],
+  "recent_ops": [
+    {
+      "op_id": "796325d23118d723bd5d053cb268ecc58cb4b5fb2d638f2a9c0b4f2cc1e74beec0e60a66ae7f1c577ff6d09d1beed05d6da5bb92b3a06af3ceb2651aa6e4c337",
+      "description": "snapshot working copy",
+      "timestamp": "2026-10-08T12:43:35.910000-04:00",
+      "is_snapshot": true,
+      "undoable": false
+    },
+    {
+      "op_id": "b37b22d491c4dd8090d36d8c68827fd5401a9057a7795eeb62110ebc7b460facdaf8610f28234fdb38a4c174ee937f1524c8b27b5bf67d4cc7e00630565fbc69",
+      "description": "gitman:start",
+      "timestamp": "2026-10-08T12:39:24.694000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "66861ca6123eb0ebe337d728679e1d7d49cd0058e25b9a7d366b0c446692149093fd49df857d982f1d6558ab880a0c05f7de0b4b08d30379d214f76d548c22ba",
+      "description": "snapshot working copy",
+      "timestamp": "2026-10-08T12:37:24.285000-04:00",
+      "is_snapshot": true,
+      "undoable": false
+    },
+    {
+      "op_id": "0d0f142ec8b739e8c837bba33fc49567424b417e3a7a954951959197abe3c6c1b80a14c98913da7b6c5ba2b3b3452fe6ece48968f0bc84b5293978feec11b93e",
+      "description": "push to git remote 'origin'",
+      "timestamp": "2026-10-08T11:59:54.133000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "632c29cc2f669c98bb3cea320c6ced6edcccf1edf0474f08a2d064044194da4ded194b6df2aa8d30068bc1cda5ffe6e1f251de677a7fa7bd5cc8a5fb5e8754db",
+      "description": "export git refs",
+      "timestamp": "2026-10-08T11:59:49.723000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "ee9086e7cde86f785d52538725f7035d5b60397a753837303c65cc2a2bbe81c4c435131ec0abf5e0c7b9469bdab47a16c27bc08a38a01bf0f79371291dd294f7",
+      "description": "gitman:land",
+      "timestamp": "2026-10-08T11:59:47.075000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "fa505129f0d1e5de83b31ce53584bb9b17a81c4e1028c863dc27bb293bb0f85baa53d93be8d0977a4ccda95d8a1671c2e3e239affccd615349ed970bb63c03cc",
+      "description": "export git refs",
+      "timestamp": "2026-10-08T11:59:43.277000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "d7d5daccbc08f36f9d9d8af2ebd00e89a0351e5299aec1e404f71d70ee9eec0ddb74bd028340501a11fefca57d9197a7f771ea315b40bba758e2529036f120a3",
+      "description": "gitman:describe",
+      "timestamp": "2026-10-08T11:59:40.956000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "4306b77147b5c663a6f522f0442f2243148ed378ac4bc9a30260e23fd44f96e0d46d3df735cb92862810a50180935bca84103312fd20c78200723954654b4a14",
+      "description": "export git refs",
+      "timestamp": "2026-10-08T11:55:35.498000-04:00",
+      "is_snapshot": false,
+      "undoable": true
+    },
+    {
+      "op_id": "4d8f14a3c86271d51294f5287a66eb97f22d24869dc9525db00e68df0fdf1643a0cd16822f270a955cecd5f2a03e7db903f64a0c9728c15d5ffe58cc80eeaf5a",
+      "description": "snapshot working copy",
+      "timestamp": "2026-10-08T11:55:35.442000-04:00",
+      "is_snapshot": true,
+      "undoable": false
+    }
+  ],
+  "notes": [],
+  "foreign_paths": [
+    ".scratch/projects/28-temporary-workspace-handoff/evidence/step-2.5/baseline/gitman-status.json",
+    ".scratch/projects/28-temporary-workspace-handoff/evidence/step-2.5/baseline/jj-version.txt",
+    ".scratch/projects/28-temporary-workspace-handoff/evidence/step-2.5/baseline/pytest.txt",
+    ".scratch/projects/28-temporary-workspace-handoff/evidence/step-2.5/baseline/ruff.txt",
+    ".scratch/projects/28-temporary-workspace-handoff/evidence/step-2.5/baseline/walkthrough.txt"
+  ],
+  "session_identity": "default",
+  "anomalies": [],
+  "canonical": true,
+  "off_canonical": null
+}
