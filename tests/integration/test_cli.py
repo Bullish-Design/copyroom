@@ -166,3 +166,32 @@ def test_legacy_project_is_not_silently_converted(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "legacy project markers need local adoption" in result.stderr
+
+
+def test_update_test_no_change_exits_zero_with_structured_report(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    source, answers = _source(tmp_path)
+    workshop = tmp_path / "workshop"
+    (workshop / "registry").mkdir(parents=True)
+    (workshop / "scenarios" / "demo").mkdir(parents=True)
+    (workshop / "copyroom.yml").write_text("templates: {}\n", encoding="utf-8")
+    (workshop / "registry" / "demo.yml").write_text(
+        f"id: demo\nsource: {source}\n", encoding="utf-8",
+    )
+    (workshop / "scenarios" / "demo" / "basic.yml").write_text(
+        answers.read_text(encoding="utf-8"), encoding="utf-8",
+    )
+    monkeypatch.chdir(workshop)
+    runner = CliRunner()
+
+    checkout = runner.invoke(app, ["template-checkout", "demo", "--json"])
+    assert checkout.exit_code == 0, checkout.output
+    result = runner.invoke(app, ["update-test", "demo", "basic", "--json"])
+
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
+    assert json.loads(result.stdout) == {
+        "result": "no-change", "template": "demo", "scenario": "basic",
+    }
+    runner.invoke(app, ["template-discard", "demo"])

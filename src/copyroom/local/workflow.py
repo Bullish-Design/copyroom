@@ -45,6 +45,29 @@ WORKSPACE_PREFIX = "copyroom-"
 STATE_EXCLUDES = {".git", ".jj", ".devenv", ".direnv", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
 
 
+def normalize_path(path: Path) -> Path:
+    """Return an absolute path with no ``..`` segment and no symlinked parent.
+
+    Apply this rule at every entry point that takes a user path. The last
+    segment keeps its name, so ``is_symlink()`` still sees a symlinked
+    source. Check ``is_symlink()`` on the user path before you call this
+    function, then use the result for all comparisons and stored values.
+    """
+
+    path = Path(path)
+    if path.name in {"", ".", ".."}:
+        return path.resolve()
+    return path.parent.resolve() / path.name
+
+
+def _refuse_symlink(source: Path) -> Path:
+    """Reject a symlinked source, then return the normalized path."""
+
+    if Path(source).is_symlink():
+        raise LocalError(f"source must not be a symlink: {normalize_path(source)}")
+    return normalize_path(source)
+
+
 def _feed(digest: Any, data: bytes) -> None:
     digest.update(len(data).to_bytes(8, "big"))
     digest.update(data)
@@ -120,8 +143,8 @@ def clear_workspace(root: Path) -> None:
 def _validate_disjoint(source: Path, project: Path, allow_snapshot: bool = False) -> None:
     """Reject paths that can cause a render to consume or replace its source."""
 
-    source = source.absolute()
-    project = project.absolute()
+    source = normalize_path(source)
+    project = normalize_path(project)
     if source == project or project in source.parents or source in project.parents:
         if allow_snapshot and source.is_relative_to(project / SOURCE_DIR):
             return
@@ -322,10 +345,8 @@ def _snapshot_for_plan(source: Path, project: Path, out: Path, plan: RenderPlan)
 def new(source: Path, target: Path, answers_file: Path) -> dict[str, str]:
     """Create a project from one local Templateer source."""
 
-    source = source.absolute()
-    target = target.absolute()
-    if source.is_symlink():
-        raise LocalError(f"source must not be a symlink: {source}")
+    source = _refuse_symlink(source)
+    target = normalize_path(target)
     _validate_disjoint(source, target)
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
         raise LocalError(f"target is not empty: {target}")
@@ -368,12 +389,10 @@ def _attach_layer(
 ) -> dict[str, str]:
     """Attach one prevalidated render as an independent layer."""
 
-    project = project.absolute()
-    source = source.absolute()
+    project = normalize_path(project)
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", layer) or layer == "base":
         raise LocalError("layer name must start with a letter and use letters, digits, '_' or '-'", 3)
-    if source.is_symlink():
-        raise LocalError(f"source must not be a symlink: {source}")
+    source = _refuse_symlink(source)
     _validate_disjoint(source, project)
     jj = JJ(project)
     temporary_root = Path(tempfile.mkdtemp(prefix="copyroom-layer-"))
@@ -381,6 +400,8 @@ def _attach_layer(
     workspace_name = WORKSPACE_PREFIX + uuid.uuid4().hex[:12]
     workspace_added = False
     with project_lock(project):
+        # Backfill the ignore rules before any JSON write. An older project lacks them.
+        exclude_local_state(project)
         data = marker(project)
         records = data.get("layers", {"base": data})
         if not isinstance(records, dict):
@@ -474,9 +495,7 @@ def add_layer(
 ) -> dict[str, str]:
     """Render and attach one independent local Templateer layer."""
 
-    source = source.absolute()
-    if source.is_symlink():
-        raise LocalError(f"source must not be a symlink: {source}")
+    source = _refuse_symlink(source)
     plan = compose(source, read_json(answers_file))
     return _attach_layer(project, source, plan, layer)
 
@@ -484,7 +503,7 @@ def add_layer(
 def list_layers(project: Path) -> list[dict[str, Any]]:
     """List layer render heads and path owners."""
 
-    project = project.absolute()
+    project = normalize_path(project)
     data = marker(project)
     records = data.get("layers", {"base": data})
     if not isinstance(records, dict):
@@ -514,11 +533,13 @@ def preview(
 ) -> dict[str, Any]:
     """Render and merge in a separate jj workspace."""
 
-    project = project.absolute()
-    out = out.absolute()
+    project = normalize_path(project)
+    out = normalize_path(out)
+    if source_override is not None:
+        source_override = _refuse_symlink(source_override)
     data = marker(project)
     record = _layer_record(data, layer)
-    source = resolve_source(project, data, source_override, record)
+    source = normalize_path(resolve_source(project, data, source_override, record))
     _validate_disjoint(source, project, allow_snapshot=source.is_relative_to(project / SOURCE_DIR))
     if out.exists() or _preview_sidecar(out).exists():
         raise LocalError(f"preview path already exists: {out}")
@@ -547,10 +568,12 @@ def preview(
 
     jj = JJ(project)
     with project_lock(project):
+        # Backfill the ignore rules before any JSON write. An older project lacks them.
+        exclude_local_state(project)
         # Read all active state after taking the lock.
         data = marker(project)
         record = _layer_record(data, layer)
-        current_source = resolve_source(project, data, source_override, record)
+        current_source = normalize_path(resolve_source(project, data, source_override, record))
         if current_source != source:
             raise LocalError("project source locator changed during render", 1)
         old_render = jj.render_head(str(data["project_id"]), layer)
@@ -559,6 +582,11 @@ def preview(
         workspace_name = WORKSPACE_PREFIX + uuid.uuid4().hex[:12]
         added = False
         try:
+            # A new workspace needs an existing parent directory.
+            try:
+                out.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                raise LocalError(f"cannot create preview parent directory: {exc}", 2) from exc
             jj.run("workspace", "add", "--name", workspace_name, "-r", old_render, str(out))
             added = True
             clear_workspace(out)
@@ -624,6 +652,7 @@ def preview(
 def _load_preview(out: Path) -> dict[str, Any]:
     """Load and validate a preview sidecar."""
 
+    out = normalize_path(out)
     if not out.is_dir() or not (out / ".jj").exists():
         raise LocalError(f"preview workspace is missing: {out}")
     state = read_json(_preview_sidecar(out))
@@ -637,7 +666,7 @@ def _load_preview(out: Path) -> dict[str, Any]:
     if (
         state.get("schema") != 1 or not required <= state.keys()
         or not str(state["workspace"]).startswith(WORKSPACE_PREFIX)
-        or Path(str(state["path"])) != out.absolute()
+        or normalize_path(Path(str(state["path"]))) != out
     ):
         raise LocalError("unsupported preview state")
     return state
@@ -654,13 +683,15 @@ def _discard(project: Path, out: Path, state: dict[str, Any]) -> None:
 def apply(project: Path, out: Path) -> dict[str, str]:
     """Apply the reviewed preview tree and record its source state."""
 
-    project = project.absolute()
-    out = out.absolute()
+    project = normalize_path(project)
+    out = normalize_path(out)
     state = _load_preview(out)
-    if state["project"] != str(project):
+    if normalize_path(Path(str(state["project"]))) != project:
         raise LocalError("preview belongs to another project", 1)
     jj = JJ(project)
     with project_lock(project):
+        # Backfill the ignore rules before any JSON write. An older project lacks them.
+        exclude_local_state(project)
         data = marker(project)
         if state["project_id"] != data["project_id"]:
             raise LocalError("preview belongs to another project", 1)
@@ -785,9 +816,9 @@ def update(project: Path, out: Path) -> dict[str, str]:
 def discard(out: Path) -> dict[str, str]:
     """Discard a preview workspace without changing the project."""
 
-    out = out.absolute()
+    out = normalize_path(out)
     state = _load_preview(out)
-    project = Path(str(state["project"]))
+    project = normalize_path(Path(str(state["project"])))
     with project_lock(project):
         current = marker(project)
         if current["project_id"] != state["project_id"]:
@@ -799,7 +830,7 @@ def discard(out: Path) -> dict[str, str]:
 def list_previews(project: Path) -> list[dict[str, Any]]:
     """List saved preview workspaces for one project."""
 
-    project = project.absolute()
+    project = normalize_path(project)
     marker_data = marker(project)
     states: list[dict[str, Any]] = []
     directory = project / PREVIEW_DIR
@@ -821,7 +852,7 @@ def list_previews(project: Path) -> list[dict[str, Any]]:
 def inspect(project: Path) -> dict[str, Any]:
     """Return full project state for structured output."""
 
-    project = project.absolute()
+    project = normalize_path(project)
     data = marker(project)
     records = data.get("layers", {"base": data})
     if not isinstance(records, dict):

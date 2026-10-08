@@ -35,16 +35,28 @@ saved input used to replay that render.
 ## Create and update
 
 ```bash
-copyroom new ../app-template ./app --answers ../app-template/answers.json
+copyroom new app-template ./app --answers app-template/answers.json
 cd app
 copyroom status
-copyroom update --out .copyroom-local/previews/update-1
+copyroom update
 ```
+
+`copyroom update` prints the preview path. With no `--out` it creates a unique
+path beside the project, in `.copyroom-previews/`. Name the path yourself with
+`--out`:
+
+```bash
+copyroom update --out ../app-update-1
+```
+
+The preview workspace must be outside the project. If `--out` is inside the
+project, `copyroom update` exits with code `2` and prints `preview must be
+outside the project`. CopyRoom creates the parent directory of `--out`.
 
 Review files in the preview workspace. Apply the exact reviewed preview with:
 
 ```bash
-copyroom update --apply .copyroom-local/previews/update-1
+copyroom update --apply ../app-update-1
 ```
 
 The active project does not change during preview. If the project changes after
@@ -62,9 +74,10 @@ layer is created by `new`. Add an overlay with a local Templateer source and
 answers file:
 
 ```bash
-copyroom layer add ../docs-template --as docs --answers docs-answers.json
+copyroom layer add --source ../docs-template --as docs \
+  --answers ../docs-template/docs-answers.json
 copyroom layer list --json
-copyroom update --layer docs --out .copyroom-local/previews/docs-2
+copyroom update --layer docs --out ../docs-2
 ```
 
 CopyRoom rejects exact, prefix, case-folded, and project-owned path collisions
@@ -80,29 +93,39 @@ call.
 ```bash
 copyroom generate --source ../app-template --template config \
   --request "Add a local test command" --model openai:gpt-4.1-mini
-copyroom refresh --layer gen-config --out .copyroom-local/previews/config \
+copyroom refresh --layer gen-config --out ../config-preview \
   --request "Add a coverage command"
 ```
 
-Review and apply a refresh preview with `copyroom update --apply PATH`.
+The `refresh` preview is also outside the project. Review it, then apply it
+with `copyroom update --apply PATH`.
 
 ## Adopt and templatize
 
 `adopt` reports changed, project-only, and template-only paths. It does not
-write unless `--write` is present. Use `--template-only keep` to save explicit
+write unless `--write` is present. The report exits with code `1` when the
+project differs from the source. Use `--template-only keep` to save explicit
 omissions for paths that should remain outside template ownership.
 
+Run these commands from the directory that holds the project and the source.
+Name the project with `--project`.
+
 ```bash
-copyroom adopt ../app-template --answers answers.json
-copyroom adopt ../app-template --answers answers.json --template-only keep --write
+copyroom adopt app-template --project app --answers app-template/answers.json
+copyroom adopt app-template --project app --answers app-template/answers.json \
+  --template-only keep --write
 ```
 
 `templatize` extracts files, modes, binary files, and safe relative symlinks.
 Selected paths can use `project_name`; the command checks the extracted source
 against the original tree and then renders a changed probe answer.
 
+Run `templatize` from the directory that holds the project. The `--target`
+source must be outside the project. With `--parameterize`, `--name` must equal
+the project directory name.
+
 ```bash
-copyroom templatize --into ../app-template --name app \
+copyroom templatize --project app --target app-template --name app \
   --parameterize README.md
 ```
 
@@ -131,6 +154,9 @@ copyroom test app basic
 copyroom release-check app
 ```
 
+Run `copyroom golden ID SCENARIO --refresh` first to create a golden. Without a
+golden, `copyroom golden` exits with code `1`.
+
 Golden comparison checks paths, bytes, modes, and symlink targets. Refresh is
 explicit and runs Templateer's authoring audit first. `test` and
 `release-check` run `devenv test` in the generated scenario and preserve the
@@ -149,4 +175,8 @@ copyroom template-discard app
 
 The active source remains unchanged while the candidate is edited. The project
 preview is separate from the active project. Apply a reviewed project preview
-from that project's directory with `copyroom update --apply PATH`.
+from that project's directory.
+
+`copyroom update-test` exits `0` and reports `no-change` when the candidate
+renders the same tree as the project. That result means the update path was not
+exercised.

@@ -22,7 +22,7 @@ applies the preview head and verifies the exact tree.
 
 ## Recovery
 
-`copyroom preview list` lists saved previews. `copyroom discard --preview PATH`
+`copyroom preview list --project DIR` lists saved previews. `copyroom discard --preview PATH`
 removes one preview. A conflict remains in its preview workspace for review.
 The project stays unchanged until apply succeeds.
 

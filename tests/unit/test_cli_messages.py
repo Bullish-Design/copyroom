@@ -6,9 +6,10 @@ import builtins
 from pathlib import Path
 
 import click
+import pytest
 from typer.testing import CliRunner
 
-from copyroom.cli import _usage_error_type, app
+from copyroom.cli import _usage_error_type, app, main
 
 runner = CliRunner()
 
@@ -78,3 +79,36 @@ def test_nested_workshop_marker_takes_precedence_over_outer_project(
 
     assert result.exit_code == 1
     assert "project command cannot run in workshop mode" in result.stderr
+
+
+def test_version_option_prints_one_line_and_exits_zero() -> None:
+    from copyroom import __version__
+
+    result = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+    assert result.stdout == f"copyroom {__version__}\n"
+
+
+def test_bare_command_still_exits_three(capsys) -> None:
+    with pytest.raises(SystemExit) as raised:
+        main([])
+
+    assert raised.value.code == 3
+    captured = capsys.readouterr()
+    assert "Usage:" in captured.out + captured.err
+
+
+def test_version_option_exits_zero_through_main(capsys) -> None:
+    with pytest.raises(SystemExit) as raised:
+        main(["--version"])
+
+    assert raised.value.code == 0
+    assert capsys.readouterr().out.startswith("copyroom ")
+
+
+def test_mode_option_still_works_with_subcommand() -> None:
+    result = runner.invoke(app, ["--mode", "bogus", "update"])
+
+    assert result.exit_code == 3
+    assert "--mode must be" in result.output

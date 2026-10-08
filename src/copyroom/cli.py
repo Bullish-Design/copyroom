@@ -110,18 +110,29 @@ def _source(path: Path) -> Path:
     return path
 
 
-@app.callback()
-def _root(
-    ctx: typer.Context,
-    mode: str | None = typer.Option(None, "--mode", help="Force project or workshop mode"),
-    version: bool = typer.Option(False, "--version", is_eager=True),
-) -> None:
-    global _MODE_OVERRIDE
-    if version:
+def _show_version(value: bool) -> None:
+    """Print the version and exit 0 before Click checks for a subcommand."""
+
+    if value:
         from . import __version__
 
         typer.echo(f"copyroom {__version__}")
         raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    ctx: typer.Context,
+    mode: str | None = typer.Option(None, "--mode", help="Force project or workshop mode"),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        callback=_show_version,
+        is_eager=True,
+        help="Print the version and exit",
+    ),
+) -> None:
+    global _MODE_OVERRIDE
     if mode not in (None, "project", "workshop"):
         _error("--mode must be 'project' or 'workshop'", 3)
     _MODE_OVERRIDE = mode

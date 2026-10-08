@@ -21,7 +21,9 @@ Workshop commands use `copyroom.yml`, `registry/`, and `scenarios/`.
 | `copyroom refresh --layer NAME --out DIR --request TEXT` | Generate and preview a new frozen result. |
 
 With no `--out`, `update` creates a unique path beside the project in
-`.copyroom-previews/`. `--apply` cannot be combined with preview inputs.
+`.copyroom-previews/`. Every `--out` path must be outside the project and the
+source. CopyRoom creates the parent directory of `--out`. `--apply` cannot be
+combined with preview inputs.
 Remote refs, branch flags, and hooks are not supported by local updates.
 
 ## Adoption commands

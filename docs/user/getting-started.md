@@ -39,10 +39,13 @@ records the initial render as the base layer.
 ## Preview and apply an update
 
 ```bash
-copyroom update --out .copyroom-local/previews/update-2
+copyroom update --out ../app-update-1
 # Review the separate preview workspace.
-copyroom update --apply .copyroom-local/previews/update-2
+copyroom update --apply ../app-update-1
 ```
+
+The preview workspace must be outside the project. Run `copyroom update` with
+no `--out` to let CopyRoom name the path for you.
 
 CopyRoom refuses to apply a stale preview. Resolve jj conflicts in the preview
 workspace, then apply the exact reviewed tree. See [Local Workflows](local-workflows.md)

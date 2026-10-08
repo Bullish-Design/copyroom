@@ -461,6 +461,15 @@ def update_test(
     apply_edits(edits, project)
 
     state = preview(project, preview_dir, candidate, None, "base")
+    if state.get("result") == "no-change":
+        # The candidate renders the same tree as the project. Preview made no
+        # workspace and no state, so only the disposable test root remains.
+        shutil.rmtree(test_root)
+        return {
+            "result": "no-change",
+            "template": template_id,
+            "scenario": scenario_id,
+        }
     if state["conflicts"]:
         return {
             "result": "conflicts",

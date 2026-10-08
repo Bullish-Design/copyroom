@@ -27,6 +27,7 @@ from .workflow import (
     _render_subject,
     _validate_disjoint,
     clear_workspace,
+    normalize_path,
     working_digest,
     working_files,
     write_tree,
@@ -77,7 +78,7 @@ def compare(project: Path, plan: RenderPlan) -> dict[str, Any]:
         for path in changed
     }
     return {
-        "project": str(project.absolute()),
+        "project": str(normalize_path(project)),
         "source_digest": plan.source_digest,
         "changed": changed,
         "changed_detail": detail,
@@ -96,8 +97,8 @@ def adopt(
 ) -> dict[str, Any]:
     """Report template drift or attach a local source with explicit write."""
 
-    project = project.absolute()
-    source = source.absolute()
+    project = normalize_path(project)
+    source = normalize_path(source)
     if (project / MARKER).exists():
         raise LocalError("project already has a local marker", 3)
     _validate_disjoint(source, project)
@@ -255,8 +256,8 @@ def templatize(
 ) -> dict[str, Any]:
     """Extract a local Templateer source and prove an exact golden render."""
 
-    project = project.absolute()
-    target = target.absolute()
+    project = normalize_path(project)
+    target = normalize_path(target)
     _validate_disjoint(project, target)
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
         raise LocalError(f"template target is not empty: {target}")

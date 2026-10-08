@@ -16,7 +16,7 @@ from copyroom.local.errors import LocalError
 from copyroom.local.generation import generate, refresh
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt, templatize
-from copyroom.local.source import marker, snapshot_path
+from copyroom.local.source import TEMP_EXCLUDE, marker, snapshot_path
 from copyroom.local.workflow import (
     add_layer,
     apply,
@@ -144,6 +144,56 @@ class LocalTemplateerJJTests(unittest.TestCase):
             preview(self.project, self.root / "collision")
         self.assertEqual(before, working_digest(self.project))
         self.assertFalse((self.root / "collision").exists())
+
+    def test_mutating_commands_backfill_the_write_temporary_ignore_rule(self) -> None:
+        self.create()
+        exclude = self.project / ".git" / "info" / "exclude"
+
+        def strip_rule() -> None:
+            """Return the project to the state of one created before the rule existed."""
+
+            kept = [
+                line
+                for line in exclude.read_text(encoding="utf-8").splitlines()
+                if line != TEMP_EXCLUDE
+            ]
+            exclude.write_text("\n".join(kept) + "\n", encoding="utf-8")
+
+        def rules() -> list[str]:
+            return exclude.read_text(encoding="utf-8").splitlines()
+
+        self.assertIn(TEMP_EXCLUDE, rules())
+
+        template = self.source / "templates/settings/template.j2"
+        template.write_text(
+            template.read_text(encoding="utf-8") + '\nrevision: "v2"\n', encoding="utf-8",
+        )
+        out = self.root / "backfill"
+        strip_rule()
+        self.assertNotIn(TEMP_EXCLUDE, rules())
+        preview(self.project, out)
+        self.assertIn(TEMP_EXCLUDE, rules())
+
+        strip_rule()
+        apply(self.project, out)
+        self.assertIn(TEMP_EXCLUDE, rules())
+
+        overlay = self.root / "backfill-overlay"
+        shutil.copytree(self.source, overlay)
+        manifest_path = overlay / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["templates"] = ["settings"]
+        manifest["executable"] = []
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        metadata = overlay / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "docs/guide.md"),
+            encoding="utf-8",
+        )
+        strip_rule()
+        add_layer(self.project, overlay, overlay / "answers.json", "docs")
+        self.assertIn(TEMP_EXCLUDE, rules())
+        self.assertIn("docs", {str(record["layer"]) for record in list_layers(self.project)})
 
     def test_apply_reports_a_foreign_jj_operation_and_keeps_preview(self) -> None:
         self.create()
@@ -524,6 +574,41 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(active_readme, (workshop / "source/templates/readme/template.j2").read_bytes())
         template_discard(workshop)
         self.assertFalse(candidate.exists())
+
+    def make_workshop(self) -> Path:
+        workshop = self.root / "workshop"
+        (workshop / "registry").mkdir(parents=True)
+        (workshop / "scenarios/demo").mkdir(parents=True)
+        shutil.copytree(self.source, workshop / "source")
+        (workshop / "copyroom.yml").write_text(
+            "templates:\n  demo:\n    source: source\n", encoding="utf-8",
+        )
+        (workshop / "scenarios/demo/basic.yml").write_text(
+            self.answers.read_text(encoding="utf-8"), encoding="utf-8",
+        )
+        return workshop
+
+    def test_update_test_reports_no_change_when_candidate_matches_source(self) -> None:
+        workshop = self.make_workshop()
+        template_checkout("demo", workshop)
+
+        real_run = subprocess.run
+
+        def fail_devenv(command: list[str], *args: object, **kwargs: object) -> object:
+            if command == ["devenv", "test"]:
+                raise AssertionError("devenv test must not run without a change")
+            return real_run(command, *args, **kwargs)
+
+        before = set(Path(tempfile.gettempdir()).glob("copyroom-update-demo-basic-*"))
+        with patch("copyroom.local.workshop.subprocess.run", side_effect=fail_devenv):
+            report = update_test("demo", "basic", workshop)
+        after = set(Path(tempfile.gettempdir()).glob("copyroom-update-demo-basic-*"))
+
+        self.assertEqual(
+            {"result": "no-change", "template": "demo", "scenario": "basic"}, report,
+        )
+        self.assertEqual(before, after)
+        template_discard(workshop)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,8 @@ SOURCE_DIR = f"{STATE_DIR}/sources"
 PREVIEW_DIR = f"{STATE_DIR}/previews"
 LOCK_FILE = f"{STATE_DIR}/write.lock"
 SCHEMA_VERSION = 2
+TEMP_PREFIX = ".copyroom-tmp-"
+TEMP_EXCLUDE = f"{TEMP_PREFIX}*"
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -32,25 +34,50 @@ def read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def write_json(path: Path, data: dict[str, Any]) -> None:
-    """Write JSON with a same-directory atomic replace."""
+def _fsync_directory(directory: Path) -> None:
+    """Flush a directory entry to disk. Skip it where the filesystem refuses."""
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.",
-            delete=False,
-        ) as stream:
-            temporary = Path(stream.name)
-            stream.write(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        descriptor = os.open(directory, flags)
+    except OSError:
+        return
+    try:
+        os.fsync(descriptor)
+    except OSError:
+        pass
+    finally:
+        os.close(descriptor)
+
+
+def write_json(path: Path, data: dict[str, Any]) -> None:
+    """Write JSON with a same-directory atomic replace.
+
+    The temporary file lives next to the target, so the rename stays atomic.
+    Its name starts with ``TEMP_PREFIX``. One ignore rule matches that prefix,
+    so a crash cannot leave a file that jj snapshots into history.
+    The steps are: write, fsync the file, chmod, rename, fsync the directory.
+    The output bytes are part of recorded digests. Do not change them.
+    """
+
+    payload = json.dumps(data, indent=2, sort_keys=True) + "\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        descriptor, name = tempfile.mkstemp(dir=path.parent, prefix=TEMP_PREFIX)
+        temporary = Path(name)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(payload)
             stream.flush()
-            temporary.chmod(0o644)
             os.fsync(stream.fileno())
-        temporary.replace(path)
+        temporary.chmod(0o644)
+        os.replace(temporary, path)
+        temporary = None
+        _fsync_directory(path.parent)
     except OSError as exc:
         raise LocalError(f"cannot write {path}: {exc}") from exc
     finally:
-        if "temporary" in locals():
+        if temporary is not None:
             temporary.unlink(missing_ok=True)
 
 
@@ -145,12 +172,12 @@ def resolve_source(
 
 
 def exclude_local_state(project: Path) -> None:
-    """Exclude lock and preview state from the project tree."""
+    """Exclude lock, preview state, and write temporaries from the project tree."""
 
     exclude = project / ".git" / "info" / "exclude"
     exclude.parent.mkdir(parents=True, exist_ok=True)
     existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
-    entries = ["/.copyroom-local/previews/", "/.copyroom-local/write.lock"]
+    entries = ["/.copyroom-local/previews/", "/.copyroom-local/write.lock", TEMP_EXCLUDE]
     missing = [entry for entry in entries if entry not in existing.splitlines()]
     if missing:
         with exclude.open("a", encoding="utf-8") as stream:
@@ -184,6 +211,7 @@ def marker_with_plan(plan: Any, source: Path, project_id: str, revision: int = 0
 
 __all__ = [
     "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION", "SOURCE_DIR", "STATE_DIR",
+    "TEMP_EXCLUDE", "TEMP_PREFIX",
     "exclude_local_state", "marker", "marker_with_plan", "read_json", "resolve_source",
     "snapshot_path", "snapshot_source", "write_json",
 ]
