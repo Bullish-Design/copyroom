@@ -130,6 +130,32 @@ def tracked_tree_digest(root: Path, jj: JJ | None = None, rev: str = "@") -> str
     return digest.hexdigest()
 
 
+def _tracked_local_state(paths: set[str]) -> list[str]:
+    """Return tracked preview, journal, lock, and write-temporary paths."""
+
+    prefixes = (f"{PREVIEW_DIR}/", f"{JOURNAL_DIR}/")
+    return sorted(
+        path for path in paths
+        if path == LOCK_FILE
+        or path == PREVIEW_DIR
+        or path == JOURNAL_DIR
+        or path.startswith(prefixes)
+        or Path(path).name.startswith(TEMP_PREFIX)
+    )
+
+
+def _require_local_state_untracked(jj: JJ) -> None:
+    """Stop a write when jj tracks local transaction state."""
+
+    tracked = _tracked_local_state(jj.tracked_paths("@"))
+    if tracked:
+        raise LocalError(
+            "CopyRoom local state is tracked by jj: " + ", ".join(tracked)
+            + "; run copyroom recover --prune",
+            2,
+        )
+
+
 def _write_entry(root: Path, name: str, entry: FileEntry) -> None:
     target = root / name
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -628,6 +654,7 @@ def _attach_layer(
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
+        _require_local_state_untracked(jj)
         data = marker(project)
         records = data.get("layers", {"base": data})
         if not isinstance(records, dict):
@@ -841,19 +868,11 @@ def preview(
     _preflight_paths(
         project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
     )
-    if (
-        plan.render_digest == record["render_digest"]
-        and plan.source_digest == record["source_digest"]
-        and plan.answers == record["answers"]
-        and plan.templateer_digest == record["templateer_digest"]
-        and plan.composer_digest == record["composer_digest"]
-        and (record_metadata is None or record_metadata == record.get("generation"))
-    ):
-        return {"result": "no-change", "project": str(project)}
 
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
+        _require_local_state_untracked(jj)
         # Read all active state after taking the lock.
         data = marker(project)
         record = _layer_record(data, layer)
@@ -863,6 +882,15 @@ def preview(
         _preflight_paths(
             project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
         )
+        if (
+            plan.render_digest == record["render_digest"]
+            and plan.source_digest == record["source_digest"]
+            and plan.answers == record["answers"]
+            and plan.templateer_digest == record["templateer_digest"]
+            and plan.composer_digest == record["composer_digest"]
+            and (record_metadata is None or record_metadata == record.get("generation"))
+        ):
+            return {"result": "no-change", "project": str(project)}
         old_render = jj.render_head(str(data["project_id"]), layer)
         active_head = jj.commit_id("@")
         active_tree = tracked_tree_digest(project, jj)
@@ -1305,6 +1333,12 @@ def recover(project: Path, prune: bool = False) -> dict[str, Any]:
     jj = JJ(project)
     with project_lock(project):
         exclude_local_state(project)
+        tracked_local_state = _tracked_local_state(jj.tracked_paths("@"))
+        repaired: list[dict[str, str]] = []
+        if prune:
+            for name in tracked_local_state:
+                jj.run("file", "untrack", name)
+                repaired.append({"kind": "tracked_local_state", "path": name})
         transactions: list[dict[str, Any]] = []
         directory = project / JOURNAL_DIR
         journal_files = sorted(directory.glob("*.json")) if directory.is_dir() else []
@@ -1384,13 +1418,19 @@ def recover(project: Path, prune: bool = False) -> dict[str, Any]:
         has_orphans = bool(orphan_workspaces or orphan_layer_dirs or write_temporaries)
         return {
             "project": str(project),
-            "ok": not pending and (prune or not has_orphans),
+            "ok": (
+                not pending
+                and (prune or not has_orphans)
+                and (prune or not tracked_local_state)
+            ),
             "transactions": transactions,
+            "tracked_local_state": tracked_local_state,
             "orphans": {
                 "workspaces": orphan_workspaces,
                 "layer_directories": orphan_layer_dirs,
                 "write_temporaries": write_temporaries,
             },
+            "repaired": repaired,
             "pruned": pruned,
         }
 
@@ -1407,6 +1447,7 @@ def apply(project: Path, out: Path) -> dict[str, str]:
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
+        _require_local_state_untracked(jj)
         journal = _ensure_preview_journal(project, state)
         if journal.get("journal_state") in {"publishing", "published"}:
             row = _reconcile_journal(project, jj, journal)

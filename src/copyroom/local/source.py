@@ -175,7 +175,18 @@ def resolve_source(
 def exclude_local_state(project: Path) -> None:
     """Exclude local state and write temporaries from the project tree."""
 
-    exclude = project / ".git" / "info" / "exclude"
+    git_directory = _git_directory(project)
+    jj_git_directory = _jj_git_directory(project)
+    if git_directory is not None and (
+        jj_git_directory is None or git_directory == jj_git_directory
+    ):
+        target = git_directory
+    elif jj_git_directory is not None:
+        target = jj_git_directory
+    else:
+        return
+
+    exclude = target / "info" / "exclude"
     exclude.parent.mkdir(parents=True, exist_ok=True)
     existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
     entries = [
@@ -188,6 +199,59 @@ def exclude_local_state(project: Path) -> None:
             if existing and not existing.endswith("\n"):
                 stream.write("\n")
             stream.write("\n".join(missing) + "\n")
+
+
+def is_colocated(project: Path) -> bool:
+    """Return whether jj uses the Git directory attached to this workspace."""
+
+    git_directory = _git_directory(project)
+    jj_git_directory = _jj_git_directory(project)
+    return git_directory is not None and git_directory == jj_git_directory
+
+
+def _git_directory(project: Path) -> Path | None:
+    """Resolve a workspace's .git directory without creating one."""
+
+    entry = project / ".git"
+    if entry.is_dir():
+        return entry.resolve()
+    if not entry.is_file():
+        return None
+    try:
+        lines = entry.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for line in lines:
+        key, separator, value = line.partition(":")
+        if separator and key.strip().lower() == "gitdir" and value.strip():
+            target = Path(value.strip())
+            if not target.is_absolute():
+                target = entry.parent / target
+            resolved = target.resolve()
+            return resolved if resolved.is_dir() else None
+    return None
+
+
+def _jj_git_directory(project: Path) -> Path | None:
+    """Resolve the Git directory used by jj, when the repository has one."""
+
+    store = project / ".jj" / "repo" / "store"
+    target_file = store / "git_target"
+    if target_file.is_file():
+        try:
+            value = target_file.read_text(encoding="utf-8").strip()
+        except OSError:
+            return None
+        if not value:
+            return None
+        target = Path(value)
+        if not target.is_absolute():
+            target = store / target
+        resolved = target.resolve()
+        if resolved.is_dir():
+            return resolved
+    internal = store / "git"
+    return internal.resolve() if internal.is_dir() else None
 
 
 def marker_with_plan(plan: Any, source: Path, project_id: str, revision: int = 0) -> dict[str, Any]:

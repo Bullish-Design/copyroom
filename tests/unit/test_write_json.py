@@ -109,6 +109,7 @@ def test_directory_is_fsynced_after_rename(tmp_path: Path) -> None:
 
 
 def test_exclude_local_state_is_idempotent(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
     exclude_local_state(tmp_path)
     first = (tmp_path / ".git" / "info" / "exclude").read_text(encoding="utf-8")
     exclude_local_state(tmp_path)
@@ -129,6 +130,37 @@ def test_exclude_local_state_backfills_older_projects(tmp_path: Path) -> None:
         "/.copyroom-local/journal/",
         TEMP_EXCLUDE,
     ]
+
+
+def test_exclude_local_state_resolves_git_file_pointer(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    git_directory = tmp_path / "git-data" / "worktrees" / "project"
+    project.mkdir()
+    git_directory.mkdir(parents=True)
+    (project / ".git").write_text(
+        f"gitdir: {os.path.relpath(git_directory, project)}\n",
+        encoding="utf-8",
+    )
+
+    exclude_local_state(project)
+
+    assert (git_directory / "info" / "exclude").is_file()
+    assert not (project / ".git" / "info").exists()
+
+
+def test_exclude_local_state_does_not_create_git_without_a_repository(tmp_path: Path) -> None:
+    exclude_local_state(tmp_path)
+    assert not (tmp_path / ".git").exists()
+
+
+def test_exclude_local_state_ignores_a_broken_git_pointer(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / ".git").write_text("gitdir: missing/git-directory\n", encoding="utf-8")
+
+    exclude_local_state(project)
+
+    assert not (project / "missing").exists()
 
 
 @pytest.mark.skipif(shutil.which("jj") is None, reason="jj is not installed")

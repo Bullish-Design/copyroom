@@ -83,6 +83,10 @@ temporaries. Use `copyroom recover --prune` to remove the listed orphans and
 temporaries. `copyroom status` reports pending publication and any mismatch
 between the marker and render head.
 
+Recovery also reports tracked preview, journal, lock, and write-temporary paths.
+Use `copyroom recover --prune` to untrack those paths. It keeps their files on
+disk.
+
 ## Layers
 
 Each layer owns a separate set of paths and a separate jj render line. The base
@@ -122,6 +126,10 @@ with `copyroom update --apply PATH`.
 write unless `--write` is present. The report exits with code `1` when the
 project differs from the source. Use `--template-only keep` to save explicit
 omissions for paths that should remain outside template ownership.
+
+`adopt --write` requires an existing jj repository to be colocated with its
+Git directory. If the repository is not colocated, CopyRoom exits with code
+`2`. Run `jj git init --colocate`, then retry adoption.
 
 Run these commands from the directory that holds the project and the source.
 Name the project with `--project`.

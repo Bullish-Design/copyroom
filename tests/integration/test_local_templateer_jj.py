@@ -17,7 +17,7 @@ from copyroom.local.errors import LocalError
 from copyroom.local.generation import generate, refresh
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt, templatize
-from copyroom.local.source import MARKER, TEMP_EXCLUDE, marker, snapshot_path
+from copyroom.local.source import LOCK_FILE, MARKER, TEMP_EXCLUDE, TEMP_PREFIX, marker, snapshot_path
 from copyroom.local.workflow import (
     add_layer,
     apply,
@@ -97,6 +97,51 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn('revision: "v2"', (self.project / "config/project.yml").read_text(encoding="utf-8"))
         self.assertTrue(snapshot_path(self.project, state["source_digest"]).is_dir())
         self.assertEqual(1, marker(self.project)["revision"])
+
+    def test_exclude_rules_keep_preview_state_out_of_the_colocated_tree(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+
+        preview(self.project, self.root / "ignored-preview")
+
+        tracked = JJ(self.project).tracked_paths("@")
+        self.assertFalse(
+            [
+                path for path in tracked
+                if path.startswith((".copyroom-local/previews/", ".copyroom-local/journal/"))
+                or path == LOCK_FILE
+                or Path(path).name.startswith(TEMP_PREFIX)
+            ],
+        )
+        self.assertIn(TEMP_EXCLUDE, (self.project / ".git/info/exclude").read_text())
+
+    def test_preview_and_apply_refuse_tracked_local_state(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "tracked-state-preview"
+        preview(self.project, out)
+        local_lock = self.project / LOCK_FILE
+        local_lock.write_text("tracked by mistake\n", encoding="utf-8")
+        JJ(self.project).run("file", "track", "--include-ignored", LOCK_FILE)
+        JJ(self.project).run("commit", "-m", "test: track CopyRoom lock")
+
+        for operation in (
+            lambda: preview(self.project, self.root / "blocked-preview"),
+            lambda: apply(self.project, out),
+        ):
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(LocalError, "recover --prune") as caught:
+                    operation()
+                self.assertEqual(2, caught.exception.code)
+        self.assertTrue(out.exists())
 
     def test_prepared_tree_equals_applied_tree_including_marker(self) -> None:
         self.create()
@@ -965,6 +1010,59 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(before, after)
         self.assertEqual(plan.source_digest, marker(target)["source_digest"])
         self.assertTrue(JJ(target).render_head(marker(target)["project_id"], "base"))
+
+    def test_adopt_refuses_a_non_colocated_project(self) -> None:
+        target = self.root / "non-colocated"
+        target.mkdir()
+        JJ(target).run("git", "init", "--no-colocate")
+
+        with self.assertRaises(LocalError) as caught:
+            adopt(
+                target, self.source, self.answers, write=True,
+                template_only_choice="keep",
+            )
+
+        self.assertEqual(2, caught.exception.code)
+        self.assertIn("jj git init --colocate", str(caught.exception))
+        self.assertFalse((target / ".git").exists())
+        self.assertFalse((target / ".copyroom-local").exists())
+
+    def test_recover_reports_and_untracks_local_state(self) -> None:
+        self.create()
+        local_lock = self.project / LOCK_FILE
+        local_lock.parent.mkdir(parents=True, exist_ok=True)
+        local_lock.write_text("tracked by mistake\n", encoding="utf-8")
+        JJ(self.project).run("file", "track", "--include-ignored", LOCK_FILE)
+        JJ(self.project).run("commit", "-m", "test: track CopyRoom lock")
+        self.assertIn(LOCK_FILE, JJ(self.project).tracked_paths("@"))
+
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertIn(LOCK_FILE, report["tracked_local_state"])
+        self.assertEqual([], report["repaired"])
+
+        repaired = recover(self.project, prune=True)
+        self.assertTrue(repaired["ok"])
+        self.assertEqual(
+            [{"kind": "tracked_local_state", "path": LOCK_FILE}],
+            repaired["repaired"],
+        )
+        self.assertNotIn(LOCK_FILE, JJ(self.project).tracked_paths("@"))
+
+    def test_exclude_local_state_uses_non_colocated_jj_store(self) -> None:
+        from copyroom.local.source import exclude_local_state
+
+        project = self.root / "non-colocated-excludes"
+        project.mkdir()
+        JJ(project).run("git", "init", "--no-colocate")
+
+        exclude_local_state(project)
+
+        self.assertFalse((project / ".git").exists())
+        self.assertIn(
+            TEMP_EXCLUDE,
+            (project / ".jj/repo/store/git/info/exclude").read_text(encoding="utf-8"),
+        )
 
     def test_adopt_requires_template_only_choice_and_saves_omissions(self) -> None:
         source = self.root / "adopt-source"

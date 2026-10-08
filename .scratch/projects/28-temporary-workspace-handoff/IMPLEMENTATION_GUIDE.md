@@ -306,7 +306,9 @@ right: this is a repository-state problem the user must fix.
 
 Adoption on a non-colocated repo already tracked `.copyroom-local/write.lock`.
 Add a repair to `recover`: when a local-state path is tracked, name it and, with
-`--prune`, run `jj file untrack <path>`. Report it under a new `repaired` key.
+`--prune`, run `jj file untrack <path>`. Report detected paths under
+`tracked_local_state`; list paths untracked by `--prune` under the new
+`repaired` key. Do not fail before `recover` can make this repair.
 
 ### D4. Decide adoption
 
@@ -325,8 +327,8 @@ way, and 2 changes a repository the user did not ask CopyRoom to change.
 | Test | Asserts |
 | --- | --- |
 | `test_adopt_refuses_a_non_colocated_project` | Exit 2 and the remediation text. |
-| `test_exclude_rules_take_effect_in_a_colocated_project` | After `preview`, no `.copyroom-local/**` path and no `.copyroom-tmp-*` path is in `jj file list -r @`. |
-| `test_recover_untracks_local_state` | A project with `.copyroom-local/write.lock` tracked. Assert `recover` names it, and `recover --prune` untracks it. |
+| `test_exclude_rules_take_effect_in_a_colocated_project` | After `preview`, no preview, journal, lock, or `.copyroom-tmp-*` path is in `jj file list -r @`. Source snapshots under `.copyroom-local/sources/` are persistent project inputs and can remain tracked. |
+| `test_recover_untracks_local_state` | A project with `.copyroom-local/write.lock` tracked. Assert `recover` names it under `tracked_local_state`, and `recover --prune` untracks it and lists it under `repaired`. |
 | `test_exclude_local_state_creates_no_git_directory` | On a non-colocated repo, `project / ".git"` does not exist afterwards. |
 
 ## Phase E — Make `recover` safe and complete (findings F4, F6, F7, F8, F9, F19)

@@ -253,7 +253,9 @@ def status_command(
 @app.command("recover")
 def recover_command(
     project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
-    prune: bool = typer.Option(False, "--prune", help="Remove named orphan workspaces and files"),
+    prune: bool = typer.Option(
+        False, "--prune", help="Remove named orphans and untrack CopyRoom local state",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     """Report and reconcile interrupted project transactions."""

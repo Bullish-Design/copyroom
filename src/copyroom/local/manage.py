@@ -18,6 +18,7 @@ from .jj import JJ, project_lock
 from .source import (
     MARKER,
     exclude_local_state,
+    is_colocated,
     marker_with_plan,
     read_json,
     snapshot_source,
@@ -140,6 +141,12 @@ def adopt(
             templateer_digest=plan.templateer_digest,
             composer_digest=plan.composer_digest,
             render_digest=plan_digest(kept_files),
+        )
+
+    if (project / ".jj").exists() and not is_colocated(project):
+        raise LocalError(
+            "adoption requires a colocated jj repository; run jj git init --colocate first",
+            2,
         )
 
     jj = JJ(project)
