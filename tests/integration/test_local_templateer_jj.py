@@ -64,14 +64,31 @@ class LocalTemplateerJJTests(unittest.TestCase):
             Path(tempfile.gettempdir()).glob("copyroom-layer-*")
         )
 
-    def tearDown(self) -> None:
+    def leaked_layer_directories(self) -> list[Path]:
+        """List new copyroom-layer-* directories whose workspace uses this project's repository."""
+
         project_repo = (self.project / ".jj" / "repo").resolve()
-        leaked = []
-        for path in set(Path(tempfile.gettempdir()).glob("copyroom-layer-*")) - self.layer_temporary_baseline:
-            repo_pointer = path / "workspace" / ".jj" / "repo"
-            if repo_pointer.exists() and repo_pointer.resolve() == project_repo:
-                leaked.append(path)
-        self.assertEqual([], leaked, "test left a copyroom-layer-* directory")
+        created = set(Path(tempfile.gettempdir()).glob("copyroom-layer-*")) - self.layer_temporary_baseline
+        return sorted(
+            path for path in created
+            if workflow_module._workspace_repo(path / "workspace") == project_repo
+        )
+
+    def tearDown(self) -> None:
+        self.assertEqual([], self.leaked_layer_directories(), "test left a copyroom-layer-* directory")
+
+    def test_cleanup_guard_finds_an_owned_layer_directory(self) -> None:
+        self.create()
+        leaked = Path(tempfile.gettempdir()) / f"copyroom-layer-{uuid.uuid4().hex}"
+        leaked.mkdir()
+        jj = JJ(self.project)
+        jj.run("workspace", "add", "--name", "guard-probe", str(leaked / "workspace"))
+        try:
+            self.assertEqual([leaked], self.leaked_layer_directories())
+        finally:
+            jj.run("workspace", "forget", "guard-probe")
+            shutil.rmtree(leaked, ignore_errors=True)
+        self.assertEqual([], self.leaked_layer_directories())
 
     def create(self) -> None:
         new(self.source, self.project, self.answers)
@@ -825,39 +842,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn(TEMP_EXCLUDE, rules())
         self.assertIn("docs", {str(record["layer"]) for record in list_layers(self.project)})
 
-    def test_apply_retains_a_competing_commit_object_during_publication(self) -> None:
-        self.create()
-        template = self.source / "templates/settings/template.j2"
-        template.write_text(
-            template.read_text(encoding="utf-8") + '\nrevision: "concurrent-check"\n',
-            encoding="utf-8",
-        )
-        out = self.root / "concurrent-preview"
-        preview(self.project, out)
-
-        original = JJ.run
-        foreign: dict[str, str] = {}
-
-        def concurrent_run(jj: JJ, *args: str, **kwargs: object) -> str:
-            if jj.cwd == self.project and args[:1] == ("new",) and not foreign:
-                (self.project / "concurrent.txt").write_text("concurrent work\n", encoding="utf-8")
-                original(jj, "commit", "-m", "external concurrent commit")
-                foreign["head"] = jj.commit_id("@")
-                foreign["operation"] = jj.operation_id()
-            return original(jj, *args, **kwargs)
-
-        with patch.object(JJ, "run", concurrent_run):
-            apply(self.project, out)
-
-        self.assertEqual(foreign["head"], JJ(self.project).commit_id(foreign["head"]))
-        self.assertEqual(
-            "concurrent work\n",
-            JJ(self.project).run("file", "show", "-r", foreign["head"], "concurrent.txt"),
-        )
-        self.assertFalse(out.exists())
-
-    def test_layer_add_retains_a_competing_commit_object_during_publication(self) -> None:
-        self.create()
+    def make_docs_overlay(self) -> Path:
         overlay = self.root / "overlay-source"
         shutil.copytree(self.source, overlay)
         manifest_path = overlay / "manifest.json"
@@ -870,26 +855,162 @@ class LocalTemplateerJJTests(unittest.TestCase):
             metadata.read_text(encoding="utf-8").replace("config/project.yml", "docs/guide.md"),
             encoding="utf-8",
         )
+        return overlay
+
+    def race_before_publication(self, subject: str) -> dict[str, str]:
+        """Return a patch target that commits foreign work just before CopyRoom runs jj new."""
 
         original = JJ.run
         foreign: dict[str, str] = {}
 
         def concurrent_run(jj: JJ, *args: str, **kwargs: object) -> str:
-            if jj.cwd == self.project and args[:1] == ("new",) and not foreign:
+            if (
+                jj.cwd == self.project
+                and args[:1] == ("new",)
+                and subject in args
+                and not foreign
+            ):
                 (self.project / "concurrent.txt").write_text("concurrent work\n", encoding="utf-8")
                 original(jj, "commit", "-m", "external concurrent commit")
-                foreign["head"] = jj.commit_id("@")
-                foreign["operation"] = jj.operation_id()
+                foreign["head"] = jj.commit_id("@-")
             return original(jj, *args, **kwargs)
 
-        with patch.object(JJ, "run", concurrent_run):
+        self.patch_run = patch.object(JJ, "run", concurrent_run)
+        return foreign
+
+    def assert_race_is_a_finding(self, foreign: dict[str, str], raised: LocalError) -> None:
+        jj = JJ(self.project)
+        self.assertEqual(1, raised.code)
+        self.assertIn("overlapped", str(raised))
+        self.assertEqual(
+            "concurrent work\n",
+            jj.run("file", "show", "-r", foreign["head"], "concurrent.txt"),
+        )
+        # CopyRoom must not report success. The foreign commit is off the active line.
+        self.assertEqual("", jj.run("log", "--no-graph", "-r", f"{foreign['head']} & ::@", "-T", "commit_id"))
+        journals = list((self.project / ".copyroom-local/journal").glob("*.json"))
+        self.assertEqual(1, len(journals))
+        journal = json.loads(journals[0].read_text(encoding="utf-8"))
+        self.assertEqual("publishing", journal["journal_state"])
+        self.assertTrue(journal["verification"])
+        for _ in range(2):
+            self.assertFalse(status(self.project)["ok"])
+            self.assertTrue(status(self.project)["has_pending_publication"])
+            report = recover(self.project)
+            self.assertFalse(report["ok"])
+            self.assertEqual(1, len(report["pending_recovery"]))
+            self.assertIn("unverified", report["pending_recovery"][0]["action"])
+            self.assertTrue(journals[0].is_file())
+
+    def test_apply_refuses_success_after_a_competing_writer(self) -> None:
+        self.create()
+        template = self.source / "templates/settings/template.j2"
+        template.write_text(
+            template.read_text(encoding="utf-8") + '\nrevision: "concurrent-check"\n',
+            encoding="utf-8",
+        )
+        out = self.root / "concurrent-preview"
+        preview(self.project, out)
+        foreign = self.race_before_publication("copyroom:update")
+
+        with self.patch_run, self.assertRaises(LocalError) as raised:
+            apply(self.project, out)
+
+        self.assert_race_is_a_finding(foreign, raised.exception)
+        self.assertTrue(out.is_dir())
+
+    def test_layer_add_refuses_success_after_a_competing_writer(self) -> None:
+        self.create()
+        overlay = self.make_docs_overlay()
+        foreign = self.race_before_publication("copyroom:layer add docs")
+
+        with self.patch_run, self.assertRaises(LocalError) as raised:
             add_layer(self.project, overlay, overlay / "answers.json", "docs")
 
-        self.assertEqual(foreign["head"], JJ(self.project).commit_id(foreign["head"]))
+        # The journal keeps the staging directory as recovery state. Remove it after the checks.
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        staging = Path(str(json.loads(journal_path.read_text(encoding="utf-8"))["temporary_path"]))
+        try:
+            self.assert_race_is_a_finding(foreign, raised.exception)
+            self.assertTrue(staging.is_dir())
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+
+    def prepare_update_preview(self, name: str) -> Path:
+        self.create()
+        template = self.source / "templates/settings/template.j2"
+        template.write_text(
+            template.read_text(encoding="utf-8") + f'\nrevision: "{name}"\n', encoding="utf-8",
+        )
+        out = self.root / f"{name}-preview"
+        preview(self.project, out)
+        return out
+
+    def test_apply_command_error_after_a_competing_writer_stays_a_finding(self) -> None:
+        out = self.prepare_update_preview("error-after-race")
+        foreign = self.race_before_publication("copyroom:update")
+
+        with self.patch_run:
+            racing_run = JJ.run
+
+            def run_then_fail(jj: JJ, *args: str, **kwargs: object) -> str:
+                result = racing_run(jj, *args, **kwargs)
+                if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                    raise LocalError("jj lost its connection")
+                return result
+
+            with patch.object(JJ, "run", run_then_fail), self.assertRaises(LocalError) as raised:
+                apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertIn("unverified", str(raised.exception))
         self.assertEqual(
             "concurrent work\n",
             JJ(self.project).run("file", "show", "-r", foreign["head"], "concurrent.txt"),
         )
+        self.assertFalse(recover(self.project)["ok"])
+        self.assertTrue(out.is_dir())
+
+    def test_journal_without_a_pre_publication_operation_is_unverified(self) -> None:
+        out = self.prepare_update_preview("old-journal")
+        original = JJ.run
+
+        def run_then_crash(jj: JJ, *args: str, **kwargs: object) -> str:
+            result = original(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                raise KeyboardInterrupt
+            return result
+
+        with patch.object(JJ, "run", run_then_crash), self.assertRaises(KeyboardInterrupt):
+            apply(self.project, out)
+        # Remove the new field to mimic a journal from an earlier Step 2.5 lane.
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        del journal["publish_from_operation"]
+        journal_path.write_text(json.dumps(journal), encoding="utf-8")
+
+        for _ in range(2):
+            report = recover(self.project)
+            self.assertFalse(report["ok"])
+            self.assertIn("no pre-publication operation", report["pending_recovery"][0]["action"])
+            self.assertTrue(journal_path.is_file())
+            self.assertTrue(out.is_dir())
+
+    def test_recover_finishes_after_a_later_foreign_commit(self) -> None:
+        self.create()
+        template = self.source / "templates/settings/template.j2"
+        template.write_text(
+            template.read_text(encoding="utf-8") + '\nrevision: "later-writer"\n',
+            encoding="utf-8",
+        )
+        out = self.root / "later-writer-preview"
+        preview(self.project, out)
+        apply(self.project, out)
+        (self.project / "later.txt").write_text("later work\n", encoding="utf-8")
+        JJ(self.project).run("commit", "-m", "later foreign commit")
+
+        self.assertTrue(recover(self.project)["ok"])
+        self.assertTrue(status(self.project)["ok"])
 
     def test_source_snapshot_replays_after_locator_disappears(self) -> None:
         self.create()

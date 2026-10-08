@@ -95,6 +95,22 @@ unpruned finding. A prepared update is pending review. It does not make
 `recover` exit `1`. The report separates `pending_review` from
 `pending_recovery`. Exit `1` reports a finding. Exit `2` reports an error.
 
+Before it runs `jj new`, CopyRoom saves the current jj operation in the
+journal as `publish_from_operation`. After publication, CopyRoom checks that the
+first operation after it put the prepared head under `@`. Any other operation
+means a foreign writer ran during publication. `apply` and `layer add` then exit
+`1`, keep the journal and the preview, and name the operation. `status` and
+`recover` keep reporting `published but unverified` until you resolve it.
+A journal without `publish_from_operation` gets the same result, because
+CopyRoom cannot prove where its publication started.
+
+This check detects the race. It does not prevent it. The `jj new` command can
+move `@` before CopyRoom sees the foreign operation. The foreign commit stays in
+the repository but leaves the active line. To resolve it, run `jj op log`, move
+the foreign work back onto the active line, and apply or discard the preview.
+Do not run `jj op restore`; it hides the foreign work. A guarded default
+publication path is planned for a later step.
+
 `recover` reports orphan workspaces, layer directories, and JSON write
 temporaries. An orphan is a workspace or temporary that no journal protects.
 Use `copyroom recover --prune` to remove safe orphans and temporaries. This

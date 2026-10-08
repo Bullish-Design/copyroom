@@ -344,20 +344,49 @@ def _render_subject(project_id: str, layer: str, revision: int, source_digest: s
     return f"copyroom:render {project_id} {layer} {revision} {source_digest}"
 
 
-def _check_operation_parent(jj: JJ, expected: str, action: str) -> str:
-    """Reject a jj operation that another writer inserted into this action."""
+MAX_PUBLICATION_OPERATIONS = 64
 
-    current = jj.operation_id()
-    parents = jj.operation_parents(current)
-    if parents != [expected]:
-        found = ", ".join(parents) or "none"
-        raise LocalError(
-            f"{action} overlapped a jj operation: expected parent operation {expected}; "
-            f"current operation {current} has parent(s) {found}. The preview is kept. "
-            "Inspect jj op log and recover the foreign operation before retrying.",
-            1,
+
+def _publication_origin_problem(
+    jj: JJ,
+    prepared_head: str,
+    from_operation: str | None,
+) -> str | None:
+    """Return why publication cannot be proved to start at the checked operation.
+
+    CopyRoom records the jj operation just before `jj new`. The first operation
+    after it must be the one that put the prepared head under `@`. Any other
+    first operation means a foreign writer ran in between.
+    """
+
+    if not from_operation:
+        return (
+            "journal has no pre-publication operation; "
+            "publication cannot be proved to start from the checked state"
         )
-    return current
+    try:
+        first = jj.operation_id()
+        for _ in range(MAX_PUBLICATION_OPERATIONS):
+            if first == from_operation:
+                return f"no operation follows the pre-publication operation {from_operation}"
+            parents = jj.operation_parents(first)
+            if len(parents) != 1:
+                found = ", ".join(parents) or "none"
+                return f"operation {first} has parent(s) {found}; cannot trace publication"
+            if parents[0] == from_operation:
+                break
+            first = parents[0]
+        else:
+            return f"more than {MAX_PUBLICATION_OPERATIONS} operations follow {from_operation}"
+        if jj.commit_id_at(first, "@-") != prepared_head:
+            return (
+                f"operation {first} followed pre-publication operation {from_operation} "
+                "and did not publish the prepared head; a foreign writer ran during "
+                "publication and its work may be off the active line"
+            )
+    except LocalError as exc:
+        return f"could not trace the publication operation: {exc}"
+    return None
 
 
 def _check_active_state(
@@ -395,6 +424,7 @@ def _verify_published(
     project_id: str,
     layer: str,
     expected_render: str,
+    from_operation: str | None,
 ) -> list[str]:
     """List every way the published result differs from the prepared result."""
 
@@ -444,7 +474,13 @@ def _verify_published(
                 f"render head is {actual_render}, expected {expected_render}",
             )
 
+    def check_origin() -> None:
+        problem = _publication_origin_problem(jj, expected_head, from_operation)
+        if problem:
+            problems.append(f"publication overlapped a jj operation: {problem}")
+
     check("active head parent", check_parent)
+    check("publication origin", check_origin)
     check("active conflicts", check_conflicts)
     check("active tree", check_tree)
     check("active marker", check_marker)
@@ -752,7 +788,9 @@ def _attach_layer(
                 prepared_tree=prepared_tree,
                 prepared_marker_digest=prepared_marker_digest,
             )
-            _set_journal_phase(project, journal, "publishing")
+            _set_journal_phase(
+                project, journal, "publishing", publish_from_operation=jj.operation_id(),
+            )
             try:
                 jj.run("new", prepared_head, "-m", f"copyroom:layer add {layer}")
             except Exception as exc:
@@ -783,6 +821,7 @@ def _attach_layer(
                 str(data["project_id"]),
                 layer,
                 render,
+                journal.get("publish_from_operation"),
             )
             if problems:
                 _set_journal_phase(
@@ -1212,7 +1251,9 @@ def _publish_layer_transaction(
         dict(prepared_record["owners"]),
         tracked_paths=jj.tracked_paths("@"),
     )
-    _set_journal_phase(project, journal, "publishing", state)
+    _set_journal_phase(
+        project, journal, "publishing", state, publish_from_operation=jj.operation_id(),
+    )
     try:
         jj.run("new", prepared_head, "-m", f"copyroom:layer add {journal['layer']}")
     except Exception:
@@ -1234,6 +1275,7 @@ def _publish_layer_transaction(
                 str(journal["project_id"]),
                 str(journal["layer"]),
                 str(journal["next_render"]),
+                journal.get("publish_from_operation"),
             )
             if problems:
                 _set_journal_phase(
@@ -1258,6 +1300,7 @@ def _publish_layer_transaction(
         str(journal["project_id"]),
         str(journal["layer"]),
         str(journal["next_render"]),
+        journal.get("publish_from_operation"),
     )
     if problems:
         _set_journal_phase(project, journal, "publishing", state, verification=problems)
@@ -1312,6 +1355,7 @@ def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[s
                 str(journal["project_id"]),
                 str(journal["layer"]),
                 str(journal["next_render"]),
+                journal.get("publish_from_operation"),
             )
             if problems:
                 _set_journal_phase(
@@ -1716,7 +1760,10 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         journal["prepared_tree"] = preview_tree
         journal["prepared_marker_digest"] = state["prepared_marker_digest"]
         _set_journal_phase(project, journal, "prepared", state)
-        _set_journal_phase(project, journal, "publishing", state)
+        _set_journal_phase(
+            project, journal, "publishing", state,
+            publish_from_operation=jj.operation_id(),
+        )
         try:
             jj.run("new", preview_head, "-m", "copyroom:update")
         except Exception as exc:
@@ -1729,6 +1776,8 @@ def apply(project: Path, out: Path) -> dict[str, str]:
             if row.get("journal_state") == "published":
                 return {"project": str(project), "render": str(state["next_render"])}
             detail = str(exc)
+            if "unverified" in str(row["action"]):
+                raise LocalError(f"{detail}; {row['action']}; run copyroom recover", 1) from exc
             if isinstance(exc, LocalError):
                 raise LocalError(
                     f"{detail}; publication did not complete; preview kept for review",
@@ -1747,6 +1796,7 @@ def apply(project: Path, out: Path) -> dict[str, str]:
             str(data["project_id"]),
             layer,
             str(state["next_render"]),
+            journal.get("publish_from_operation"),
         )
         if problems:
             _set_journal_phase(

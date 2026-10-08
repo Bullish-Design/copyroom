@@ -69,6 +69,17 @@ class JJ:
         )
         return output.split()
 
+    def commit_id_at(self, operation: str, rev: str) -> str:
+        """Return one full commit ID as the repository stood at one operation."""
+
+        value = self.run(
+            "log", f"--at-op={operation}", "--ignore-working-copy", "--no-graph",
+            "-r", rev, "-T", "commit_id",
+        ).strip()
+        if len(value) != 40:
+            raise LocalError(f"expected one commit for {rev} at {operation}, got {value!r}")
+        return value
+
     def conflicts(self) -> list[str]:
         """List paths with unresolved jj conflicts."""
 
