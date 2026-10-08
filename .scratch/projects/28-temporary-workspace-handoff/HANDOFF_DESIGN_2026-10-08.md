@@ -822,9 +822,9 @@ The line numbers below refer to the investigation baseline. Items 11 and 15 have
 | 4 | Replace the publication block with one guarded call | `W:700-757`, `W:421-443` | §11.1. Removes defects 1–3 |
 | 5 | Give `layer add` a prepared head and a journal entry | `W:362-466` | §3. L1 is the worst crash state |
 | 6 | Use `--ignore-working-copy` on all read helpers; snapshot exactly once, inside the guard | `jj.py:37-82` | §2.5. Reads currently mutate the repo and can make the preview stale |
-| 7 | Drop `active_tree` as a precondition; keep `marker_digest` as a cheap assertion | `W:669`, `W:713`, `W:266` | §4.3. Removes O(repo) hashing and the ignored-file false refusals |
+| 7 | Remove the disk-wide `active_tree` precondition and post-publication `working_digest` equality check; compare jj-tracked trees for the reviewed result, and keep `marker_digest` as a cheap assertion | `W:669`, `W:713`, `W:266` | §4.3. An ignored file must not trigger a false refusal before or after publication. |
 | 8 | Resolve jj/pyjutsu once by absolute path from `COPYROOM_JJ`/`COPYROOM_PYJUTSU` | `jj.py:25-28`, `W:892` | §10.3. Removes the bare-name PATH gap |
-| 9 | Preflight that every render-owned path is jj-tracked; refuse otherwise with exit 1 | `_preflight_paths` `W:159` | §4.3. An ignored render path is invisible to the precondition |
+| 9 | Preflight that every render-owned path is jj-tracked; refuse otherwise with exit 1 | `_preflight_paths` `W:159` | §4.3. An ignored render path is invisible to the tracked-tree comparison. |
 | 10 | Delete the `jj op restore` branch; never infer "nothing published" from a non-zero exit | `W:759-774`, `W:445-463` | §11.2. Dead in practice and dangerous if reached |
 | 11 | **Done:** use a same-directory `.copyroom-tmp-` prefix, remove failed temporaries, fsync the parent, and backfill the ignore rule | `source.py`, `workflow.py` | Fixes §1 defect 3 without changing JSON bytes or atomic rename. Step 2 still needs to list orphan temporaries. |
 | 12 | Add the capability probe and `--publish-unguarded` | `cli.py`, `W:880` | §10.4 |
@@ -842,11 +842,12 @@ Each step is landable on its own and leaves the suite green. Acceptance tests ar
 
 ### Step 1 — CopyRoom: complete prepared result (no jj or Vendomat work)
 
-Open changes 1 and 7. Change 11 is complete. Acceptance:
+Open changes 1, 7, and 9. Change 11 is complete. Compare the prepared and published jj-tracked trees. A disk-wide digest includes ignored files and will still reject a valid apply after `jj new`. Acceptance:
 
 - `test_prepared_tree_equals_applied_tree` — the preview tree digest equals the post-apply active tree digest, including the marker. This currently **fails by design**; the 2026-10-07 harness records `prepared_marker_hex != active_marker_after_hex`.
 - `test_apply_performs_one_active_mutation` — count `JJ.run` calls with the project cwd that mutate; assert exactly one.
 - `test_ignored_artifact_does_not_block_apply` — create `dist/x.whl` in the project after preview; apply must succeed.
+- `test_ignored_render_path_is_refused` — a render-owned path ignored by jj must fail preflight before a preview workspace is created.
 - Keep the existing `write_json` byte, mode, cleanup, fsync, ignore, and backfill tests green. A killed process may leave an ignored `.copyroom-tmp-*` file; Step 2 must report it.
 
 Rollback: revert the commit. No external dependency.
