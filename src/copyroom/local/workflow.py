@@ -245,6 +245,18 @@ def _preflight_paths(
         check_paths([new_path, *collisions])
 
 
+def _require_render_paths_tracked(workspace: Path, plan: RenderPlan) -> None:
+    """Refuse a render that jj omitted because the repository ignores its paths."""
+
+    rendered = JJ(workspace).tracked_paths("@-")
+    untracked = sorted(name for name in plan.files if name not in rendered)
+    if untracked:
+        raise LocalError(
+            "render-owned path is ignored by this repository: " + ", ".join(untracked),
+            1,
+        )
+
+
 def _plan_record(plan: RenderPlan, source: Path, revision: int = 0) -> dict[str, Any]:
     """Build the marker data for one layer render."""
 
@@ -662,6 +674,7 @@ def _attach_layer(
             JJ(workspace_path).run(
                 "commit", "-m", _render_subject(str(data["project_id"]), layer, 0, plan.source_digest),
             )
+            _require_render_paths_tracked(workspace_path, plan)
             render = JJ(workspace_path).commit_id("@-")
             journal["old_render"] = jj.render_head(str(data["project_id"]), layer) if layer in records else None
             JJ(workspace_path).run("new", active_head, render, "-m", f"copyroom:layer {layer}")
@@ -689,6 +702,9 @@ def _attach_layer(
             active_operation = jj.operation_id()
             _check_active_state(
                 jj, project, active_head, active_tree, active_operation, "layer add",
+            )
+            _preflight_paths(
+                project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
             )
             _set_journal_phase(
                 project,
@@ -887,6 +903,7 @@ def preview(
                 "commit", "-m",
                 _render_subject(str(data["project_id"]), layer, revision, plan.source_digest),
             )
+            _require_render_paths_tracked(out, plan)
             next_render = JJ(out).commit_id("@-")
             if JJ(out).commit_id(f"{next_render}-") != old_render:
                 raise LocalError("new render has the wrong parent")
@@ -1093,6 +1110,15 @@ def _publish_layer_transaction(
         != journal.get("prepared_marker_digest")
     ):
         return _journal_row(journal, "prepared layer changed; retry layer add")
+    prepared_data = marker(workspace_path)
+    prepared_record = _layer_record(prepared_data, str(journal["layer"]))
+    _preflight_paths(
+        project,
+        marker(project),
+        str(journal["layer"]),
+        dict(prepared_record["owners"]),
+        tracked_paths=jj.tracked_paths("@"),
+    )
     _set_journal_phase(project, journal, "publishing", state)
     try:
         jj.run("new", prepared_head, "-m", f"copyroom:layer add {journal['layer']}")
@@ -1437,6 +1463,13 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         _check_active_state(
             jj, project, str(state["active_head"]), str(state["active_tree"]), operation,
             "apply",
+        )
+        _preflight_paths(
+            project,
+            data,
+            layer,
+            dict(state["owners"]),
+            tracked_paths=jj.tracked_paths("@"),
         )
         state["prepared_head"] = preview_head
         state["preview_head"] = preview_head

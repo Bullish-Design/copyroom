@@ -381,11 +381,62 @@ class LocalTemplateerJJTests(unittest.TestCase):
         ignored_path.parent.mkdir()
         ignored_path.write_bytes(b"untracked ignored artifact")
         out = self.root / "ignored-render"
+        workspaces_before = JJ(self.project).workspaces()
+        operation_before = JJ(self.project).operation_id()
+        journal_dir = self.project / ".copyroom-local" / "journal"
+        journals_before = sorted(path.name for path in journal_dir.glob("*.json"))
 
         with self.assertRaisesRegex(LocalError, "render-owned path is not tracked by jj"):
             preview(self.project, out)
 
         self.assertFalse(out.exists())
+        self.assertFalse(out.with_name(out.name + ".copyroom-preview.json").exists())
+        self.assertEqual(workspaces_before, JJ(self.project).workspaces())
+        self.assertEqual(operation_before, JJ(self.project).operation_id())
+        self.assertEqual(journals_before, sorted(path.name for path in journal_dir.glob("*.json")))
+
+    def test_preview_refuses_ignored_render_path_that_does_not_exist(self) -> None:
+        self.create()
+        metadata = self.source / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "dist/x.txt"),
+            encoding="utf-8",
+        )
+        exclude = self.project / ".git" / "info" / "exclude"
+        exclude.write_text(exclude.read_text(encoding="utf-8") + "dist/\n", encoding="utf-8")
+        out = self.root / "ignored-absent-render"
+
+        with self.assertRaisesRegex(LocalError, "render-owned path is ignored by this repository"):
+            preview(self.project, out)
+
+        self.assertFalse((self.project / "dist/x.txt").exists())
+        self.assertFalse(out.exists())
+        self.assertFalse(out.with_name(out.name + ".copyroom-preview.json").exists())
+        self.assertEqual([], list_previews(self.project))
+
+    def test_apply_refuses_ignored_render_path_created_after_preview(self) -> None:
+        self.create()
+        metadata = self.source / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "dist/new.txt"),
+            encoding="utf-8",
+        )
+        out = self.root / "ignored-path-created-after-preview"
+        preview(self.project, out)
+        exclude = self.project / ".git" / "info" / "exclude"
+        exclude.write_text(exclude.read_text(encoding="utf-8") + "dist/\n", encoding="utf-8")
+        owned_path = self.project / "dist/new.txt"
+        owned_path.parent.mkdir()
+        owned_path.write_bytes(b"user bytes")
+        operation_before = JJ(self.project).operation_id()
+
+        with self.assertRaisesRegex(LocalError, "render-owned path is not tracked by jj") as raised:
+            apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertEqual(b"user bytes", owned_path.read_bytes())
+        self.assertEqual(operation_before, JJ(self.project).operation_id())
+        self.assertTrue(out.is_dir())
 
     def test_conflict_can_be_resolved_in_preview_and_applied_exactly(self) -> None:
         self.create()
@@ -754,6 +805,31 @@ class LocalTemplateerJJTests(unittest.TestCase):
         pruned = recover(self.project, prune=True)
         self.assertTrue(pruned["ok"])
         self.assertFalse(temporary.exists())
+
+    def test_layer_add_refuses_ignored_render_path_that_does_not_exist(self) -> None:
+        self.create()
+        overlay = self.root / "ignored-overlay"
+        shutil.copytree(self.source, overlay)
+        manifest_path = overlay / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["templates"] = ["settings"]
+        manifest["executable"] = []
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        metadata = overlay / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "dist/x.txt"),
+            encoding="utf-8",
+        )
+        exclude = self.project / ".git" / "info" / "exclude"
+        exclude.write_text(exclude.read_text(encoding="utf-8") + "dist/\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(LocalError, "render-owned path is ignored by this repository"):
+            add_layer(self.project, overlay, overlay / "answers.json", "ignored")
+
+        self.assertEqual(["base"], [item["layer"] for item in list_layers(self.project)])
+        self.assertFalse((self.project / "dist/x.txt").exists())
+        journal_dir = self.project / ".copyroom-local" / "journal"
+        self.assertEqual([], list(journal_dir.glob("*.json")))
 
     def test_layer_add_and_update_keep_render_heads_independent(self) -> None:
         self.create()
