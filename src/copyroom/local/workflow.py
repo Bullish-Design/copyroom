@@ -101,6 +101,30 @@ def working_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
+def tracked_tree_digest(root: Path, jj: JJ | None = None, rev: str = "@") -> str:
+    """Digest only files in one jj revision's tracked tree."""
+
+    jj = jj or JJ(root)
+    tracked = jj.tracked_paths(rev)
+    digest = hashlib.sha256()
+    for name in sorted(tracked):
+        path = root / name
+        if path.is_symlink():
+            kind, content, mode = "symlink", os.readlink(path).encode(), 0
+        elif path.is_file():
+            kind = "file"
+            content = path.read_bytes()
+            mode = stat.S_IMODE(path.stat().st_mode)
+        elif path.is_dir():
+            kind, content = "directory", b""
+            mode = stat.S_IMODE(path.stat().st_mode)
+        else:
+            raise LocalError(f"jj-tracked path is missing from the working copy: {name}", 1)
+        for item in (name.encode(), kind.encode(), f"{mode:o}".encode(), content):
+            _feed(digest, item)
+    return digest.hexdigest()
+
+
 def _write_entry(root: Path, name: str, entry: FileEntry) -> None:
     target = root / name
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -184,6 +208,7 @@ def _preflight_paths(
     data: dict[str, Any],
     layer: str,
     new_owners: dict[str, str],
+    tracked_paths: set[str] | None = None,
 ) -> None:
     """Check a layer plan against all owners and project files."""
 
@@ -205,6 +230,11 @@ def _preflight_paths(
     internal.update(name for name in project_files if name.startswith(f"{SOURCE_DIR}/"))
     all_owned = other_paths | old_paths
     project_only = project_files - all_owned - internal
+    if tracked_paths is not None:
+        for name in new_owners:
+            path = project / name
+            if (path.is_file() or path.is_symlink()) and name not in tracked_paths:
+                raise LocalError(f"render-owned path is not tracked by jj: {name}", 1)
     for new_path in new_owners:
         collisions = other_paths | project_only
         check_paths([new_path, *collisions])
@@ -297,7 +327,7 @@ def _check_active_state(
     """Check that the active project still matches its captured state."""
 
     current_head = jj.commit_id("@")
-    current_tree = working_digest(project)
+    current_tree = tracked_tree_digest(project, jj)
     current_operation = jj.operation_id()
     if (
         current_head != expected_head
@@ -340,6 +370,42 @@ def _snapshot_for_plan(source: Path, project: Path, out: Path, plan: RenderPlan)
         return False
     snapshot_source(source, out, plan.source_digest)
     return True
+
+
+def _next_marker(
+    data: dict[str, Any],
+    record: dict[str, Any],
+    layer: str,
+    source: Path,
+    plan: RenderPlan,
+    revision: int,
+    record_metadata: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Build the marker for a prepared render."""
+
+    updated_record = {
+        **record,
+        "source": str(source),
+        "source_digest": plan.source_digest,
+        "manifest_digest": plan.manifest_digest,
+        "templateer_version": plan.templateer_version,
+        "templateer_digest": plan.templateer_digest,
+        "composer_digest": plan.composer_digest,
+        "answers": plan.answers,
+        "owners": plan.owners,
+        "revision": revision,
+        "render_digest": plan.render_digest,
+    }
+    if record_metadata:
+        updated_record["generation"] = record_metadata
+        updated_record["kind"] = "generated"
+    records = data.get("layers", {"base": data})
+    if not isinstance(records, dict):
+        raise LocalError("invalid layer records in project marker")
+    next_data = {**data, "layers": {**records, layer: updated_record}}
+    if layer == "base":
+        next_data.update(updated_record)
+    return next_data
 
 
 def new(source: Path, target: Path, answers_file: Path) -> dict[str, str]:
@@ -410,7 +476,9 @@ def _attach_layer(
         if layer in records:
             shutil.rmtree(temporary_root, ignore_errors=True)
             raise LocalError(f"layer already exists: {layer}", 3)
-        _preflight_paths(project, data, layer, plan.owners)
+        _preflight_paths(
+            project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
+        )
         if digest_source(source) != plan.source_digest:
             shutil.rmtree(temporary_root, ignore_errors=True)
             raise LocalError("source changed after render", 1)
@@ -428,7 +496,7 @@ def _attach_layer(
             render = JJ(workspace_path).commit_id("@-")
             last_operation = jj.operation_id()
             active_head = jj.commit_id("@")
-            active_tree = working_digest(project)
+            active_tree = tracked_tree_digest(project, jj)
             JJ(workspace_path).run("new", active_head, render, "-m", f"copyroom:layer {layer}")
             conflicts = JJ(workspace_path).conflicts()
             if conflicts:
@@ -438,7 +506,7 @@ def _attach_layer(
             if not has_snapshot:
                 JJ(workspace_path).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
             last_operation = jj.operation_id()
-            reviewed_tree = working_digest(workspace_path)
+            reviewed_tree = tracked_tree_digest(workspace_path, JJ(workspace_path))
             merge_head = JJ(workspace_path).commit_id("@")
             active_operation = jj.operation_id()
             _check_active_state(
@@ -449,7 +517,7 @@ def _attach_layer(
             last_operation = _check_operation_parent(jj, active_operation, "layer add")
             if jj.commit_id(f"{applied_head}-") != merge_head:
                 raise LocalError("layer add did not apply its reviewed merge head", 1)
-            if jj.conflicts() or working_digest(project) != reviewed_tree:
+            if jj.conflicts() or tracked_tree_digest(project, jj) != reviewed_tree:
                 raise LocalError("layer tree differs from its reviewed merge", 1)
             record = {
                 **_plan_record(plan, source),
@@ -555,7 +623,10 @@ def preview(
     else:
         plan = compose(source, answers)
     plan = _apply_omissions(plan, record)
-    _preflight_paths(project, data, layer, plan.owners)
+    jj = JJ(project)
+    _preflight_paths(
+        project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
+    )
     if (
         plan.render_digest == record["render_digest"]
         and plan.source_digest == record["source_digest"]
@@ -566,7 +637,6 @@ def preview(
     ):
         return {"result": "no-change", "project": str(project)}
 
-    jj = JJ(project)
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
@@ -576,9 +646,12 @@ def preview(
         current_source = normalize_path(resolve_source(project, data, source_override, record))
         if current_source != source:
             raise LocalError("project source locator changed during render", 1)
+        _preflight_paths(
+            project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
+        )
         old_render = jj.render_head(str(data["project_id"]), layer)
         active_head = jj.commit_id("@")
-        active_tree = working_digest(project)
+        active_tree = tracked_tree_digest(project, jj)
         workspace_name = WORKSPACE_PREFIX + uuid.uuid4().hex[:12]
         added = False
         try:
@@ -607,11 +680,19 @@ def preview(
             if new_snapshot:
                 # The source snapshot becomes part of the reviewed tree and is replayable.
                 JJ(out).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
-            preview_tree = working_digest(out)
-            if jj.commit_id("@") != active_head or working_digest(project) != active_tree:
+            next_data = _next_marker(
+                data, record, layer, source, plan, revision, record_metadata,
+            )
+            write_json(out / MARKER, next_data)
+            preview_jj = JJ(out)
+            preview_jj.run("commit", "-m", "copyroom:project inputs")
+            preview_head = preview_jj.commit_id("@")
+            preview_tree = tracked_tree_digest(out, preview_jj)
+            prepared_marker_digest = digest_bytes((out / MARKER).read_bytes())
+            if jj.commit_id("@") != active_head or tracked_tree_digest(project, jj) != active_tree:
                 raise LocalError("active project changed during preview", 1)
             state = {
-                "schema": 1,
+                "schema": 2,
                 "project": str(project),
                 "project_id": data["project_id"],
                 "layer": layer,
@@ -620,9 +701,11 @@ def preview(
                 "active_head": active_head,
                 "active_tree": active_tree,
                 "marker_digest": digest_bytes((project / MARKER).read_bytes()),
+                "prepared_marker_digest": prepared_marker_digest,
                 "old_render": old_render,
                 "next_render": next_render,
-                "preview_head": JJ(out).commit_id("@"),
+                "preview_head": preview_head,
+                "prepared_head": preview_head,
                 "preview_tree": preview_tree,
                 "revision": revision,
                 "source": str(source),
@@ -658,13 +741,14 @@ def _load_preview(out: Path) -> dict[str, Any]:
     state = read_json(_preview_sidecar(out))
     required = {
         "schema", "project", "project_id", "layer", "workspace", "path", "active_head", "active_tree",
-        "marker_digest", "old_render", "next_render", "preview_head", "preview_tree", "revision",
+        "marker_digest", "prepared_marker_digest", "old_render", "next_render", "preview_head",
+        "prepared_head", "preview_tree", "revision",
         "source", "source_digest", "manifest_digest", "templateer_version", "templateer_digest",
         "composer_digest", "answers", "owners", "render_digest", "conflicts",
         "record_metadata",
     }
     if (
-        state.get("schema") != 1 or not required <= state.keys()
+        state.get("schema") != 2 or not required <= state.keys()
         or not str(state["workspace"]).startswith(WORKSPACE_PREFIX)
         or normalize_path(Path(str(state["path"]))) != out
     ):
@@ -696,8 +780,11 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         if state["project_id"] != data["project_id"]:
             raise LocalError("preview belongs to another project", 1)
         layer = str(state["layer"])
-        record = _layer_record(data, layer)
-        if jj.commit_id("@") != state["active_head"] or working_digest(project) != state["active_tree"]:
+        _layer_record(data, layer)
+        if (
+            jj.commit_id("@") != state["active_head"]
+            or tracked_tree_digest(project, jj) != state["active_tree"]
+        ):
             raise LocalError("active project changed after preview", 1)
         if digest_bytes((project / MARKER).read_bytes()) != state["marker_digest"]:
             raise LocalError("project marker changed after preview", 1)
@@ -713,7 +800,7 @@ def apply(project: Path, out: Path) -> dict[str, str]:
                 "preview has unresolved conflicts: " + ", ".join(current_conflicts), 1,
             )
         preview_head = preview_jj.commit_id("@")
-        preview_tree = working_digest(out)
+        preview_tree = tracked_tree_digest(out, preview_jj)
         if state["conflicts"]:
             if (
                 preview_jj.merge_base(preview_head, str(state["active_head"]))
@@ -722,10 +809,17 @@ def apply(project: Path, out: Path) -> dict[str, str]:
                 != state["next_render"]
             ):
                 raise LocalError("resolved preview no longer has the reviewed parents", 1)
-        elif preview_head != state["preview_head"] or preview_tree != state["preview_tree"]:
+        elif (
+            preview_head != state["prepared_head"]
+            or preview_head != state["preview_head"]
+            or preview_tree != state["preview_tree"]
+        ):
             raise LocalError("preview workspace changed after preview", 1)
         preview_marker = out / MARKER
-        if not preview_marker.is_file() or digest_bytes(preview_marker.read_bytes()) != state["marker_digest"]:
+        if (
+            not preview_marker.is_file()
+            or digest_bytes(preview_marker.read_bytes()) != state["prepared_marker_digest"]
+        ):
             raise LocalError("preview changed a protected project marker", 1)
 
         operation = jj.operation_id()
@@ -735,56 +829,21 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         )
         last_operation = operation
         try:
-            jj.run("new", preview_head, "-m", "copyroom:update")
+            publication_head = preview_head if state["conflicts"] else str(state["prepared_head"])
+            jj.run("new", publication_head, "-m", "copyroom:update")
             applied_head = jj.commit_id("@")
             last_operation = _check_operation_parent(jj, operation, "apply")
-            if jj.commit_id(f"{applied_head}-") != preview_head:
+            if jj.commit_id(f"{applied_head}-") != publication_head:
                 raise LocalError("apply did not use its reviewed preview head", 1)
-            applied_tree = working_digest(project)
+            applied_tree = tracked_tree_digest(project, jj)
             if jj.conflicts() or applied_tree != preview_tree:
-                expected_files = working_files(out)
-                applied_files = working_files(project)
-                different = sorted(
-                    name for name in set(expected_files) | set(applied_files)
-                    if expected_files.get(name) != applied_files.get(name)
-                )
-                detail = {
-                    name: {
-                        "preview": expected_files.get(name),
-                        "project": applied_files.get(name),
-                    }
-                    for name in different
-                }
                 raise LocalError(
                     "applied tree differs from the reviewed preview "
-                    f"(expected {preview_tree}, got {applied_tree}; paths: {detail})",
+                    f"(expected {preview_tree}, got {applied_tree})",
                     1,
                 )
-            updated_record = {
-                **record,
-                "source": state["source"],
-                "source_digest": state["source_digest"],
-                "manifest_digest": state["manifest_digest"],
-                "templateer_version": state["templateer_version"],
-                "templateer_digest": state["templateer_digest"],
-                "composer_digest": state["composer_digest"],
-                "answers": state["answers"],
-                "owners": state["owners"],
-                "revision": state["revision"],
-                "render_digest": state["render_digest"],
-            }
-            if state.get("record_metadata"):
-                updated_record["generation"] = state["record_metadata"]
-                updated_record["kind"] = "generated"
-            records = data.get("layers", {"base": data})
-            if not isinstance(records, dict):
-                raise LocalError("invalid layer records in project marker")
-            next_data = {**data, "layers": {**records, layer: updated_record}}
-            if layer == "base":
-                next_data.update(updated_record)
-            write_json(project / MARKER, next_data)
-            jj.run("commit", "-m", "copyroom:project inputs")
-            last_operation = jj.operation_id()
+            if digest_bytes((project / MARKER).read_bytes()) != state["prepared_marker_digest"]:
+                raise LocalError("applied marker differs from the reviewed preview", 1)
             if jj.render_head(str(data["project_id"]), layer) != state["next_render"]:
                 raise LocalError("applied render head is wrong", 1)
         except Exception as exc:

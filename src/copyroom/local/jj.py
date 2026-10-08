@@ -42,6 +42,12 @@ class JJ:
             raise LocalError(f"expected one commit for {rev}, got {value!r}")
         return value
 
+    def tracked_paths(self, rev: str = "@") -> set[str]:
+        """Return paths in one revision's tracked tree."""
+
+        output = self.run("file", "list", "-r", rev)
+        return {line for line in output.splitlines() if line}
+
     def operation_id(self) -> str:
         """Return the current operation ID."""
 

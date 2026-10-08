@@ -26,6 +26,7 @@ from copyroom.local.workflow import (
     new,
     preview,
     status,
+    tracked_tree_digest,
     working_digest,
     working_files,
 )
@@ -93,6 +94,85 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn('revision: "v2"', (self.project / "config/project.yml").read_text(encoding="utf-8"))
         self.assertTrue(snapshot_path(self.project, state["source_digest"]).is_dir())
         self.assertEqual(1, marker(self.project)["revision"])
+
+    def test_prepared_tree_equals_applied_tree_including_marker(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "prepared"
+        state = preview(self.project, out)
+        prepared_tree = tracked_tree_digest(out)
+        prepared_marker = (out / ".copyroom-local.json").read_bytes()
+
+        apply(self.project, out)
+
+        self.assertEqual(prepared_tree, tracked_tree_digest(self.project))
+        self.assertEqual(prepared_marker, (self.project / ".copyroom-local.json").read_bytes())
+        self.assertEqual(state["prepared_head"], state["preview_head"])
+
+    def test_apply_performs_one_active_working_copy_mutation(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "single-mutation"
+        preview(self.project, out)
+        original = JJ.run
+        active_mutations: list[tuple[str, ...]] = []
+
+        def record(jj: JJ, *args: str, **kwargs: object) -> str:
+            if jj.cwd == self.project and args[:1] in {("new",), ("commit",), ("restore",)}:
+                active_mutations.append(args)
+            return original(jj, *args, **kwargs)
+
+        with patch.object(JJ, "run", record):
+            apply(self.project, out)
+
+        self.assertEqual(1, len(active_mutations))
+        self.assertEqual("new", active_mutations[0][0])
+
+    def test_ignored_project_artifact_does_not_block_apply(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "ignored-artifact"
+        preview(self.project, out)
+        exclude = self.project / ".git" / "info" / "exclude"
+        exclude.write_text(exclude.read_text(encoding="utf-8") + "dist/\n", encoding="utf-8")
+        artifact = self.project / "dist" / "x.whl"
+        artifact.parent.mkdir()
+        artifact.write_bytes(b"ignored artifact")
+
+        apply(self.project, out)
+
+        self.assertEqual(b"ignored artifact", artifact.read_bytes())
+
+    def test_ignored_render_owned_path_is_refused_before_preview_workspace(self) -> None:
+        self.create()
+        metadata = self.source / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "dist/x.whl"),
+            encoding="utf-8",
+        )
+        exclude = self.project / ".git" / "info" / "exclude"
+        exclude.write_text(exclude.read_text(encoding="utf-8") + "dist/\n", encoding="utf-8")
+        ignored_path = self.project / "dist" / "x.whl"
+        ignored_path.parent.mkdir()
+        ignored_path.write_bytes(b"untracked ignored artifact")
+        out = self.root / "ignored-render"
+
+        with self.assertRaisesRegex(LocalError, "render-owned path is not tracked by jj"):
+            preview(self.project, out)
+
+        self.assertFalse(out.exists())
 
     def test_conflict_can_be_resolved_in_preview_and_applied_exactly(self) -> None:
         self.create()
