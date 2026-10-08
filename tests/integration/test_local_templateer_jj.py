@@ -11,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from copyroom.local import workflow as workflow_module
 from copyroom.local.composer import compose
 from copyroom.local.errors import LocalError
 from copyroom.local.generation import generate, refresh
@@ -137,6 +138,216 @@ class LocalTemplateerJJTests(unittest.TestCase):
 
         self.assertEqual(1, len(active_mutations))
         self.assertEqual("new", active_mutations[0][0])
+
+    def test_apply_reports_a_published_tree_mismatch(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "tree-mismatch-preview"
+        preview(self.project, out)
+        original_run = JJ.run
+        original_digest = workflow_module.tracked_tree_digest
+        published = False
+
+        def record_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            nonlocal published
+            result = original_run(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                published = True
+            return result
+
+        def wrong_tree(path: Path, jj: JJ | None = None) -> str:
+            digest = original_digest(path, jj)
+            if published and path == self.project:
+                return "wrong-tree"
+            return digest
+
+        with (
+            patch.object(JJ, "run", record_publish),
+            patch.object(workflow_module, "tracked_tree_digest", wrong_tree),
+            self.assertRaises(LocalError) as raised,
+        ):
+            apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertIn("published result does not match the reviewed preview", str(raised.exception))
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        self.assertEqual("publishing", journal["journal_state"])
+        self.assertTrue(journal["verification"])
+        self.assertTrue(out.is_dir())
+        self.assertFalse(status(self.project)["ok"])
+
+    def test_apply_reports_a_published_conflict(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "conflict-mismatch-preview"
+        preview(self.project, out)
+        original_run = JJ.run
+        original_conflicts = JJ.conflicts
+        published = False
+        injected = False
+
+        def record_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            nonlocal published
+            result = original_run(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                published = True
+            return result
+
+        def report_conflict(jj: JJ) -> list[str]:
+            nonlocal injected
+            if published and jj.cwd == self.project and not injected:
+                injected = True
+                return ["README.md"]
+            return original_conflicts(jj)
+
+        with (
+            patch.object(JJ, "run", record_publish),
+            patch.object(JJ, "conflicts", report_conflict),
+            self.assertRaises(LocalError) as raised,
+        ):
+            apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        self.assertEqual("publishing", journal["journal_state"])
+        self.assertIn("active project has conflicts: README.md", journal["verification"])
+        self.assertTrue(out.is_dir())
+
+    def test_apply_reports_a_published_marker_mismatch(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "marker-mismatch-preview"
+        preview(self.project, out)
+        original_run = JJ.run
+        original_digest = workflow_module.digest_bytes
+        published = False
+
+        def record_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            nonlocal published
+            result = original_run(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                published = True
+            return result
+
+        def wrong_marker(content: bytes) -> str:
+            digest = original_digest(content)
+            if published and content == (self.project / ".copyroom-local.json").read_bytes():
+                return "wrong-marker"
+            return digest
+
+        with (
+            patch.object(JJ, "run", record_publish),
+            patch.object(workflow_module, "digest_bytes", wrong_marker),
+            self.assertRaises(LocalError) as raised,
+        ):
+            apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        self.assertEqual("publishing", journal["journal_state"])
+        self.assertTrue(any("active marker digest" in item for item in journal["verification"]))
+        self.assertTrue(out.is_dir())
+
+    def test_layer_add_reports_a_published_tree_mismatch(self) -> None:
+        self.create()
+        overlay = self.root / "overlay-source"
+        shutil.copytree(self.source, overlay)
+        manifest_path = overlay / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["templates"] = ["settings"]
+        manifest["executable"] = []
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        metadata = overlay / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace("config/project.yml", "docs/guide.md"),
+            encoding="utf-8",
+        )
+        original_run = JJ.run
+        original_digest = workflow_module.tracked_tree_digest
+        published = False
+
+        def record_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            nonlocal published
+            result = original_run(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:layer add docs" in args:
+                published = True
+            return result
+
+        def wrong_tree(path: Path, jj: JJ | None = None) -> str:
+            digest = original_digest(path, jj)
+            if published and path == self.project:
+                return "wrong-tree"
+            return digest
+
+        with (
+            patch.object(JJ, "run", record_publish),
+            patch.object(workflow_module, "tracked_tree_digest", wrong_tree),
+            self.assertRaises(LocalError) as raised,
+        ):
+            add_layer(self.project, overlay, overlay / "answers.json", "docs")
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertIn("published result does not match the prepared layer", str(raised.exception))
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        self.assertEqual("publishing", journal["journal_state"])
+        self.assertTrue(journal["verification"])
+        self.assertFalse(status(self.project)["ok"])
+
+    def test_recover_does_not_publish_an_unverified_result(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "unverified-recovery-preview"
+        preview(self.project, out)
+        original_run = JJ.run
+
+        class SimulatedCrash(BaseException):
+            pass
+
+        def crash_after_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            result = original_run(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                raise SimulatedCrash
+            return result
+
+        with patch.object(JJ, "run", crash_after_publish):
+            with self.assertRaises(SimulatedCrash):
+                apply(self.project, out)
+
+        original_digest = workflow_module.tracked_tree_digest
+
+        def wrong_tree(path: Path, jj: JJ | None = None) -> str:
+            digest = original_digest(path, jj)
+            if path == self.project:
+                return "wrong-tree"
+            return digest
+
+        with patch.object(workflow_module, "tracked_tree_digest", wrong_tree):
+            report = recover(self.project)
+
+        self.assertFalse(report["ok"])
+        self.assertEqual("publishing", report["transactions"][0]["journal_state"])
+        self.assertIn("published but unverified", report["transactions"][0]["action"])
+        self.assertTrue(out.is_dir())
 
     def test_ignored_project_artifact_does_not_block_apply(self) -> None:
         self.create()

@@ -1,0 +1,26 @@
+UP035 [*] Import from `collections.abc` instead: `Callable`
+  --> src/copyroom/local/workflow.py:15:1
+   |
+13 | from dataclasses import replace
+14 | from pathlib import Path
+15 | from typing import Any, Callable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |
+17 | from .composer import (
+   |
+help: Import from `collections.abc`
+
+F841 [*] Local variable `exc` is assigned to but never used
+   --> src/copyroom/local/workflow.py:744:29
+    |
+742 |             _set_journal_phase(project, journal, "published")
+743 |             _cleanup_transaction(project, journal)
+744 |         except Exception as exc:
+    |                             ^^^
+745 |             if publication_returned or publication_error_handled:
+746 |                 raise
+    |
+help: Remove assignment to unused variable `exc`
+
+Found 2 errors.
+[*] 2 fixable with the `--fix` option.

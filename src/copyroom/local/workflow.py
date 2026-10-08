@@ -10,6 +10,7 @@ import shutil
 import stat
 import tempfile
 import uuid
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -346,6 +347,72 @@ def _check_active_state(
         )
 
 
+def _verify_published(
+    project: Path,
+    jj: JJ,
+    expected_head: str,
+    expected_tree: str,
+    expected_marker: str,
+    project_id: str,
+    layer: str,
+    expected_render: str,
+) -> list[str]:
+    """List every way the published result differs from the prepared result."""
+
+    problems: list[str] = []
+
+    def check(label: str, action: Callable[[], None]) -> None:
+        try:
+            action()
+        except Exception as exc:
+            problems.append(f"could not verify {label}: {exc}")
+
+    def check_parent() -> None:
+        applied_head = jj.commit_id("@")
+        applied_parent = jj.commit_id(f"{applied_head}-")
+        if applied_parent != expected_head:
+            problems.append(
+                f"active head parent is {applied_parent}, expected {expected_head}",
+            )
+
+    def check_conflicts() -> None:
+        conflicts = jj.conflicts()
+        if conflicts:
+            problems.append("active project has conflicts: " + ", ".join(conflicts))
+
+    def check_tree() -> None:
+        actual_tree = tracked_tree_digest(project, jj)
+        if actual_tree != expected_tree:
+            problems.append(
+                f"active tree is {actual_tree}, expected {expected_tree}",
+            )
+
+    def check_marker() -> None:
+        marker_path = project / MARKER
+        if not marker_path.is_file():
+            problems.append("active marker is missing")
+            return
+        actual_marker = digest_bytes(marker_path.read_bytes())
+        if actual_marker != expected_marker:
+            problems.append(
+                f"active marker digest is {actual_marker}, expected {expected_marker}",
+            )
+
+    def check_render() -> None:
+        actual_render = jj.render_head(project_id, layer)
+        if actual_render != expected_render:
+            problems.append(
+                f"render head is {actual_render}, expected {expected_render}",
+            )
+
+    check("active head parent", check_parent)
+    check("active conflicts", check_conflicts)
+    check("active tree", check_tree)
+    check("active marker", check_marker)
+    check("render head", check_render)
+    return problems
+
+
 def _state_path(project: Path, workspace: str) -> Path:
     return project / PREVIEW_DIR / f"{workspace}.json"
 
@@ -583,7 +650,8 @@ def _attach_layer(
         }
         _write_journal(project, journal)
         workspace_added = False
-        publish_started = False
+        publication_returned = False
+        publication_error_handled = False
         try:
             temporary_root.mkdir()
             root = jj.commit_id("root()")
@@ -632,21 +700,10 @@ def _attach_layer(
                 prepared_marker_digest=prepared_marker_digest,
             )
             _set_journal_phase(project, journal, "publishing")
-            publish_started = True
-            jj.run("new", prepared_head, "-m", f"copyroom:layer add {layer}")
-            applied_head = jj.commit_id("@")
-            if jj.commit_id(f"{applied_head}-") != prepared_head:
-                raise LocalError("layer add did not apply its reviewed merge head", 1)
-            if jj.conflicts() or tracked_tree_digest(project, jj) != prepared_tree:
-                raise LocalError("layer tree differs from its prepared result", 1)
-            if digest_bytes((project / MARKER).read_bytes()) != prepared_marker_digest:
-                raise LocalError("applied marker differs from the prepared layer", 1)
-            if jj.render_head(str(data["project_id"]), layer) != render:
-                raise LocalError("added layer render head is wrong", 1)
-            _set_journal_phase(project, journal, "published")
-            _cleanup_transaction(project, journal)
-        except Exception as exc:
-            if publish_started:
+            try:
+                jj.run("new", prepared_head, "-m", f"copyroom:layer add {layer}")
+            except Exception as exc:
+                publication_error_handled = True
                 try:
                     row = _reconcile_journal(project, jj, journal)
                 except Exception as recovery_error:
@@ -663,6 +720,31 @@ def _attach_layer(
                 raise LocalError(
                     f"layer add failed; {row['action']}; run copyroom recover",
                 ) from exc
+            publication_returned = True
+            problems = _verify_published(
+                project,
+                jj,
+                prepared_head,
+                prepared_tree,
+                prepared_marker_digest,
+                str(data["project_id"]),
+                layer,
+                render,
+            )
+            if problems:
+                _set_journal_phase(
+                    project, journal, "publishing", verification=problems,
+                )
+                raise LocalError(
+                    "published result does not match the prepared layer; run copyroom recover: "
+                    + "; ".join(problems),
+                    1,
+                )
+            _set_journal_phase(project, journal, "published")
+            _cleanup_transaction(project, journal)
+        except Exception:
+            if publication_returned or publication_error_handled:
+                raise
             if workspace_added and workspace_name in {row["name"] for row in jj.workspaces()}:
                 jj.run("workspace", "forget", workspace_name)
             shutil.rmtree(temporary_root, ignore_errors=True)
@@ -1024,24 +1106,46 @@ def _publish_layer_transaction(
         except LocalError:
             return _journal_row(journal, "publication-uncertain; run recover again")
         if published:
+            problems = _verify_published(
+                project,
+                jj,
+                prepared_head,
+                str(journal["prepared_tree"]),
+                str(journal["prepared_marker_digest"]),
+                str(journal["project_id"]),
+                str(journal["layer"]),
+                str(journal["next_render"]),
+            )
+            if problems:
+                _set_journal_phase(
+                    project, journal, "publishing", state, verification=problems,
+                )
+                return _journal_row(
+                    journal,
+                    "published but unverified; inspect the project: " + "; ".join(problems),
+                )
             _set_journal_phase(project, journal, "published", state)
             _cleanup_transaction(project, journal)
             return _journal_row(journal, "published and cleaned after command error")
         _set_journal_phase(project, journal, "prepared", state)
         return _journal_row(journal, "publication did not complete; retry layer add")
 
-    applied_head = jj.commit_id("@")
-    if jj.commit_id(f"{applied_head}-") != prepared_head:
-        return _journal_row(journal, "publication-uncertain; run recover again")
-    if (
-        jj.conflicts()
-        or tracked_tree_digest(project, jj) != journal.get("prepared_tree")
-        or digest_bytes((project / MARKER).read_bytes())
-        != journal.get("prepared_marker_digest")
-        or jj.render_head(str(journal["project_id"]), str(journal["layer"]))
-        != journal.get("next_render")
-    ):
-        return _journal_row(journal, "publication-uncertain; run recover again")
+    problems = _verify_published(
+        project,
+        jj,
+        prepared_head,
+        str(journal["prepared_tree"]),
+        str(journal["prepared_marker_digest"]),
+        str(journal["project_id"]),
+        str(journal["layer"]),
+        str(journal["next_render"]),
+    )
+    if problems:
+        _set_journal_phase(project, journal, "publishing", state, verification=problems)
+        return _journal_row(
+            journal,
+            "published but unverified; inspect the project: " + "; ".join(problems),
+        )
     _set_journal_phase(project, journal, "published", state)
     _cleanup_transaction(project, journal)
     return _journal_row(journal, "published and cleaned")
@@ -1079,6 +1183,24 @@ def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[s
             except LocalError:
                 published = False
         if published:
+            problems = _verify_published(
+                project,
+                jj,
+                str(prepared_head),
+                str(journal["prepared_tree"]),
+                str(journal["prepared_marker_digest"]),
+                str(journal["project_id"]),
+                str(journal["layer"]),
+                str(journal["next_render"]),
+            )
+            if problems:
+                _set_journal_phase(
+                    project, journal, "publishing", state, verification=problems,
+                )
+                return _journal_row(
+                    journal,
+                    "published but unverified; inspect the project: " + "; ".join(problems),
+                )
             _set_journal_phase(project, journal, "published", state)
             _cleanup_transaction(project, journal)
             return _journal_row(journal, "published and cleaned")
@@ -1326,20 +1448,6 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         _set_journal_phase(project, journal, "publishing", state)
         try:
             jj.run("new", preview_head, "-m", "copyroom:update")
-            applied_head = jj.commit_id("@")
-            if jj.commit_id(f"{applied_head}-") != preview_head:
-                raise LocalError("apply did not use its reviewed preview head", 1)
-            applied_tree = tracked_tree_digest(project, jj)
-            if jj.conflicts() or applied_tree != preview_tree:
-                raise LocalError(
-                    "applied tree differs from the reviewed preview "
-                    f"(expected {preview_tree}, got {applied_tree})",
-                    1,
-                )
-            if digest_bytes((project / MARKER).read_bytes()) != state["prepared_marker_digest"]:
-                raise LocalError("applied marker differs from the reviewed preview", 1)
-            if jj.render_head(str(data["project_id"]), layer) != state["next_render"]:
-                raise LocalError("applied render head is wrong", 1)
         except Exception as exc:
             try:
                 row = _reconcile_journal(project, jj, journal)
@@ -1359,6 +1467,25 @@ def apply(project: Path, out: Path) -> dict[str, str]:
                 f"apply failed; publication did not complete; preview kept for review: {detail}",
                 1,
             ) from exc
+        problems = _verify_published(
+            project,
+            jj,
+            preview_head,
+            preview_tree,
+            str(state["prepared_marker_digest"]),
+            str(data["project_id"]),
+            layer,
+            str(state["next_render"]),
+        )
+        if problems:
+            _set_journal_phase(
+                project, journal, "publishing", state, verification=problems,
+            )
+            raise LocalError(
+                "published result does not match the reviewed preview; run copyroom recover: "
+                + "; ".join(problems),
+                1,
+            )
         _set_journal_phase(project, journal, "published", state)
         _cleanup_transaction(project, journal)
     return {"project": str(project), "render": str(state["next_render"])}
