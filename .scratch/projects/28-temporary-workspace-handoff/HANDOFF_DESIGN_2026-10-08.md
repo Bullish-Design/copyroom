@@ -2,7 +2,9 @@
 
 Date: 2026-10-08.
 Scope: `copyroom update --apply` and `copyroom layer add`.
-Status: investigation and plan. No CopyRoom runtime code changed. No system configuration changed or deployed. No model provider called.
+Status: design and implementation plan. The handoff changes remain open. The incidental fixes in §1 have landed. No system configuration changed or deployed for this design. No model provider was called.
+
+Current-state update: 2026-10-08, after the `templateer-jj-local` and incidental-fix lanes landed on `main`. §1 records the investigation baseline. Later sections keep their original measurements and line numbers as historical evidence. Find current code locations before editing.
 
 This report adds to `RESEARCH_REPORT.md` (2026-10-07) and `ALTERNATIVES_2026-10-07.md`. It does not replace them. Their findings stay as the historical record. Where this report contradicts them, it says so and gives the new evidence.
 
@@ -37,15 +39,29 @@ Labels used throughout:
 
 **One real surprise.** Two independent jj engines already write these repositories: CopyRoom uses the jj **CLI 0.43.0**, and gitman uses **jj-lib 0.44.0** in process via pyjutsu. They share the relevant locks, so the contract holds — but they are pinned separately and should be aligned.
 
-**The remaining decision is §14**, and it is narrow: may CopyRoom depend on pyjutsu for the publication step?
+**The next work is Steps 1 and 2 in §13.** They need no new tool dependency. The later product decision is in §14: may CopyRoom depend on pyjutsu for the publication step?
 
 ---
 
-## 1. Verified live state
+## 1. Investigation baseline and current state
 
-Every value below is TESTED today. Treat the 2026-10-07 reports' versions as historical.
+The tables below record the state tested during the investigation on 2026-10-08. They are not live version or lane reports. Treat the 2026-10-07 reports' versions as earlier historical records.
 
-### Repository
+### State after the incidental fixes landed
+
+| Item | Current state on 2026-10-08 |
+| --- | --- |
+| CopyRoom version | 0.7.7 in `pyproject.toml` |
+| Gitman | `CANONICAL`; `main` at `151ef1fa76a6727fedd10731f6ae55b8847219cf`, in sync with origin; no lanes |
+| Last full gate | 88 tests completed, Ruff passed, walkthrough passed |
+| Handoff | The reviewed preview still has the old marker. `apply` still writes the next marker in the active project after `jj new`. No journal or `copyroom recover` exists. |
+| Fixed incidental defects | `--version` exits 0; default and relative preview paths work; `update-test` returns structured `no-change`; JSON temporaries use `.copyroom-tmp-` and an ignore rule. |
+
+`write_json` keeps its temporary file beside the target to preserve atomic rename. It now removes the file on an exception and fsyncs the parent directory after the rename. `exclude_local_state` installs the unanchored `.copyroom-tmp-*` rule for new projects and backfills it in existing projects before JSON writes. A crash can still leave an ignored temporary file. Step 2 should list such files in `copyroom recover`.
+
+The path helper resolves each parent and keeps the last path segment. This lets relative `..` paths work while preserving the target symlink check. An existing marker's stored source path can change to the normalized form on its next apply. Review that behavior if a source uses a symlinked parent.
+
+### Repository at investigation time
 
 | Item | Value |
 | --- | --- |
@@ -57,7 +73,7 @@ Every value below is TESTED today. Treat the 2026-10-07 reports' versions as his
 | ruff | `All checks passed!`, exit 0 |
 | `demo/walkthrough.sh` | passes, exit 0 |
 
-The lane carries in-flight project 28 work from an earlier session. This report preserves it.
+The lane carried in-flight project 28 work from an earlier session. This report preserved it. The lane has since landed.
 
 ### Toolchain
 
@@ -122,9 +138,9 @@ The formats are compatible, TESTED in both directions: the CLI 0.43 created a re
 
 **Consequence.** A `copyroom`-managed project is colocated (`.git` exists — TESTED, `copyroom new` creates it) and is itself a candidate for gitman management. Both engines can write the same repository. Any writer contract must name both.
 
-### Incidental live defects found
+### Incidental defects found and later fixed
 
-These are outside the handoff but they are real and cheap to fix.
+These findings describe the investigation baseline. The first three are fixed on `main`. The fourth remains part of Step 1.
 
 1. `copyroom --version` prints `Usage: …` and `Error: Missing command.`, exit 3. The option is advertised in `--help` and does not work. TESTED twice by two agents.
 2. `docs/user/local-workflows.md` tells the reader to run `copyroom update --out .copyroom-local/previews/update-1`. That path is rejected: `Error: preview must be outside the project`, exit 2. TESTED.
@@ -133,9 +149,9 @@ These are outside the handoff but they are real and cheap to fix.
 
 ---
 
-## 2. Current architecture and the exact race
+## 2. Architecture at investigation time and the exact race
 
-`W` below means `src/copyroom/local/workflow.py`. All line numbers verified today.
+`W` below means `src/copyroom/local/workflow.py`. These line numbers refer to the investigation baseline. Later fixes shifted them. Search the current functions before implementation.
 
 ### 2.1 What preparation does
 
@@ -796,7 +812,7 @@ Two hard rules in the recovery code:
 
 ## 12. CopyRoom changes, in dependency order
 
-Each item names the file and line it touches. None of these were made.
+The line numbers below refer to the investigation baseline. Items 11 and 15 have landed. The other items remain open. Search the current code before editing.
 
 | # | Change | Where | Why |
 | --- | --- | --- | --- |
@@ -810,11 +826,11 @@ Each item names the file and line it touches. None of these were made.
 | 8 | Resolve jj/pyjutsu once by absolute path from `COPYROOM_JJ`/`COPYROOM_PYJUTSU` | `jj.py:25-28`, `W:892` | §10.3. Removes the bare-name PATH gap |
 | 9 | Preflight that every render-owned path is jj-tracked; refuse otherwise with exit 1 | `_preflight_paths` `W:159` | §4.3. An ignored render path is invisible to the precondition |
 | 10 | Delete the `jj op restore` branch; never infer "nothing published" from a non-zero exit | `W:759-774`, `W:445-463` | §11.2. Dead in practice and dangerous if reached |
-| 11 | Stage `write_json` temp files under `.copyroom-local/tmp/`, not the project root | `source.py:35-54` | §1 defect 3. A crash currently leaves a stray file that jj snapshots |
+| 11 | **Done:** use a same-directory `.copyroom-tmp-` prefix, remove failed temporaries, fsync the parent, and backfill the ignore rule | `source.py`, `workflow.py` | Fixes §1 defect 3 without changing JSON bytes or atomic rename. Step 2 still needs to list orphan temporaries. |
 | 12 | Add the capability probe and `--publish-unguarded` | `cli.py`, `W:880` | §10.4 |
 | 13 | Make `status`/`inspect` flag a marker-versus-render-head mismatch | `W:821`, `W:868` | §2.3. `status` reports `ok: true` on a half-applied project |
 | 14 | Apply the same publication path to adoption and workshop checkout | `manage.py:179`, `workshop.py:393` | They repeat the identical unconditional `jj new` |
-| 15 | Fix `copyroom --version`; fix the `--out` example in the docs | `cli.py`, `docs/user/local-workflows.md` | §1 incidental defects 1–2 |
+| 15 | **Done:** fix `--version`, the default preview parent, relative `..` paths, `update-test` no-change, and the command examples | `cli.py`, `workflow.py`, `workshop.py`, `docs/user/` | §1 incidental defects 1–2 and related command failures |
 
 Items 1–3 are independent of the chosen design and can land first.
 
@@ -822,33 +838,34 @@ Items 1–3 are independent of the chosen design and can land first.
 
 ## 13. Implementation plan
 
-Each step is landable on its own and leaves the suite green. Acceptance tests are named per step; the standing gate stays `pytest` green, `ruff` clean, walkthrough passes.
+Each step is landable on its own and leaves the suite green. Acceptance tests are named per step. Run `devenv shell -- uv run pytest -q`, `devenv shell -- uv run ruff check src/ tests/`, and `devenv shell -- bash demo/walkthrough.sh` before landing. Keep the historical race and crash captures as evidence; do not use their old line numbers as current code locations.
 
 ### Step 1 — CopyRoom: complete prepared result (no jj or Vendomat work)
 
-Changes 1, 7, 11. Acceptance:
+Open changes 1 and 7. Change 11 is complete. Acceptance:
 
 - `test_prepared_tree_equals_applied_tree` — the preview tree digest equals the post-apply active tree digest, including the marker. This currently **fails by design**; the 2026-10-07 harness records `prepared_marker_hex != active_marker_after_hex`.
 - `test_apply_performs_one_active_mutation` — count `JJ.run` calls with the project cwd that mutate; assert exactly one.
 - `test_ignored_artifact_does_not_block_apply` — create `dist/x.whl` in the project after preview; apply must succeed.
-- `test_crash_after_publish_leaves_no_stray_temp_file` — crash between temp write and `os.replace`; no `..copyroom-local.json.*` remains.
+- Keep the existing `write_json` byte, mode, cleanup, fsync, ignore, and backfill tests green. A killed process may leave an ignored `.copyroom-tmp-*` file; Step 2 must report it.
 
 Rollback: revert the commit. No external dependency.
 
 ### Step 2 — CopyRoom: journal and `copyroom recover`
 
-Changes 2, 3, 5, 13. Acceptance, driven by the §3 crash harness (reusable as-is from `/tmp/cr-crash-*/driver.py`):
+Changes 2, 3, 5, 13. Start from the committed crash driver at `evidence/2026-10-08/harness/driver.py`. Adapt its hooks as Step 1 changes the publication calls. Acceptance:
 
 - For each of A1–A6 and L1–L4: `copyroom recover` lists the state and returns it to either `prepared` or `published` with no manual jj command.
 - `test_recover_preserves_competing_writer` — repeat the six paired writer runs (A1w…L3w); the writer's commit, file and uncommitted file must all survive every recovery path.
 - `test_status_flags_half_applied` — after an A1 crash, `copyroom status` must not report `ok: true`.
 - `test_recover_prune_lists_orphan_workspaces` — a crash after `workspace add` must be listable.
+- `test_recover_lists_orphan_write_temporaries` — list ignored `.copyroom-tmp-*` files without treating them as managed project content.
 
 Rollback: revert. The journal is additive and ignored by older code.
 
 ### Step 3 — pyjutsu: the guard
 
-**A working prototype already exists** (§16) in a copy at `/tmp/pj-proto-2714908/pyjutsu`, with the full diff at `evidence/full-diff.patch` and the method body at `evidence/publish_if_method.rs.txt`. This step is therefore a port and a hardening pass, not a research task. Carry it in with the six changes listed in §16.6 — above all, delete `src/proto_hooks.rs`.
+**A working prototype was tested** (§16). The committed `evidence/2026-10-08/prototype/` directory contains `full-diff.patch` and `publish_if_method.rs.txt`. The `/tmp/pj-proto-2714908/pyjutsu` copy was present during this update, but `/tmp` is not a durable source. Port from committed evidence and harden it. Carry in the six changes in §16.6. Delete `src/proto_hooks.rs`; it contains test barriers.
 
 Add `publish_if` plus the `publish-if` entry point (§9.2, §9.3); tag a release. Acceptance, in pyjutsu's own suite — all of these are already demonstrated by the prototype and should be kept as regression tests:
 
@@ -987,7 +1004,7 @@ T6-a-r1    exit=0
 
 The recommendation in §11 rests on one claim that could not be settled by reading: that the guard is buildable from already-public jj-lib 0.44.0 API. It was built and tested. **It works.**
 
-The prototype lives in a copy of pyjutsu at `/tmp/pj-proto-2714908/pyjutsu`. The real pyjutsu repository was only read; its `git status` is clean. Nothing in CopyRoom was touched.
+During the investigation, the prototype lived in a copy of pyjutsu at `/tmp/pj-proto-2714908/pyjutsu`. The durable patch and method body are committed in `evidence/2026-10-08/prototype/`. The real pyjutsu repository was only read during that investigation. The later incidental CopyRoom fixes did not implement this guard.
 
 ### 16.1 Build
 
