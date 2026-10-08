@@ -57,8 +57,9 @@ include = [
 templateer = { path = "../templateer_v2", editable = true }
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=copyroom --cov-report=term-missing"
+addopts = "-q --cov=copyroom --cov-report=term-missing -m 'not slow'"
 testpaths = ["tests"]
+markers = ["slow: long-running process and recovery checks"]
 
 [tool.ty]
 src = { include = ["tests/**"] }

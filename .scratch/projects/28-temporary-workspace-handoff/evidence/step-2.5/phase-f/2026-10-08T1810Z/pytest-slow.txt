@@ -1,0 +1,93 @@
+• Running devenv:python:virtualenv
+• Running devenv:files:cleanup
+✓ Running devenv:files:cleanup in 24.5ms
+✓ Running devenv:python:virtualenv in 31.2ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 20.1ms
+• Running devenv:enterTest
+✓ Running devenv:enterTest in 4.37µs (no command)
+ok      copyroom:.agents  /home/andrew/Documents/Projects/copyroom/.agents
+ok      copyroom:.claude/skills  /home/andrew/Documents/Projects/copyroom/.claude/skills
+ok      copyroom:.envrc  /home/andrew/Documents/Projects/copyroom/.envrc
+ok      copyroom:.loci  /home/andrew/Documents/Projects/copyroom/.loci
+ok      copyroom:devenv.local.nix  /home/andrew/Documents/Projects/copyroom/devenv.local.nix
+
+allium-env setup needed: skills are not installed in /home/andrew/Documents/Projects/copyroom/.agents/skills
+Run: allium-install-codex-skills
+Optional: set allium.codexSkills.autoInstall = true to install automatically on shell entry.
+
+hello from copyroom
+git version 2.54.0
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /nix/store/s1fc2pj5w10a7qbksriy87vqzz8avf4s-mypi-agent-0.3.5/lib/python3.13/ │
+│ site-packages/mypi_agent/cli.py:127 in needs_sync_command                    │
+│                                                                              │
+│   124 │   if trigger not in {"manual", "shell"}:                             │
+│   125 │   │   raise typer.BadParameter("--trigger must be one of: manual, sh │
+│   126 │   paths = _resolve_paths(allow_unmanaged=allow_unmanaged)            │
+│ ❱ 127 │   if needs_sync(paths):                                              │
+│   128 │   │   raise typer.Exit(code=0)                                       │
+│   129 │   raise typer.Exit(code=1)                                           │
+│   130                                                                        │
+│                                                                              │
+│ /nix/store/s1fc2pj5w10a7qbksriy87vqzz8avf4s-mypi-agent-0.3.5/lib/python3.13/ │
+│ site-packages/mypi_agent/sync.py:224 in needs_sync                           │
+│                                                                              │
+│   221                                                                        │
+│   222                                                                        │
+│   223 def needs_sync(paths: Paths) -> bool:                                  │
+│ ❱ 224 │   if not paths.agent_root.exists():                                  │
+│   225 │   │   return True                                                    │
+│   226 │   if not paths.settings_path.exists():                               │
+│   227 │   │   return True                                                    │
+│                                                                              │
+│ /nix/store/s1fc2pj5w10a7qbksriy87vqzz8avf4s-mypi-agent-0.3.5/lib/python3.13/ │
+│ site-packages/mypi_agent/models.py:54 in agent_root                          │
+│                                                                              │
+│    51 │   │   if override:                                                   │
+│    52 │   │   │   root = (self.project_root / override).resolve()            │
+│    53 │   │   │   if root != self.project_root and self.project_root not in  │
+│ ❱  54 │   │   │   │   raise RuntimeError("error: MYPI_AGENT_ROOT must stay w │
+│    55 │   │   │   return root                                                │
+│    56 │   │   return self.project_root / ".agents" / "pi"                    │
+│    57                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RuntimeError: error: MYPI_AGENT_ROOT must stay within project root
+warning: SecretSpec config exists but has no secrets defined.
+  Add API keys to secretspec.toml under [profiles.default]:
+    ANTHROPIC_API_KEY = { description = "Anthropic API key for Pi", required = false }
+    OPENAI_API_KEY = { description = "OpenAI API key for Pi", required = false }
+  Then run: secretspec check
+warning: SecretSpec: some secrets are not yet configured.
+  Run: secretspec check
+
+  ⚠️  MYPI agent is not fully configured.
+     Run `mypi doctor` for details, or `mypi sync` to set up.
+
+  Quick reference:
+    mypi sync     — Bootstrap/sync the Pi agent
+    mypi doctor   — Check configuration status
+    mypi pi       — Run Pi (with SecretSpec secrets)
+    mypi agent    — Run Pi directly
+
+..........................                                               [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.14-final-0 _______________
+
+Name                               Stmts   Miss  Cover   Missing
+----------------------------------------------------------------
+src/copyroom/__init__.py               6      2    67%   9-10
+src/copyroom/__main__.py               3      3     0%   3-7
+src/copyroom/cli.py                  222    141    36%   16-17, 38-39, 43-47, 51-58, 62-78, 82-98, 102, 108-110, 116-120, 136-139, 150-152, 165-181, 193-195, 203-205, 214-216, 224-226, 234-236, 244-250, 262-266, 272-276, 287-289, 297-299, 313-317, 335-339, 355-362, 374-376, 388-411, 416-418, 423-425, 438-445, 452-454, 466-470, 475-477, 482-484, 495-497, 505-507, 512-513, 517
+src/copyroom/local/__init__.py         2      0   100%
+src/copyroom/local/composer.py       270    221    18%   56, 60-61, 67-88, 94-99, 105-110, 116-137, 143-155, 161-169, 175-185, 189-195, 199-220, 224-236, 242-248, 254-269, 275-365
+src/copyroom/local/edits.py          142    124    13%   36-43, 85-113, 126-140, 150-170, 180-191, 196-203, 211-223, 231-244, 259-269, 281-305, 320-345
+src/copyroom/local/errors.py           4      2    50%   8-9
+src/copyroom/local/generation.py      65     49    25%   39-103, 117-120, 135-149
+src/copyroom/local/jj.py              74     31    58%   26, 31, 33-34, 42, 54, 62-66, 71-72, 77-83, 88-98, 123-130
+src/copyroom/local/manage.py         209    184    12%   46, 55, 64-81, 101-225, 231, 237-239, 245, 251-252, 266-371
+src/copyroom/local/source.py         188    156    17%   29-35, 41-51, 64-82, 88-100, 106, 112-146, 157-169, 178-201, 207-214, 220-222, 228-245, 251-267, 273-285
+src/copyroom/local/workflow.py      1056    957     9%   61-64, 70-72, 83-97, 103-107, 119, 124-128, 137-138, 151-153, 161-177, 183-184, 190-196, 202-207, 213-218, 224-235, 247-272, 278-281, 290, 307-317, 333-340, 344, 350-360, 373-381, 401-452, 456, 460, 464-465, 469-470, 474, 478-480, 492-500, 506-557, 563-569, 583-605, 611-643, 655-806, 817-819, 825-831, 855-1016, 1022-1036, 1042-1045, 1051-1060, 1066, 1096-1118, 1124-1129, 1137-1150, 1154, 1171-1264, 1270-1351, 1357-1368, 1378-1398, 1404-1414, 1420-1606, 1632-1756, 1762, 1768-1776, 1782-1805, 1815-1857, 1863-1866, 1882-1912, 1936-1950, 1956-1966
+src/copyroom/local/workshop.py       312    268    14%   29-31, 37-52, 56-62, 68-87, 93-106, 112-125, 131, 137-145, 156-181, 185-188, 192-194, 198-200, 206, 210-218, 229-231, 244-253, 265-295, 315-332, 350-365, 369, 378-404, 408-417, 423-433, 443-498, 517-521, 527-534
+----------------------------------------------------------------
+TOTAL                               2553   2138    16%

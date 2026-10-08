@@ -261,34 +261,46 @@ Two weaknesses in the ancestry mechanism, CODE-READ: the render head is found by
 
 ## 3. Crash states and recovery, measured
 
-Method: a `/tmp` driver monkeypatched `JJ.run`, `write_json`, `shutil.rmtree`, `Path.unlink` or `Path.replace` in a child process running the real CLI, then called `os._exit(137)` after the Nth matching call. Three runs were repeated with a real external `SIGKILL`; after normalising ids the post-crash captures were **identical** (0 diff lines across the operation log, commit list, marker, file set and workspace list), so `os._exit` is a faithful stand-in. The `write.lock` flock was free after all 21 crashes. TESTED.
+Phase F uses `tests/crash/test_publication_crash_matrix.py` and a separate
+`tests/crash/driver.py` process. Each case requires a crash record and the
+expected exit code, runs `recover`, checks the tracked tree and marker, checks
+the workspace and journal, and runs `recover` a second time. The full matrix
+passed with 26 cases. The earlier capture-only run is in
+`evidence/2026-10-08/crash-pre-phase-f/`.
 
-| Run | Crash point | State left | Listable by CopyRoom? | Recoverable by CopyRoom? |
-| --- | --- | --- | --- | --- |
-| A1 | after `jj new <preview_head>` | tree holds the update; marker still revision 0; `@` is an empty `copyroom:update` commit | yes | partly — retry exits 1; `discard` then a fresh `update --apply` converges |
-| A2 | after the marker `write_json` | marker on disk is revision 1, uncommitted | yes | partly — retry exits 1; fresh `update` returns `no-change`, marker stays uncommitted |
-| A2pre | after the temp file, before `os.replace` | stray `..copyroom-local.json.<rand>` in the project root, later snapshotted into history | yes | partly — the stray file persists |
-| A3 | after `jj commit` | fully applied; stale preview and both state files remain | yes | yes — `discard` cleans up |
-| A4 | after `workspace forget`, before `rmtree` | workspace unregistered; preview dir and state files remain | yes (ghost) | yes — `discard` exits 0; forgetting a missing workspace is a no-op warning |
-| A5 | after `rmtree`, before the unlinks | preview dir gone; both state files remain | yes (ghost) | **no** — retry and `discard` both exit 2 `preview workspace is missing`; needs manual `rm` |
-| A6 | after the first unlink | orphan sidecar only | **no** | **no** — orphan file leaks until removed by hand |
-| L0 | after `workspace add` | leaked workspace and temp dir | **no** | retry add exits 0; the leak remains |
-| **L1** | after the active `jj new <merge_head>` | layer files **in the tree**; marker has **no** layer; a temp workspace leaks | **no** — `status` and `layer list` report ok, exit 0 | **no** — retry exits 2 `output path collision`; a different name also exits 2; only manual jj surgery fixes it |
-| L2 | after the marker write | marker has the layer, uncommitted; workspace leaks | partly | retry exits 3 `layer already exists`; leak needs manual cleanup |
-| L3 | after the marker commit | layer committed; workspace and temp dir leak | partly | as L2 |
-| L4 | after `workspace forget`, before `rmtree` | layer committed; temp dir leaks | partly | as L2 |
+| Run | Crash point | Recovery result |
+| --- | --- | --- |
+| A1 | after `jj new` returns for update | `recover` verifies publication and removes the journal, workspace, and preview state |
+| A2 | after the `published` journal write | `recover` completes cleanup |
+| A3 | after `workspace forget`, before preview removal | `recover` removes the preview directory and state |
+| A4 | after preview `rmtree` | `recover` removes the remaining state and journal |
+| A5 | after the preview state unlink | `recover` removes the sidecar and journal |
+| A6 | after the preview sidecar unlink | `recover` removes the journal |
+| L0 | after layer `workspace add` | `recover` removes the incomplete workspace and temporary directory |
+| L1 | after layer `jj new` returns | `recover` verifies publication and removes the journal and temporary directory |
+| L2 | after the `published` journal write | `recover` completes cleanup |
+| L3 | after layer `workspace forget` | `recover` removes the temporary directory and journal |
+| L4 | after layer temporary `rmtree` | `recover` removes the journal |
+| X0 | after `prepared`, before `publishing` | `recover` keeps the preview for review; `discard` removes it |
+| X1 | after `publishing`, before `jj new` | `recover` resets the journal to `prepared`; `discard` removes the preview |
+| X1j | while the real `jj new` process is blocked at its working-copy lock | `recover` resets the journal to `prepared`; `discard` removes the preview |
 
 ### 3.1 What this means
 
-**CopyRoom never discards a competing writer's work on crash.** TESTED across six paired runs (A1w, A2w, A3w, L1w, L2w, L3w): after each crash a second writer edited `README.md`, added a file, committed, and left an uncommitted file. In all six the edit, the committed file and the uncommitted file survived every recovery path CopyRoom offers, and the writer's commit stayed an ancestor of `@`. Retry apply refuses because `@` moved, so it never reaches the dead `op restore` branch. One side effect, TESTED in A2w: the marker change and the update content were folded into the writer's commit, and no `copyroom:project inputs` commit exists.
+The writer variants check the exact bytes of `README.md`, `writer-notes.txt`,
+and `writer-wip.txt`, the combined tracked tree, the marker digest, and commit
+ancestry. The writer's committed change remains an ancestor of `@` in all
+writer cases. For X0w, X1w, and X1jw, the project moved before publication, so
+the prepared head is not an ancestor of `@`; recovery keeps the preview for
+review until the test discards it. For A1w and L1w, recovery reports publication
+as unverified and keeps the journal and workspace. Other published writer
+cases clean the journal and workspace.
 
-The hazard is not loss. The hazard is a **silent half state plus manual cleanup** — and the standing advice to run `jj op restore <saved op>` would hide the writer's later operations.
-
-**`layer add` is the worst case.** L1 leaves the layer's files applied, the marker without the layer, `copyroom status` reporting `ok` with exit 0, and no CopyRoom command able to see or fix it. The recovery that worked was four manual jj commands (`jj rebase -s <writer commit> -d <active head>`, `jj abandon '<merge head> | parents(<merge head>)'`, `jj workspace forget <ws>`, `rm -rf` the temp dir) followed by a re-run.
-
-**`.jj` itself never became inconsistent.** In all 21 crash runs `jj status`, `jj op log` and `jj workspace list` exited 0. The word "stale" appears nowhere in the crash evidence, and jj never suggested `jj workspace update-stale`. A kill inside a jj subprocess was not tested; jj's own operation store is the only protection there (INTERPRETATION).
-
-**Preparation also leaks.** A crash after `jj workspace add` (preview `W:562`, layer `W:400`) leaves a registered jj workspace and a directory that no CopyRoom command lists. `list_previews` only globs `.copyroom-local/previews/*.json` and never checks that the workspace or directory still exists. The `$TMPDIR/copyroom-layer-*` directories accumulate; roughly 40 were already present on this machine from earlier runs.
+A1k, A3k, and L1k use a real `SIGKILL`. X1j also kills the real jj binary after
+the test confirms that the shim has executed it. These process kills do not
+simulate power loss. The `write_json` fsync discipline in `source.py:54-82`
+remains unproven; a crash-consistent filesystem layer such as `dm-flakey` is
+needed to test it.
 
 ---
 

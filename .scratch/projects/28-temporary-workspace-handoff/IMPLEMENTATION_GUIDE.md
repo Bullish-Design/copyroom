@@ -507,8 +507,9 @@ Create `tests/crash/test_publication_crash_matrix.py` and
 - Keep the monkeypatch injection. A grep of `src/` for `_exit`, `environ`,
   `getenv`, `FAULT`, `CRASH` and `inject` found nothing, so no hook can fire in
   production. Keep it that way: the driver stays in `tests/`, never in `src/`.
-- Mark the full matrix `@pytest.mark.slow` and register the marker, so the
-  default gate stays near its current 84 s. Run the matrix with
+- Mark the full matrix `@pytest.mark.slow`, register the marker, and add
+  `-m 'not slow'` to pytest's default options. This keeps the default gate near
+  its current 84 s. Run the matrix with
   `devenv shell -- uv run pytest -q -m slow`.
 
 ### F2. Add the two missing crash points
@@ -521,8 +522,8 @@ Create `tests/crash/test_publication_crash_matrix.py` and
 Implement `X1` by patching `_set_journal_phase` and dying on
 `phase == "publishing"` — the current driver already has that hook shape at
 `driver.py:57-63`, pointed at `published` instead. Add an `X1j` variant that
-kills during the `jj new` subprocess: put a shim named `jj` first on `PATH`
-that sleeps, writes the ready file, then `exec`s the real jj.
+kills during the `jj new` subprocess: put a shim named `jj` first on `PATH`,
+wait at a FIFO barrier, then `exec` the real jj.
 
 Run each new point with and without a competing writer.
 
@@ -537,11 +538,14 @@ Replace the capture-only `recover()` step. For each case assert:
 3. `tracked_tree_digest(project)` equals the recorded `prepared_tree`, or the
    pre-crash tree when the case must not publish.
 4. The marker bytes digest equals the recorded `prepared_marker_digest`.
-5. The publication commit is an ancestor of `@`.
-6. `.copyroom-local/journal/` is empty.
-7. `jj workspace list` holds only `default`.
-8. No `copyroom-layer-*` directory remains.
-9. A second `recover` is a no-op and exits 0.
+5. The publication commit is an ancestor of `@` when the crash point follows
+   publication. A prepublication crash without a writer leaves the active tree
+   unchanged.
+6. A completed recovery leaves `.copyroom-local/journal/` empty.
+7. A completed recovery leaves only `default` in `jj workspace list`.
+8. A completed recovery removes every `copyroom-layer-*` directory.
+9. A second `recover` leaves the result unchanged. It exits 0 after cleanup;
+   an unverified publication keeps the same named pending result and exits 1.
 
 Record `prepared_tree` and `prepared_marker_digest` **before** the crash. The
 journal is deleted at cleanup, so those values do not survive it.
@@ -550,10 +554,13 @@ journal is deleted at cleanup, so those values do not survive it.
 
 Use a FIFO barrier. `evidence/2026-10-08/harness/barrier_driver.py` already
 demonstrates the technique against the old apply path; reuse it. The writer
-must be released **inside** the crash window, not after the process has died.
-For each `w` case assert the writer's exact README bytes, the exact
-`writer-wip.txt` bytes, and that both the writer commit and the prepared head
-are ancestors of `@`.
+must finish **inside** the crash window, while the driver process is alive.
+For each `w` case assert the writer's exact README bytes, `writer-notes.txt`,
+and `writer-wip.txt` bytes. For postpublication cases, assert that both the
+writer commit and prepared head are ancestors of `@`. For X0w, X1w, and X1jw,
+assert that the writer commit is an ancestor and that recovery keeps the
+prepared preview for review; the prepared head cannot be an ancestor before
+publication.
 
 ### F5. State the power-loss limit
 
@@ -564,10 +571,13 @@ not claim durability the harness does not prove.
 
 ### F6. Regenerate the committed evidence
 
-Delete or clearly date-stamp `evidence/2026-10-08/crash/`, and commit the run
-that matches the new test. Update the design report's §3 table: the crash-point
-labels changed meaning (A3 is now `workspace forget`, not "after `jj commit`";
-A5 is the state unlink; A6 is the sidecar unlink).
+The earlier capture-only evidence now lives in
+`evidence/2026-10-08/crash-pre-phase-f/`. Commit the run that matches the new
+test at
+`evidence/step-2.5/phase-f/2026-10-08T1810Z/`. Update the design report's §3
+table: the crash-point labels changed
+meaning (A3 is now `workspace forget`, not "after `jj commit`"; A5 is the
+state unlink; A6 is the sidecar unlink).
 
 ## Phase G — Exit codes, cleanup, and the smaller findings
 
