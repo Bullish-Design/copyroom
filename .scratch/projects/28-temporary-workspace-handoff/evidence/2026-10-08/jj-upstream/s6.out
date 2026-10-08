@@ -1,0 +1,40 @@
+
+======== S1 `jj new main` in w1 paused at C, then P is SIGKILLed (crash between publish and checkout) ========
+heads (P's op published): ['3b8ce38017f4']
+P killed rc = -9 | w1 files: ['a.txt', 'w.txt']
+--- w1: jj st: rc=1
+stderr:
+Error: The working copy is stale (not updated since operation 45d99ac55d85).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+--- w1: jj debug working-copy (ignore-working-copy): rc=0
+stdout:
+Type: "local"
+Current operation: OperationId("45d99ac55d858b50d8ed7db26e24c2405d145b1cf1f63c9cc18b0aaf0a2be12633a1cb080bafc0f15f2dc6d5357146e33990a75f58c4f9babf60be3df13d9827")
+Current tree: MergedTree { tree_ids: Resolved(TreeId("3582b3142d2d80512d805d8d49bd018b1cf7f102")), labels: Unlabeled, .. }
+--- w1: jj workspace update-stale: rc=0
+stderr:
+Working copy  (@) now at: lxpsyqnr 514f1384 (empty) S1-new-on-main
+Parent commit (@-)      : kkoozwmo bf793589 main | base
+Added 0 files, modified 0 files, removed 1 files
+Updated working copy to fresh commit 514f1384419d
+w1 files: ['a.txt']
+--- w1: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : lxpsyqnr 514f1384 (empty) S1-new-on-main
+Parent commit (@-): kkoozwmo bf793589 main | base
+
+======== same crash, but op leaves tree unchanged (jj describe): is wc considered stale? ========
+--- w1: jj st: rc=0
+stdout:
+Working copy changes:
+A w.txt
+Working copy  (@) : ozxwmorr 7d7f8f2e renamed-by-P
+Parent commit (@-): pnmynsyl b8cc7ab1 main | base
+--- w1: debug wc: rc=0
+stdout:
+Type: "local"
+Current operation: OperationId("3f5dfd91fe94bddc98b6c82f4e34dde6b3605da6d2a35c20863e3e36a484cd843c8898d8ea103f2406f452a8567713ec2afc0c362cb3ce1e3b192e813d07bff1")
+Current tree: MergedTree { tree_ids: Resolved(TreeId("3582b3142d2d80512d805d8d49bd018b1cf7f102")), labels: Unlabeled, .. }
+repo heads ['3f5dfd91fe94']

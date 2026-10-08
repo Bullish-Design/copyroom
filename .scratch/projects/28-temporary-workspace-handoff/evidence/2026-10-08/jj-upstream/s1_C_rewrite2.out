@@ -1,0 +1,44 @@
+
+======== S1 `jj new` (in w1) paused at C (op published, wc not updated); Q squashes content into w1@ (the just-published @) from default ========
+P published; heads: ['8e7b4355df82']
+--- Q: jj squash --into w1@ : rc=0
+stderr:
+Working copy  (@) now at: rwzxmunx b502f36c (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 1 files
+heads after Q: ['49c312bae431']
+--- P (jj new) result: rc=0
+stderr:
+Working copy  (@) now at: psmrppvt 7f0e043a (empty) S1-new
+Parent commit (@-)      : nnqpxpsz 9da3b0a1 w1-work
+-- state after P: op heads = ['49c312bae431']
+[from head 49c312bae431]
+49c312bae431 parents=b51b507e6778 | squash commits into 7f0e043a65bf5fd9fe77b5ed643fcb881546e719
+b51b507e6778 parents=44f32065f76c | snapshot working copy
+44f32065f76c parents=8e7b4355df82 | new empty commit
+8e7b4355df82 parents=d48b80eebd67 | new empty commit
+d48b80eebd67 parents=f9f40ac8f5fc | describe commit 10310145a76b2f1a1c6185669ea264a9348b4f34
+f9f40ac8f5fc parents=323eb44f377d | snapshot working copy
+323eb44f377d parents=944c4a6a1a0e | create initial working-copy commit in workspace w1
+944c4a6a1a0e parents=676fb8fa44ca | add workspace 'w1'
+
+commits:
+rwzxmu b502f36c ws=[default@] bm=[] (empty) 
+psmrpp daa230f7 ws=[w1@] bm=[] S1-new
+nnqpxp 9da3b0a1 ws=[] bm=[] w1-work
+vntowl 1323c56c ws=[] bm=[] (empty) default-work
+yrzmvo bdf13b6e ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- default: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : rwzxmunx b502f36c (empty) (no description set)
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+   default wc op: 49c312bae431 | files: []
+--- w1: jj st: rc=1
+stderr:
+Error: The working copy is stale (not updated since operation 8e7b4355df82).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+   w1 wc op: 8e7b4355df82 | files: ['a.txt', 'w.txt']

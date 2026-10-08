@@ -1,0 +1,2 @@
+DRIVER start point=L2 mode=exit cwd=/tmp/cr-crash-2578910/runs/L2/project args=['layer', 'add', '--source', '/tmp/cr-crash-2578910/runs/L2/overlay', '--answers', '/tmp/cr-crash-2578910/runs/L2/overlay/answers.json', '--as', 'docs']
+CRASH point=L2 mode=exit pid=2671489 matched=write_json path=/tmp/cr-crash-2578910/runs/L2/project/.copyroom-local.json

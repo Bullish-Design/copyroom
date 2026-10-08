@@ -1,0 +1,61 @@
+op X = 1583c7fe672c
+--- writer A: jj new -m A  (moves head past X): rc=0
+stderr:
+Working copy  (@) now at: vsrmqwzo 0b24bb0f (empty) A
+Parent commit (@-)      : rkznkpkn 8b16dcc5 (empty) base
+head now Y = 7e7511827a10 (X is no longer the head)
+=== (a) mutating command pinned to --at-op=X: does it refuse because X is not head?
+--- jj --at-op=X bookmark create pinned -r @: rc=0
+stderr:
+Created 1 bookmarks pointing to rkznkpkn 8b16dcc5 pinned | (empty) base
+heads: ['7e7511827a10', 'b3a371e16294']
+--- next load: rc=0
+stdout:
+f1d973d4c1bb reconcile divergent operations
+7e7511827a10 new empty commit
+b3a371e16294 create bookmark pinned pointing to commit 8b16dcc5e385be9d753555a7fde93044327cd4f7
+stderr:
+Concurrent modification detected, resolving automatically.
+=== (b) --no-integrate-operation then op integrate on a stale base
+--- jj new -m C --no-integrate-operation: rc=0
+stderr:
+Operation left uncommitted because --no-integrate-operation was requested: 522ee6992ab4
+heads (op not integrated): ['f1d973d4c1bb']
+--- writer D (normal) jj describe -m D: rc=0
+stderr:
+Working copy  (@) now at: vsrmqwzo 4b46ba91 (empty) D
+Parent commit (@-)      : rkznkpkn 8b16dcc5 pinned | (empty) base
+heads after D: ['a97ed5359dd3']
+--- jj op integrate C (its parent is not the head any more): rc=0
+stderr:
+Rebased 1 descendant commits onto commits rewritten by other operation
+The specified operation has been integrated with other existing operations.
+heads after integrate: ['6ecf87f8ceb3']
+6ecf87f8ceb3 parents=522ee6992ab4,a97ed5359dd3 | reconcile divergent operations
+522ee6992ab4 parents=f1d973d4c1bb | new empty commit
+a97ed5359dd3 parents=f1d973d4c1bb | describe commit 0b24bb0ffeff3547f838567cf6296b5df0a87277
+f1d973d4c1bb parents=7e7511827a10,b3a371e16294 | reconcile divergent operations
+7e7511827a10 parents=1583c7fe672c | new empty commit
+b3a371e16294 parents=1583c7fe672c | create bookmark pinned pointing to commit 8b16dcc5e385be9d753555a7fde93044327cd4f7
+1583c7fe672c parents=d6f111aa4b4d | describe commit 9649b435fc61969a6cbd85b754a2e0d27af3af2d
+d6f111aa4b4d parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+
+=== (c) external advisory lock on op_heads/heads/lock gives a cooperative CAS for the publish step
+prepared (unpublished) op: 45079468fdd1 based on head efa2a3ab58f1
+lock held by harness; heads: ['efa2a3ab58f1']
+competing jj writer blocked at op-heads lock: True
+harness check under lock: heads == [X]? True
+integrate under external lock rc: 0 
+heads: ['45079468fdd1']
+--- competing writer completes after release: rc=0
+heads: ['45079468fdd1', 'a03499936a41']
+edf3ce0368e4 parents=45079468fdd1,a03499936a41 | reconcile divergent operations
+45079468fdd1 parents=efa2a3ab58f1 | describe commit bbdce533ec5ce01472e7385cf9c5e9ad5f8e0f3f
+a03499936a41 parents=efa2a3ab58f1 | describe commit bbdce533ec5ce01472e7385cf9c5e9ad5f8e0f3f
+efa2a3ab58f1 parents=6ecf87f8ceb3 | describe commit 688ed509d3c3c9d802ee4f6aff1d048ff169658d
+6ecf87f8ceb3 parents=522ee6992ab4,a97ed5359dd3 | reconcile divergent operations
+522ee6992ab4 parents=f1d973d4c1bb | new empty commit
+a97ed5359dd3 parents=f1d973d4c1bb | describe commit 0b24bb0ffeff3547f838567cf6296b5df0a87277
+f1d973d4c1bb parents=7e7511827a10,b3a371e16294 | reconcile divergent operations
+7e7511827a10 parents=1583c7fe672c |

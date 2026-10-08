@@ -1,0 +1,14 @@
+{"start": true, "pid": 2689723, "python": "/home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3", "jj_which": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj", "argv": ["update", "--apply", "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/preview"]}
+{"ordinal": 1, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 2, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["log", "--no-graph", "-r", "heads(::@ & subject(glob:\"copyroom:render 18950bf1fe184d98ba7b11444f0040af base *\"))", "-T", "commit_id ++ \"\\n\""], "ok": true}
+{"ordinal": 3, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["log", "--no-graph", "-r", "d32bedcb98e0d9d28d44ade0e5369745da20e061-", "-T", "commit_id"], "ok": true}
+{"ordinal": 4, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/preview", "args": ["resolve", "--list"], "ok": true}
+{"ordinal": 5, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/preview", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 6, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 7, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 8, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 9, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["new", "844cc32f2af439def5bf01ef38e1c8115831308a", "-m", "copyroom:update"], "match_ordinal": 1, "ok": true}
+{"ordinal": 10, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 11, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 12, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["op", "log", "--at-op=5f89dea13f94b7961dcbda6e51889819b063a21088d506431a16b83e8fd8e27247fff2905b690edea5f3997e0db73c807c9b7ef9ec261ebf3f2e4b75b262656e", "--no-graph", "-n", "1", "-T", "parents.map(|parent| parent.id()).join(\" \")"], "ok": true}
+{"ordinal": 13, "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}

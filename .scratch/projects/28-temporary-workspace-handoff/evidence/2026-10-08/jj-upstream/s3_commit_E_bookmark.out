@@ -1,0 +1,56 @@
+
+======== S3 `jj commit` in w1 paused in editor (E: snapshot done, repo loaded at X); Q bookmarks w1@ from default ========
+P in editor. heads: ['c8ae4dc205ee']
+--- Q: jj bookmark create qb -r w1@: rc=0
+stderr:
+Created 1 bookmarks pointing to uqzqwpyx 067675b8 qb | w1-work
+--- Q: jj log (default view): rc=0
+stdout:
+uqzqwp 067675b8 ws=[w1@] bm=[qb] w1-work
+nsrptv ca708709 ws=[default@] bm=[] (empty) default-work
+mlszts 656d1e7d ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty)
+--- P result: rc=0
+stderr:
+Working copy  (@) now at: rsyxxmzu 5878b9f8 (empty) (no description set)
+Parent commit (@-)      : uqzqwpyx aa7cd712 committed-by-P
+-- state after P: op heads = ['09277d0b3c52', '273ea127adf0']
+[from head 09277d0b3c52]
+09277d0b3c52 parents=c8ae4dc205ee | create bookmark qb pointing to commit 067675b83679b42d61fb0afa0ec92c6de50e59c2
+c8ae4dc205ee parents=1aa0bea8ddc0 | describe commit d98bf94e32b8fd971adf1f2255f8253e653aa03c
+1aa0bea8ddc0 parents=3d89a769a9f4 | snapshot working copy
+3d89a769a9f4 parents=76bf67f594a5 | create initial working-copy commit in workspace w1
+76bf67f594a5 parents=d1bc7761682a | add workspace 'w1'
+d1bc7761682a parents=2437a598ddba | new empty commit
+2437a598ddba parents=9f88040af152 | create bookmark main pointing to commit 656d1e7d4a3f2252deb60d87c37297ce72519911
+9f88040af152 parents=3faa670f33e0 | describe commit ba54436276fe2ba50d651883a122593e8e1ede1a
+
+[from head 273ea127adf0]
+273ea127adf0 parents=c8ae4dc205ee | commit 067675b83679b42d61fb0afa0ec92c6de50e59c2
+c8ae4dc205ee parents=1aa0bea8ddc0 | describe commit d98bf94e32b8fd971adf1f2255f8253e653aa03c
+1aa0bea8ddc0 parents=3d89a769a9f4 | snapshot working copy
+3d89a769a9f4 parents=76bf67f594a5 | create initial working-copy commit in workspace w1
+76bf67f594a5 parents=d1bc7761682a | add workspace 'w1'
+d1bc7761682a parents=2437a598ddba | new empty commit
+2437a598ddba parents=9f88040af152 | create bookmark main pointing to commit 656d1e7d4a3f2252deb60d87c37297ce72519911
+9f88040af152 parents=3faa670f33e0 | describe commit ba54436276fe2ba50d651883a122593e8e1ede1a
+
+commits:
+rsyxxm 5878b9f8 ws=[w1@] bm=[] (empty) 
+uqzqwp aa7cd712 ws=[] bm=[qb] committed-by-P
+nsrptv ca708709 ws=[default@] bm=[] (empty) default-work
+mlszts 656d1e7d ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- default: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : nsrptvlu ca708709 (empty) default-work
+Parent commit (@-): mlsztssn 656d1e7d main | base
+   default wc op: 3b41f2109afa | files: ['a.txt']
+--- w1: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : rsyxxmzu 5878b9f8 (empty) (no description set)
+Parent commit (@-): uqzqwpyx aa7cd712 qb | committed-by-P
+   w1 wc op: 3b41f2109afa | files: ['a.txt', 'w.txt']

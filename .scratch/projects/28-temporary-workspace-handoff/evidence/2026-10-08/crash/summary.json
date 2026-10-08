@@ -1,0 +1,2335 @@
+{
+ "A1": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1/project\", \"project_id\": \"c8ac8e84d07c4ccaa693ea27fabfd3fb\", \"render\": \"76f230826111fb30b527ca4dd5f7c7f2260b3135\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"0e1b060da4dff013bd16566a670aeb0f92d5c1a7\", \"active_tree\": \"259506e2c8d42f020895817939a645b4c86e56c548798797a2cc974e8d77c8e5\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A1 mode=exit pid=2611316 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1/project args=('new', 'f7ae41a7eb8face2287af465849169bdff8bcdc3', '-m', 'copyroom:update')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-3f4209ab5c25: wzywlxov f7ae41a7 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"68f12d46de5a2a9688dea9e"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A1/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-3f4209ab5c25\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"68f12d46de5a2a9688dea9e5f7b7d1f52879cf12\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A1/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: typrmwxx 37e7fe56 (empty) copyroom:update"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"68f12d46de5a2a9688dea9e"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"68f12d46de5a2a9688dea9e5f7b7d1f52879cf12\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"37e7fe5691525fe3a8b664d17b8f08078d2b5c7d\", \"active_tree\": \"72a4e5dc5c1980743cbb1c245ae336c51597a51ff79ba0ce1a90b6d86232c82e\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "fresh-apply": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1/project\", \"render\": \"f43dcc47a0b42d7a99e49ea2b7bb871ac39423b5\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: monqtwxu 3effcae9 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"f43dcc47a0b42d7a99e49ea"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"f43dcc47a0b42d7a99e49ea2b7bb871ac39423b5\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A1/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "A2": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2/project\", \"project_id\": \"78daa7f864e5498591c23c78b792f475\", \"render\": \"84e71f45d830bb09a2d728aa25c30da950bd930c\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"8f566b485f5d88cef2e73776a85aa007124899d9\", \"active_tree\": \"416f2525fd7ab10001e0df77cf53e5c5519c6f4a2c76956e111d5bc67c1c744a\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A2 mode=exit pid=2613974 matched=write_json path=/tmp/cr-crash-2578910/runs/A2/project/.copyroom-local.json"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-9e08bae379e0: lumrrwtl 0eae856a (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be1"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A2/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-9e08bae379e0\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be12dc32cdfe67829965\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A2/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: syumyrkm 91859d6c copyroom:update"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be1"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be12dc32cdfe67829965\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: syumyrkm 91859d6c copyroom:update"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be1"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c62eb3556c03186ec073be12dc32cdfe67829965\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "A3": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3/project\", \"project_id\": \"a08057a748da429ba1c616fb79c0bb50\", \"render\": \"0712e3d582f79fd4cf8621e01fb94d037a19847a\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"6a2ab7071b749f5c74686ddc413e1fc5395fa2b4\", \"active_tree\": \"780e15b70bd43b094a8c5f13b3535b73d54013e112a8a5d29a1d518a8ee97ff8\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A3 mode=exit pid=2615631 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3/project args=('commit', '-m', 'copyroom:project inputs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-409ff2b57407: xxulvkkr 8f63a161 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A3/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-409ff2b57407\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008c14b6ba2b92b13fee\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A3/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: urukwsvk 75ce2535 (empty) (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008c14b6ba2b92b13fee\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: urukwsvk 75ce2535 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"9cea4d11a0748e5bd1e9008c14b6ba2b92b13fee\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "A4": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A4/project\", \"project_id\": \"dbe8e19186b04d32824f93b37282430e\", \"render\": \"3829500ef07a61be09a1c6a04d3cd0f34a3c8c21\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"5fea343309001dc89c6f7da09b0c0a4d74342e19\", \"active_tree\": \"1e9efcb3eadf8ecebdde55a8d96ce86fd4577de040c4551970f4cc4b5922a9f6\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A4 mode=exit pid=2617658 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A4/project args=('workspace', 'forget', 'copyroom-8af700a30ecb')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "default: mmswyrwl 0cccb682 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "No working copy"
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c4357"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A4/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-8af700a30ecb\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c435780f9944d1df4924e8\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A4/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A4/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: mmswyrwl 0cccb682 (empty) (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c4357"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c435780f9944d1df4924e8\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A4/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A4/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: mmswyrwl 0cccb682 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c4357"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"91848ad1fb9d57e3c7c435780f9944d1df4924e8\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A4/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "A5": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A5/project\", \"project_id\": \"bf5922cc8d234dfd8edc955c4fed34d4\", \"render\": \"c1901ea1954862841b895661183eec74ad8b9918\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"14c9485d66bf5b758b34bebe7c3fc18dfe834ca7\", \"active_tree\": \"56b837adb94393be5077a58025cfbf123dca0f43494f5cf6cfe436f5677b8173\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A5 mode=exit pid=2665998 matched=shutil.rmtree path=/tmp/cr-crash-2578910/runs/A5/preview"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "default: ynyvsvyq e8b1429a (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0b"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A5/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-ead58c9923d3\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0bfdaf104c74bec638d\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A5/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 2,
+   "msg": "Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A5/preview"
+  },
+  "discard": {
+   "rc": 2,
+   "msg": "Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A5/preview"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: ynyvsvyq e8b1429a (empty) (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0b"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A5/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-ead58c9923d3\"}]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0bfdaf104c74bec638d\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A5/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A5/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: ynyvsvyq e8b1429a (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0b"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A5/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-ead58c9923d3\"}]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"7d29681ca022d7f5a6a3e0bfdaf104c74bec638d\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A5/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "manual-list": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "manual-status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  }
+ },
+ "A6": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A6/project\", \"project_id\": \"9844c9844ed64ba8a9aa7bed6bb389e5\", \"render\": \"0951c5a64ddcf2d6a82b30a9d83c9b49ebf10965\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"2fd616750e87bfdb934348440a9ebc00911174af\", \"active_tree\": \"c11da44598e3e4ba2d963b5228f889e21bf33fa064d303ad44b0cad09ff6b932\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A6 mode=exit pid=2668747 matched=Path.unlink /tmp/cr-crash-2578910/runs/A6/project/.copyroom-local/previews/copyroom-88cd1c4910ea.json (state file removed; sidecar not yet)"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "default: rnzzynyp c5a58a3b (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769675ae592d0c3c4f43\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A6/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 2,
+   "msg": "Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A6/preview"
+  },
+  "discard": {
+   "rc": 2,
+   "msg": "Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A6/preview"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: rnzzynyp c5a58a3b (empty) (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769675ae592d0c3c4f43\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A6/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A6/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: rnzzynyp c5a58a3b (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"b6ef5f2e3f344c9b8aa1769675ae592d0c3c4f43\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A6/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "manual-status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  }
+ },
+ "L1": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L1/project\", \"project_id\": \"193dec074dfe44f1ba7066e2648d2e4f\", \"render\": \"2e583c3db22ec86cffadec33be6d76a9a9e24061\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L1 mode=exit pid=2622596 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1/project args=('new', '693e8a6a82da9010855950ae1d93b527119f6f89', '-m', 'copyroom:layer add docs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-4518fe1f65aa: xpszzrqs 693e8a6a (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2e583c3db22ec86cffadec3"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2e583c3db22ec86cffadec33be6d76a9a9e24061\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-layer-add": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L1/tmp/copyroom-layer-4av_8zqc/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L1/tmp/copyroom-layer-4av_8zqc/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-4518fe1f65aa: xpszzrqs 693e8a6a (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2e583c3db22ec86cffadec3"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2e583c3db22ec86cffadec33be6d76a9a9e24061\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  }
+ },
+ "L2": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L2/project\", \"project_id\": \"2f5c4f87c21c4daea37a629056f33d47\", \"render\": \"436bbac4767ceca7dc46203c85bd109ab7ac4168\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L2 mode=exit pid=2671489 matched=write_json path=/tmp/cr-crash-2578910/runs/L2/project/.copyroom-local.json"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-05502a227c4b: ozszwpzk 1f8e69e8 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"436bbac4767ceca7dc46203"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"436bbac4767ceca7dc46203c85bd109ab7ac4168\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L2/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "retry-layer-add": {
+   "rc": 3,
+   "msg": "Error: layer already exists: docs"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L2/tmp/copyroom-layer-3mgi5r3u/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L2/tmp/copyroom-layer-3mgi5r3u/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-05502a227c4b: ozszwpzk 1f8e69e8 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"436bbac4767ceca7dc46203"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"436bbac4767ceca7dc46203c85bd109ab7ac4168\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L2/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-forget-ws": {
+   "rc": 0,
+   "msg": ""
+  },
+  "manual-layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"436bbac4767ceca7dc46203c85bd109ab7ac4168\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L2/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-ws-list": {
+   "rc": 0,
+   "msg": "default: rpswysww 78472266 copyroom:layer add docs"
+  }
+ },
+ "L3": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L3/project\", \"project_id\": \"6403dd2072d6494ca6b5226d67f47270\", \"render\": \"568f981a36c9c5f2a0ae48f3fe99b4742671f555\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L3 mode=exit pid=2674055 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L3/project args=('commit', '-m', 'copyroom:layer marker docs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-992f2c060ebc: pttvmvvs 9ac8db25 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"568f981a36c9c5f2a0ae48f"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"568f981a36c9c5f2a0ae48f3fe99b4742671f555\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L3/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "retry-layer-add": {
+   "rc": 3,
+   "msg": "Error: layer already exists: docs"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L3/tmp/copyroom-layer-xfrf47mv/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L3/tmp/copyroom-layer-xfrf47mv/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-992f2c060ebc: pttvmvvs 9ac8db25 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"568f981a36c9c5f2a0ae48f"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"568f981a36c9c5f2a0ae48f3fe99b4742671f555\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L3/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-forget-ws": {
+   "rc": 0,
+   "msg": ""
+  },
+  "manual-layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"568f981a36c9c5f2a0ae48f3fe99b4742671f555\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L3/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-ws-list": {
+   "rc": 0,
+   "msg": "default: wrnqklyw 03566c13 (empty) (no description set)"
+  }
+ },
+ "L4": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L4/project\", \"project_id\": \"4f30cedc644a4c0fb232882f95b6ded3\", \"render\": \"21c7ba201cdd2f344522e197bf4e2263de74523f\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L4 mode=exit pid=2676354 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L4/project args=('workspace', 'forget', 'copyroom-288357b840a0')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "default: nlsmtspw 2253df53 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "No working copy"
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"21c7ba201cdd2f344522e19"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"21c7ba201cdd2f344522e197bf4e2263de74523f\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L4/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "retry-layer-add": {
+   "rc": 3,
+   "msg": "Error: layer already exists: docs"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L4/tmp/copyroom-layer-0i5qqbzh/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L4/tmp/copyroom-layer-0i5qqbzh/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "default: nlsmtspw 2253df53 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "No working copy"
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"21c7ba201cdd2f344522e19"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"21c7ba201cdd2f344522e197bf4e2263de74523f\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L4/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"21c7ba201cdd2f344522e197bf4e2263de74523f\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L4/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  },
+  "manual-ws-list": {
+   "rc": 0,
+   "msg": "default: nlsmtspw 2253df53 (empty) (no description set)"
+  }
+ },
+ "A1w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1w/project\", \"project_id\": \"3b4a2c876b6748a5aa95132fc7fd1cf8\", \"render\": \"2a72f652787a9073f7fe350cecfe2c2d12eb8a7f\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"f563f49c7fa7f92eb65ed4e24d1aada9daeab871\", \"active_tree\": \"f506451e2b22dd4be0069f18717174989c0cae573c06864ca2708b16e6e67806\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A1 mode=exit pid=2627320 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1w/project args=('new', '904290aeb13a8f8af145cfce9f51d72a151bc9dc', '-m', 'copyroom:update')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-c3734e2fadef: wmqupoyv 904290ae (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4e90e091c7578d7391eb43e"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A1w/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-c3734e2fadef\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4e90e091c7578d7391eb43edde815d1e58548170\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: ykoknnyy 76940a2b (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A1w/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: ykoknnyy 8a76121a (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4e90e091c7578d7391eb43e"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4e90e091c7578d7391eb43edde815d1e58548170\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"8a76121a222e834fd24e4c65a839f321820d2b9a\", \"active_tree\": \"c9e3f0beea935a23de9ceb64806ca04b0e8b6c1d92c4d4f363aa7e6e7110b756\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "fresh-apply": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1w/project\", \"render\": \"2c9fbf34665f76edb78cc04d65511f77ba359c13\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: rkoumwrp eaf251a2 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2c9fbf34665f76edb78cc04"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"2c9fbf34665f76edb78cc04d65511f77ba359c13\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A1w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "A2w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2w/project\", \"project_id\": \"10d4e962e4d6480e990fd35cb79999f7\", \"render\": \"4379e7390137da73604a968d7e6b6c38f80091d5\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"d7cdda4351032a7e7eb24909ea3d9def59eb3f83\", \"active_tree\": \"b180f8e2215cf5a55c06dead4319244506579ffeba6d06aba72864c0cb783474\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A2 mode=exit pid=2629404 matched=write_json path=/tmp/cr-crash-2578910/runs/A2w/project/.copyroom-local.json"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-055f3d77f0f1: ytwtupqr b5ee9676 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a5"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A2w/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-055f3d77f0f1\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a565505b92c02f6e265\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: sxuwuvll c9d9359b (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A2w/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: sxuwuvll e4a8de6b (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a5"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a565505b92c02f6e265\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2w/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: sxuwuvll e4a8de6b (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a5"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"4202f67e314c64c307426a565505b92c02f6e265\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "A3w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3w/project\", \"project_id\": \"88d2727ffac140ef8f5c7dccc1cc844a\", \"render\": \"95a233f7d6bea9b0a2e3b3a009bfb8f3ad33f7f1\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"86363005cb1c1cca655c2d5d375c0be0225b2af6\", \"active_tree\": \"a6775adbcb6be2b94016b4bfec820c32d49170c5f50cad17c1ac44102eb0e595\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A3 mode=exit pid=2631190 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3w/project args=('commit', '-m', 'copyroom:project inputs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-f5db148d5708: onuwnxzs 9f7500f7 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f1"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A3w/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-f5db148d5708\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f161876e9179d2edc9b\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: rnqpnntx ebe089f3 (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A3w/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: rnqpnntx 12b3fecc (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f1"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f161876e9179d2edc9b\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3w/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: rnqpnntx 12b3fecc (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f1"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"0c9ebe6fb280ec0b0c2b7f161876e9179d2edc9b\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3w/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "L1w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L1w/project\", \"project_id\": \"112f791f697645719e0a106e03511b03\", \"render\": \"d004cb42d9c6097b066d66a5f0b5fb862b1607f5\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L1 mode=exit pid=2683626 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1w/project args=('new', 'd0b8345365749fe345fa354208ee66ee4035325e', '-m', 'copyroom:layer add docs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-c2c7995debe5: lvzwrrny d0b83453 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"d004cb42d9c6097b066d66a"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"d004cb42d9c6097b066d66a5f0b5fb862b1607f5\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: xyoqlkxr 0846b303 (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-layer-add": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L1w/tmp/copyroom-layer-ttt9t7rc/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L1w/tmp/copyroom-layer-ttt9t7rc/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-c2c7995debe5: lvzwrrny d0b83453 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"d004cb42d9c6097b066d66a"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"d004cb42d9c6097b066d66a5f0b5fb862b1607f5\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "manual-rebase": {
+   "rc": 0,
+   "msg": "Rebased 2 commits to destination"
+  },
+  "manual-abandon-merge": {
+   "rc": 0,
+   "msg": "Abandoned 2 commits:"
+  },
+  "manual-forget-ws": {
+   "rc": 0,
+   "msg": ""
+  },
+  "manual-layer-add": {
+   "rc": 0,
+   "msg": "{\"layer\": \"docs\", \"project\": \"/tmp/cr-crash-2578910/runs/L1w/project\", \"render\": \"7598758fa990bab93d7b327239c6e28959e18591\"}"
+  },
+  "manual-layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"d004cb42d9c6097b066d66a5f0b5fb862b1607f5\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {"
+  },
+  "manual-status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "writer-check-after-manual": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "L2w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L2w/project\", \"project_id\": \"8dc5b55a65b2493cb02b52ac77016989\", \"render\": \"e214fab62c777cefdf8be0a8de11f21699f0d8d6\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L2 mode=exit pid=2633634 matched=write_json path=/tmp/cr-crash-2578910/runs/L2w/project/.copyroom-local.json"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-6f2a5e7b9029: tzmnkqsw 7b1e8e11 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"e214fab62c777cefdf8be0a"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"e214fab62c777cefdf8be0a8de11f21699f0d8d6\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L2w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: xtpwyrtm 25a7a92e (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-layer-add": {
+   "rc": 3,
+   "msg": "Error: layer already exists: docs"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L2w/tmp/copyroom-layer-ktxul4rc/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L2w/tmp/copyroom-layer-ktxul4rc/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-6f2a5e7b9029: tzmnkqsw 7b1e8e11 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"e214fab62c777cefdf8be0a"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"e214fab62c777cefdf8be0a8de11f21699f0d8d6\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L2w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "L3w": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L3w/project\", \"project_id\": \"4745c69eb09b4541b43a57c9269faa23\", \"render\": \"38cfaa24169c613276cb0fe6251cc3e608dd1062\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L3 mode=exit pid=2635276 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L3w/project args=('commit', '-m', 'copyroom:layer marker docs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-2b49bf80d94a: lnzrvulm b37ccdf7 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"38cfaa24169c613276cb0fe"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"38cfaa24169c613276cb0fe6251cc3e608dd1062\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L3w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {"
+  },
+  "writer-commit": {
+   "rc": 0,
+   "msg": "Working copy  (@) now at: upzkrrtu e8ea7b72 (empty) (no description set)"
+  },
+  "writer-check-before-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  },
+  "retry-layer-add": {
+   "rc": 3,
+   "msg": "Error: layer already exists: docs"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L3w/tmp/copyroom-layer-26ci_z15/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L3w/tmp/copyroom-layer-26ci_z15/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-2b49bf80d94a: lnzrvulm b37ccdf7 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"38cfaa24169c613276cb0fe"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"38cfaa24169c613276cb0fe6251cc3e608dd1062\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L3w/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {"
+  },
+  "writer-check-after-recovery": {
+   "README has writer edit": true,
+   "writer-notes.txt on disk": true,
+   "writer-wip.txt on disk (uncommitted)": true,
+   "writer commit visible in jj (all())": true,
+   "writer commit is ancestor of @": true
+  }
+ },
+ "A1k": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1k/project\", \"project_id\": \"c915155ecf1b4cab8e8167b9c3e2a7c7\", \"render\": \"8c94b39633ad57f5d39c50b32a66df7646ca434d\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"fff6c41b82aa573fe6778f9aeead73d21a4334b1\", \"active_tree\": \"65d2e2cae3e1d64b8a74feb2907e45fe864125edcf85ef8d836d7a1ea8ec006c\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": -9,
+   "msg": "CRASH point=A1 mode=hang pid=2636923 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1k/project args=('new', '0d1ec7c6d2bdbc400bacd187df6f9090e0228236', '-m', 'copyroom:update')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-b210abc2298d: wzzpxpyk 0d1ec7c6 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"3167fa70cfac39a79e4f8e2"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A1k/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-b210abc2298d\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"3167fa70cfac39a79e4f8e281b43fea1285ff22f\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1k/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A1k/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: mowzvzpn 37d22f03 (empty) copyroom:update"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"3167fa70cfac39a79e4f8e2"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"3167fa70cfac39a79e4f8e281b43fea1285ff22f\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A1k/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"37d22f03c414e2f6dfac8da47cfe84b4e1786b09\", \"active_tree\": \"09bd0b94f97807f6e4b73ee3db3c905382ca4ca0b12b058d265ad91212da29da\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "fresh-apply": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A1k/project\", \"render\": \"c2cd5b83022e342c86ef3903ef8d86b9533980b2\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: lmwmyonr b6e236c0 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c2cd5b83022e342c86ef390"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c2cd5b83022e342c86ef3903ef8d86b9533980b2\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A1k/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "A3k": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3k/project\", \"project_id\": \"82b842bdb2d8415c990acc47fa27b069\", \"render\": \"db46ec8e6180d60773b24f4b00d8c2c6b57aff7e\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"6fabe6342a80d739289cb4bce12dfe3e1f3dd409\", \"active_tree\": \"f334e9442f4a0cecbe2acb42cec248f53d299bf27014efc700fc38f73f88201a\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": -9,
+   "msg": "CRASH point=A3 mode=hang pid=2639370 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3k/project args=('commit', '-m', 'copyroom:project inputs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-572c96f04b66: yzsntwum 2260884b (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A3k/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-572c96f04b66\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982a42145ff41fee1757\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3k/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A3k/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: nwumpxrz 95bc52e2 (empty) (no description set)"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982a42145ff41fee1757\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3k/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A3k/project\", \"result\": \"no-change\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: nwumpxrz 95bc52e2 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"95ac1af99d54196f8b12982a42145ff41fee1757\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A3k/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "L1k": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L1k/project\", \"project_id\": \"b01501efef784f7585535c669e34251e\", \"render\": \"cbdfc4325e0d77b27559da1a88f6c52f50a76bc7\"}"
+  },
+  "crash": {
+   "rc": -9,
+   "msg": "CRASH point=L1 mode=hang pid=2640546 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1k/project args=('new', '403a1877ef280cdff9ac31bf34ba8717952a736e', '-m', 'copyroom:layer add docs')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-c69eb4bff13d: prnwoyun 403a1877 (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"cbdfc4325e0d77b27559da1"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"cbdfc4325e0d77b27559da1a88f6c52f50a76bc7\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1k/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-layer-add": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L1k/tmp/copyroom-layer-8vtlhirt/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L1k/tmp/copyroom-layer-8vtlhirt/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-c69eb4bff13d: prnwoyun 403a1877 (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"cbdfc4325e0d77b27559da1"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"cbdfc4325e0d77b27559da1a88f6c52f50a76bc7\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L1k/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  }
+ },
+ "A2pre": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2pre/project\", \"project_id\": \"11377e021457465ca3ffb67f07be5f26\", \"render\": \"cf4b5a8baec1d11f97f45ce4459775f625010451\"}"
+  },
+  "update-preview": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"fee86088cdad30eac9cc3a046bedad35753f7048\", \"active_tree\": \"1779e7676f1a191418a0289fca095cf1b050c16b8ca7ec21a1952e7c9c46e9f8\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=A2pre mode=exit pid=2657616 matched=Path.replace /tmp/cr-crash-2578910/runs/A2pre/project/..copyroom-local.json.d5i8zxwo -> /tmp/cr-crash-2578910/runs/A2pre/project/.copyroom-local.json (not yet replaced)"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-df79792c13c7: pptmtroo bc092f2d (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "post-crash:jj-status:preview": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"ee5468bed2da7c2583aa464"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[{\"conflicts\": [], \"path\": \"/tmp/cr-crash-2578910/runs/A2pre/preview\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\", \"workspace\": \"copyroom-df79792c13c7\"}]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"ee5468bed2da7c2583aa464866ba4c448803ff78\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A2pre/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-apply": {
+   "rc": 1,
+   "msg": "Error: active project changed after preview"
+  },
+  "discard": {
+   "rc": 0,
+   "msg": "{\"preview\": \"/tmp/cr-crash-2578910/runs/A2pre/preview\", \"result\": \"discarded\"}"
+  },
+  "after-recovery-1-2:workspace-list": {
+   "rc": 0,
+   "msg": "default: vvukrlxy 95aa072b copyroom:update"
+  },
+  "after-recovery-1-2:jj-status": {
+   "rc": 0,
+   "msg": "Working copy changes:"
+  },
+  "after-recovery-1-2:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-1-2:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"ee5468bed2da7c2583aa464"
+  },
+  "after-recovery-1-2:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-1-2:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-1-2:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"ee5468bed2da7c2583aa464866ba4c448803ff78\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/A2pre/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "fresh-update": {
+   "rc": 0,
+   "msg": "{\"active_head\": \"95aa072b47a38eec1671ab8034bfda8dcf02118e\", \"active_tree\": \"5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693\", \"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"co"
+  },
+  "fresh-apply": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/A2pre/project\", \"render\": \"a8db8b29665fe5207751f2372cb9a4381eb90745\"}"
+  },
+  "after-recovery-3-4:workspace-list": {
+   "rc": 0,
+   "msg": "default: uqluuqxu a3ba6c28 (empty) (no description set)"
+  },
+  "after-recovery-3-4:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery-3-4:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery-3-4:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"a8db8b29665fe5207751f23"
+  },
+  "after-recovery-3-4:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery-3-4:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery-3-4:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"a8db8b29665fe5207751f2372cb9a4381eb90745\", \"revision\": 1, \"source\": \"/tmp/cr-crash-2578910/runs/A2pre/source\", \"source_digest\": \"5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32\"}]"
+  }
+ },
+ "L0": {
+  "new": {
+   "rc": 0,
+   "msg": "{\"project\": \"/tmp/cr-crash-2578910/runs/L0/project\", \"project_id\": \"bdec94d3df9d4e75a16f4826c64cefb3\", \"render\": \"c12f246b6514073ef1f73b121b09e23c6ce76769\"}"
+  },
+  "crash": {
+   "rc": 137,
+   "msg": "CRASH point=L0 mode=exit pid=2660804 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L0/project args=('workspace', 'add', '--name', 'copyroom-40a97cd249f2', '-r', '0000000000000000000000000000000000000000', '/tmp/cr-crash-2578910/runs/L0/tmp/copyroom-layer-u6xtpo1c/workspace')"
+  },
+  "post-crash:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-40a97cd249f2: lzrlyyum dd3f309b (empty) (no description set)"
+  },
+  "post-crash:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "post-crash:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "post-crash:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c12f246b6514073ef1f73b1"
+  },
+  "post-crash:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "post-crash:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "post-crash:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c12f246b6514073ef1f73b121b09e23c6ce76769\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L0/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}]"
+  },
+  "retry-layer-add": {
+   "rc": 0,
+   "msg": "{\"layer\": \"docs\", \"project\": \"/tmp/cr-crash-2578910/runs/L0/project\", \"render\": \"f78cefd786e528c0a86e05547bfad98fa13c3b07\"}"
+  },
+  "discard-tmp": {
+   "rc": 2,
+   "msg": "Error: cannot read /tmp/cr-crash-2578910/runs/L0/tmp/copyroom-layer-u6xtpo1c/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/tmp/cr-crash-2578910/runs/L0/tmp/copyroom-layer-u6xtpo1c/workspace.copyroom-preview.json'"
+  },
+  "layer-add-other-name": {
+   "rc": 2,
+   "msg": "Error: output path collision: docs/guide.md and docs/guide.md"
+  },
+  "after-recovery:workspace-list": {
+   "rc": 0,
+   "msg": "copyroom-40a97cd249f2: lzrlyyum dd3f309b (empty) (no description set)"
+  },
+  "after-recovery:jj-status": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:jj-status:workspace": {
+   "rc": 0,
+   "msg": "The working copy has no changes."
+  },
+  "after-recovery:status": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"has_conflicts\": false, \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": "
+  },
+  "after-recovery:inspect": {
+   "rc": 0,
+   "msg": "{\"answers\": {\"description\": \"Local example with \\\"quotes\\\" and YAML: true\", \"module\": \"cedar_lab\", \"project_name\": \"cedar-lab\", \"python_version\": \"3.13\"}, \"conflicts\": [], \"layers\": {\"base\": {\"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c12f246b6514073ef1f73b1"
+  },
+  "after-recovery:list-previews": {
+   "rc": 0,
+   "msg": "[]"
+  },
+  "after-recovery:doctor": {
+   "rc": 0,
+   "msg": "{\"jj\": \"/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj\", \"ok\": true, \"templateer\": \"0.4.1\"}"
+  },
+  "after-recovery:layer-list": {
+   "rc": 0,
+   "msg": "[{\"layer\": \"base\", \"owners\": {\"README.md\": \"readme\", \"config/project.yml\": \"settings\"}, \"render_head\": \"c12f246b6514073ef1f73b121b09e23c6ce76769\", \"revision\": 0, \"source\": \"/tmp/cr-crash-2578910/runs/L0/source\", \"source_digest\": \"a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33\"}, {\""
+  }
+ }
+}

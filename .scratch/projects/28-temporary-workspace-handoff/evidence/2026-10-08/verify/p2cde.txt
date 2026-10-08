@@ -1,0 +1,61 @@
+### (c) MARKER edit by hand
+@ before edit (ignore-working-copy): 9a74095e1c1e5345703a984041e8b1015f623ea9
+@ after edit, before any snapshot (ignore-working-copy): 9a74095e1c1e5345703a984041e8b1015f623ea9
+$ jj status
+Working copy changes:
+M .copyroom-local.json
+Working copy  (@) : qltnlnmq 79dd2c93 (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+@ after jj status (ignore-working-copy): 79dd2c93e12ba939b0c53958622166e3c1008a67
+$ jj diff --summary
+M .copyroom-local.json
+--- restore marker bytes
+The working copy has no changes.
+Working copy  (@) : qltnlnmq 7ef5dee8 (empty) (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+@ after restore+status: 7ef5dee882e2a0ccae7f9921872afbc12d5b688e
+
+### (d) ORDINARY tracked file README.md edit by plain python
+@ before: 7ef5dee882e2a0ccae7f9921872afbc12d5b688e
+@ after edit, before snapshot (ignore-working-copy): 7ef5dee882e2a0ccae7f9921872afbc12d5b688e
+$ jj log -r @ -T commit_id (normal, snapshots)
+f3bcbd20a20c04344df48e8ceed5bf2946ccc2b8
+@ after (ignore-working-copy): f3bcbd20a20c04344df48e8ceed5bf2946ccc2b8
+Working copy changes:
+M README.md
+Working copy  (@) : qltnlnmq f3bcbd20 (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+--- restore README
+README now: # tiny
+@ after restore: ba215cef54f903d5db91e4fca3969a7d99dd320e
+
+### (e) IGNORED file (.git/info/exclude lists /.copyroom-local/previews/ and write.lock)
+@ before: ba215cef54f903d5db91e4fca3969a7d99dd320e
+$ jj log -r @ -T commit_id (normal, snapshots)
+ba215cef54f903d5db91e4fca3969a7d99dd320e
+@ after (ignore-working-copy): ba215cef54f903d5db91e4fca3969a7d99dd320e
+$ jj status
+Working copy changes:
+M README.md
+Working copy  (@) : qltnlnmq ba215cef (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+$ jj file list -r @ | grep -c previews/write.lock
+0
+
+### (e2) file ignored by GLOBAL ~/.config/git/ignore (*.sqlite)
+@ before: ba215cef54f903d5db91e4fca3969a7d99dd320e
+ba215cef54f903d5db91e4fca3969a7d99dd320e
+@ after (ignore-working-copy): ba215cef54f903d5db91e4fca3969a7d99dd320e
+Working copy changes:
+M README.md
+Working copy  (@) : qltnlnmq ba215cef (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+
+### (g) a NEW non-ignored file (auto-track)
+@ before: ba215cef54f903d5db91e4fca3969a7d99dd320e
+2312db2448be4f81f5b227539cbe7a7903b7f6da
+@ after: 2312db2448be4f81f5b227539cbe7a7903b7f6da
+newfile.txt
+Working copy changes:
+M README.md
+Working copy  (@) : qltnlnmq a0df5039 (no description set)

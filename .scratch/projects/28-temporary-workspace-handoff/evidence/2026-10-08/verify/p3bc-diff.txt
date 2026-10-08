@@ -1,0 +1,6 @@
+1,2c1,2
+< === BEFORE (/tmp/cr-verify-2585895/proj)
+< op head (--ignore-working-copy): 6af6f8022db04feb188d5a3b364a3acb4a0ab535188713bf1fd5e3432067e0743fd95e801da5a95d622eb0d68cfcc48983349f91b3b56ded7870437c830f6a2f
+---
+> === AFTER (/tmp/cr-verify-2585895/proj)
+> op head (--ignore-working-copy): 5f14dbd623dd42434cb3638062cbd0cf17097f2a68239d42275906c574e22d48204bec0acc7ef971a078f320e7cd08ac8cb4f4a5419e47196d1f20daa11c02d1

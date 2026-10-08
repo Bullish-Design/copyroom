@@ -1,0 +1,59 @@
+== SIGKILL at stage AFTER_PUBLISH ==
+--- jj log BEFORE ---
+@  9b779fb8ba09 @ [] empty=true
+│ ○  b2a527698ecc   [prepared] empty=false
+├─╯
+○  d32c27deab69   [base] empty=false
+◆  000000000000   [] empty=true
+lock free while publish_if is parked at stage (should be False = held): False
+publish_if exit status (negative = signal): -9
+working_copy.lock free after SIGKILL: True | op_heads lock free: True
+lock files left on disk after SIGKILL: ['.jj/working_copy/working_copy.lock']
+op heads dir (before any jj command): ['b391d0eff280']
+new ops visible: ['b391d0eff280']
+sig diff of .jj vs before: {'added': ['repo/index/op_links/b391d0eff28032e8bf85dc2e4317b121918ba91a9e5d6657f715c2040c9dcf63261489fa67d1887753a0faaced08434ba225ecf0e5eaff219580255acf290b14', 'repo/index/segments/a88af2317aad59209c61bc1016aaaf3501d404ddb5be71b350ad6777ac58a90a58026d46166f01a82f57b6465c5d282eb11877845a7b2da199a5a6c890d3db67', 'repo/op_heads/heads/b391d0eff28032e8bf85dc2e4317b121918ba91a9e5d6657f715c2040c9dcf63261489fa67d1887753a0faaced08434ba225ecf0e5eaff219580255acf290b14', 'repo/op_store/operations/b391d0eff28032e8bf85dc2e4317b121918ba91a9e5d6657f715c2040c9dcf63261489fa67d1887753a0faaced08434ba225ecf0e5eaff219580255acf290b14', 'repo/op_store/views/1b3f7148cee636530e6b26265d9ee9408d827f9e12ce3e8f5f0cb4df8815198faf9589dd5d4f3e6e48463d62fef4bb273647e6f28c931c0c4a4e1ae5397ed2d3', 'repo/store/extra/5e11320c2137d3f19254bd901496158ce8edb9b1923099feab18b439ae74144ba46e6a4903a8266742072998b87dcbba09837780ab5a0fc40524ccc00032dcd9'], 'removed': ['repo/op_heads/heads/110e0415e9940a92b240478bdb80aa8d4e11ba74c09bf6dc4505b422f602d4733d0f90c450e46fed31e6a4f120f9fc40bc3aa628ca4c34f7923ff348026a0147', 'repo/store/extra/heads/9aba0a34ecfeede0df8e0fc865e477ce7f02f01c0638323396b517e1933b70abc42e104c85677dc507259c9121f82d184148bf06420f5d0b10f6923afcabf499'], 'changed': []}
+files on disk: ['a.txt']
+`jj status` rc=1 in 0.03s
+--- jj status stdout ---
+
+--- jj status stderr ---
+Error: The working copy is stale (not updated since operation 110e0415e994).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+--- jj op log (after status) ---
+b391d0eff280 publish_if: crash-test
+110e0415e994 new empty commit
+9972347e005a snapshot working copy
+8b7e6ab9efad new empty commit
+a26115b269e9 describe commit a40ca797bdc65a3bbfb904227fa6d99ce2956a3b
+294a87e4a850 snapshot working copy
+289720099301 add workspace 'default'
+000000000000
+is_stale per pyjutsu: True
+`jj workspace update-stale` rc=0
+--- update-stale stdout ---
+
+--- update-stale stderr ---
+Working copy  (@) now at: tyqnlmmt 39108de2 (empty) (no description set)
+Parent commit (@-)      : rzssuzko b2a52769 prepared
+Added 1 files, modified 0 files, removed 0 files
+Updated working copy to fresh commit 39108de2fc58
+--- jj status after update-stale ---
+The working copy has no changes.
+Working copy  (@) : tyqnlmmt 39108de2 (empty) (no description set)
+Parent commit (@-): rzssuzko b2a52769 prepared
+--- jj op log after recovery ---
+b391d0eff280 publish_if: crash-test
+110e0415e994 new empty commit
+9972347e005a snapshot working copy
+8b7e6ab9efad new empty commit
+a26115b269e9 describe commit a40ca797bdc65a3bbfb904227fa6d99ce2956a3b
+294a87e4a850 snapshot working copy
+289720099301 add workspace 'default'
+000000000000
+files on disk: ['a.txt', 'p.txt']
+--- jj log after recovery ---
+@  39108de2fc58 @ [] empty=true
+○  b2a527698ecc   [prepared] empty=false
+○  d32c27deab69   [base] empty=false
+◆  000000000000   [] empty=true

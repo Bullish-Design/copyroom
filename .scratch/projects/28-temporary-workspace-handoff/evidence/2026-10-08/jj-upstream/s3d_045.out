@@ -1,0 +1,54 @@
+
+======== S3: `jj commit` paused in editor; other process changes w1 working-copy tree on disk via update-stale/checkout (ConcurrentCheckout) ========
+--- Q (same workspace w1): jj new main  [checks out different tree]: rc=0
+stderr:
+Working copy  (@) now at: kozlvksu 711483d5 (empty) Q-new-on-main
+Parent commit (@-)      : mvvyytlu 6b86d4c0 main | base
+Added 0 files, modified 0 files, removed 1 files
+w1 files after Q: ['a.txt']
+--- P result (expect ConcurrentCheckout?): rc=255
+stderr:
+Internal error: Failed to check out commit c52a00a72a44932aea6e945a97fe8f0d12a308ae
+Caused by: Concurrent checkout
+w1 files after P: ['a.txt']
+-- state after P: op heads = ['00b2999cb128', 'c6de48496f67']
+[from head 00b2999cb128]
+00b2999cb128 parents=a9b10b5ea595 | commit d33bd6f13fdf9e5cea223f8069056bb0ef10eac3
+a9b10b5ea595 parents=e4eea775a194 | describe commit fcfaddd75bce2c35453a1a0f8b4131096ec240db
+e4eea775a194 parents=adbe205e0fa5 | snapshot working copy
+adbe205e0fa5 parents=5eb19e27e386 | create initial working-copy commit in workspace w1
+5eb19e27e386 parents=63d2055a43a3 | add workspace 'w1'
+63d2055a43a3 parents=ec29aa229fa9 | new empty commit
+ec29aa229fa9 parents=d0cb9a0485ad | create bookmark main pointing to commit 6b86d4c0e3dc5662aa9a3f68c76fd291363ecf76
+d0cb9a0485ad parents=77098fc2f5d2 | describe commit 40b944919b3e312b62074064be35177bda2b3798
+
+[from head c6de48496f67]
+c6de48496f67 parents=a9b10b5ea595 | new empty commit
+a9b10b5ea595 parents=e4eea775a194 | describe commit fcfaddd75bce2c35453a1a0f8b4131096ec240db
+e4eea775a194 parents=adbe205e0fa5 | snapshot working copy
+adbe205e0fa5 parents=5eb19e27e386 | create initial working-copy commit in workspace w1
+5eb19e27e386 parents=63d2055a43a3 | add workspace 'w1'
+63d2055a43a3 parents=ec29aa229fa9 | new empty commit
+ec29aa229fa9 parents=d0cb9a0485ad | create bookmark main pointing to commit 6b86d4c0e3dc5662aa9a3f68c76fd291363ecf76
+d0cb9a0485ad parents=77098fc2f5d2 | describe commit 40b944919b3e312b62074064be35177bda2b3798
+
+commits:
+pxuwuq c52a00a7 ws=[] bm=[] (empty) 
+kwlnrt 66fb82b4 ws=[] bm=[] committed-by-P
+kozlvk 711483d5 ws=[w1@] bm=[] (empty) Q-new-on-main
+onypnm 56dc644a ws=[default@] bm=[] (empty) default-work
+mvvyyt 6b86d4c0 ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- default: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : onypnmxl 56dc644a (empty) default-work
+Parent commit (@-): mvvyytlu 6b86d4c0 main | base
+   default wc op: ca6366ca273e | files: ['a.txt']
+--- w1: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : kozlvksu 711483d5 (empty) Q-new-on-main
+Parent commit (@-): mvvyytlu 6b86d4c0 main | base
+   w1 wc op: ca6366ca273e | files: ['a.txt']

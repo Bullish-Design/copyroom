@@ -1,0 +1,108 @@
+{
+  "case": "T6-a-r1",
+  "timing": "T6",
+  "writer": "a",
+  "exit_code": 0,
+  "Q1_success": true,
+  "stdout": "{\"project\": \"/tmp/cr-race-2587806/runs/T6-a-r1/project\", \"render\": \"64c4e7d3873364f16833c636bdc87112940cd8bc\"}",
+  "stderr": "",
+  "Q2_at_moved_before_rejection": false,
+  "new_ops_after_release": [
+    "forget workspace copyroom-b4d1a45280af"
+  ],
+  "op_restore_ran": false,
+  "at_before_release": "9084100ee5384ae46e6cc4c007821f9a74fdd9fd",
+  "at_after": "9084100ee5384ae46e6cc4c007821f9a74fdd9fd",
+  "tree_equals_preview_tree": false,
+  "tree_equals_old_active_tree": false,
+  "marker_unchanged_vs_B0": false,
+  "marker_revision_before_after": [
+    0,
+    1
+  ],
+  "render_head_after": [
+    "64c4e7d3873364f16833c636bdc87112940cd8bc"
+  ],
+  "old_render": "5a7229cf2d664958b804171ebea4727a2f93080e",
+  "next_render": "64c4e7d3873364f16833c636bdc87112940cd8bc",
+  "preview_dir_exists_after": false,
+  "sidecar_exists_after": false,
+  "Q3_writer_work": "working copy foreign.txt; commit e927b432 (ancestor of @)",
+  "Q3_detail": {
+    "in_working_copy_files": [
+      "foreign.txt"
+    ],
+    "visible_commits": [
+      {
+        "commit": "e927b432c7d5e9e71f5d3df4d748950a584663ce",
+        "change": "vswslrvtpvuxovqzpxyuvxvrzynozwtl",
+        "is_head": false,
+        "ancestor_of_at": true,
+        "is_at": false,
+        "reachable_from_heads": [
+          "9084100ee5384ae46e6cc4c007821f9a74fdd9fd"
+        ],
+        "desc": "foreign-work FOREIGNT6ar1"
+      }
+    ],
+    "only_in_op_log_commits": [],
+    "older_versions_of_visible_changes": [
+      "a0de65c1118a17357d5ca91638f8f6bbeade667f"
+    ],
+    "bookmarks": {}
+  },
+  "files_after": [
+    ".copyroom-local.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/answers.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/manifest.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/template.j2",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/answers.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/manifest.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/template.j2",
+    ".copyroom-local/write.lock",
+    "README.md",
+    "config/project.yml",
+    "foreign.txt",
+    "notes.txt"
+  ],
+  "barrier_hit": {
+    "ordinal": 18,
+    "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project",
+    "args": [
+      "workspace",
+      "forget",
+      "copyroom-b4d1a45280af"
+    ],
+    "match_ordinal": 1,
+    "point": "before",
+    "pid": 2705349
+  },
+  "writer_pids": [
+    2705593,
+    2705616,
+    2705619
+  ],
+  "writer_rc": [
+    0,
+    0,
+    0
+  ],
+  "writer_err": [
+    "Working copy  (@) now at: vswslrvt 312ba55c (empty) foreign\nParent commit (@-)      : munzrmsx c1af4d83 (empty) (no description set)",
+    "Working copy  (@) now at: tvwrvknu 9084100e (empty) (no description set)\nParent commit (@-)      : vswslrvt e927b432 foreign-work FOREIGNT6ar1"
+  ]
+}

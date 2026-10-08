@@ -1,0 +1,97 @@
+$ ls -la
+$ find .copyroom-local -maxdepth 3
+.copyroom-local
+.copyroom-local/sources
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/answers.json
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/manifest.json
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates
+$ jj file list -r @
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/answers.json
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/manifest.json
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/note/metadata.yml
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/note/prompt.md
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/note/schema.py
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/note/template.j2
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/readme/metadata.yml
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/readme/prompt.md
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/readme/schema.py
+.copyroom-local/sources/dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a/templates/readme/template.j2
+.copyroom-local.json
+NOTES.md
+README.md
+exit 0
+$ jj status
+The working copy has no changes.
+Working copy  (@) : qltnlnmq 9a74095e (empty) (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+$ cat .gitignore
+[31m[bat error][0m: '.gitignore': No such file or directory (os error 2)
+exit 1
+$ cat .jjignore
+[31m[bat error][0m: '.jjignore': No such file or directory (os error 2)
+exit 1
+$ cat .git/info/exclude
+# This file contains repository-wide exclude patterns that git will ignore.
+# They are local and will not be shared when pushing or pulling.
+# When using Rust the following would be typical exclude patterns.
+# Remove the '# ' prefix to let them take effect.
+# /target/
+/.copyroom-local/previews/
+/.copyroom-local/write.lock
+exit 0
+$ git config core.excludesfile / global ignore (info)
+"/home/andrew/.gitignore": No such file or directory (os error 2)
+.rw-r--r-- 40 andrew 28 Jul 20:53 /home/andrew/.config/git/ignore
+$ jj config get snapshot.auto-track
+all()
+$ jj log -r @
+@  9a74095e1c1e5345703a984041e8b1015f623ea9
+│
+~
+$ jj log --no-graph (all)
+9a74095e1c1e 
+c08c134ded2a copyroom:project inputs
+30c674468d4b copyroom:render da2bda9e6a4b4628be6e7b10e32e791f base 0 dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a
+000000000000 
+$ cat marker
+{
+  "answers": {
+    "description": "A tiny project.",
+    "project_name": "tiny"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "layers": {
+    "base": {
+      "answers": {
+        "description": "A tiny project.",
+        "project_name": "tiny"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "manifest_digest": "8df2baa8448baa3095b1a930dcf9419b5050891a60e12d0bfb7d5417e9fe04dd",
+      "owners": {
+        "NOTES.md": "note",
+        "README.md": "readme"
+      },
+      "render_digest": "345686c171b2a3deaa9f27016b560380c3e76c7ae8ecd66f8d0948fc16dfcb5a",
+      "revision": 0,
+      "source": "/tmp/cr-verify-2585895/src1",
+      "source_digest": "dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    }
+  },
+  "manifest_digest": "8df2baa8448baa3095b1a930dcf9419b5050891a60e12d0bfb7d5417e9fe04dd",
+  "owners": {
+    "NOTES.md": "note",
+    "README.md": "readme"
+  },
+  "project_id": "da2bda9e6a4b4628be6e7b10e32e791f",
+  "render_digest": "345686c171b2a3deaa9f27016b560380c3e76c7ae8ecd66f8d0948fc16dfcb5a",
+  "revision": 0,
+  "schema": 2,
+  "source": "/tmp/cr-verify-2585895/src1",
+  "source_digest": "dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1"
+}

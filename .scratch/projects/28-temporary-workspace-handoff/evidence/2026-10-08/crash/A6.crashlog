@@ -1,0 +1,2 @@
+DRIVER start point=A6 mode=exit cwd=/tmp/cr-crash-2578910/runs/A6/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A6/preview']
+CRASH point=A6 mode=exit pid=2668747 matched=Path.unlink /tmp/cr-crash-2578910/runs/A6/project/.copyroom-local/previews/copyroom-88cd1c4910ea.json (state file removed; sidecar not yet)

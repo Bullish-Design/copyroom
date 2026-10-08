@@ -1,0 +1,19 @@
+{
+  "kind": "b",
+  "token": "FOREIGNT4br1",
+  "procs": [
+    {
+      "argv": [
+        "sh",
+        "-c",
+        "printf '%s\\n' FOREIGNT4br1 > foreign-b.txt"
+      ],
+      "pid": 2661068,
+      "rc": 0,
+      "out": "",
+      "err": ""
+    }
+  ],
+  "bookmarks": [],
+  "path": "foreign-b.txt"
+}

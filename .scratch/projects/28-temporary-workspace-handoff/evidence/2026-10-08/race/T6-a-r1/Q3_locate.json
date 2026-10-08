@@ -1,0 +1,23 @@
+{
+  "in_working_copy_files": [
+    "foreign.txt"
+  ],
+  "visible_commits": [
+    {
+      "commit": "e927b432c7d5e9e71f5d3df4d748950a584663ce",
+      "change": "vswslrvtpvuxovqzpxyuvxvrzynozwtl",
+      "is_head": false,
+      "ancestor_of_at": true,
+      "is_at": false,
+      "reachable_from_heads": [
+        "9084100ee5384ae46e6cc4c007821f9a74fdd9fd"
+      ],
+      "desc": "foreign-work FOREIGNT6ar1"
+    }
+  ],
+  "only_in_op_log_commits": [],
+  "older_versions_of_visible_changes": [
+    "a0de65c1118a17357d5ca91638f8f6bbeade667f"
+  ],
+  "bookmarks": {}
+}

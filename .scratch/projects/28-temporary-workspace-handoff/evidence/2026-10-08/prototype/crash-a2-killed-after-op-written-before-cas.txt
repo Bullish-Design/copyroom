@@ -1,0 +1,31 @@
+== SIGKILL at stage BEFORE_PUBLISH ==
+--- jj log BEFORE ---
+@  5a9ecdc23144 @ [] empty=true
+│ ○  789ff39c4ce0   [prepared] empty=false
+├─╯
+○  93922516b27e   [base] empty=false
+◆  000000000000   [] empty=true
+lock free while publish_if is parked at stage (should be False = held): False
+publish_if exit status (negative = signal): -9
+working_copy.lock free after SIGKILL: True | op_heads lock free: True
+lock files left on disk after SIGKILL: ['.jj/working_copy/working_copy.lock']
+op heads dir (before any jj command): ['d93109a396f3']
+new ops visible: []
+sig diff of .jj vs before: {'added': ['repo/index/op_links/56955cc2ffec4644d098f8900529e1a9a6391e1a758f61595d2b0cfd01f77a0c6b97b976554d0ef057b2983ed5752a298a5f0b5c6767ff03413f31626af46eff', 'repo/index/segments/b05bd1614f5e188f468d6a46346c94c2f70183acd3308d3a32084e3aeb7da647d45dea7963570e5045b38961bd58b5775fd24860cbe27684024f2eda0e2624de', 'repo/op_store/operations/56955cc2ffec4644d098f8900529e1a9a6391e1a758f61595d2b0cfd01f77a0c6b97b976554d0ef057b2983ed5752a298a5f0b5c6767ff03413f31626af46eff', 'repo/op_store/views/ece12087415a026a485c9474d09ded5632e1f015ffd44175fca2c319f7718ff1b5dceae625aa284eeb45a406c7613cfb19ef8b954ba8f38306d7a80bb509f8ce', 'repo/store/extra/3b81f20381bdec2f3d4de02ebdb7aacbd98c40b39109b435728a16d185efdac50090ecda47b42b92e8f740d64fd309587761d2dc5e39a1bd5353b0c79b8a2e03', 'repo/store/extra/heads/3b81f20381bdec2f3d4de02ebdb7aacbd98c40b39109b435728a16d185efdac50090ecda47b42b92e8f740d64fd309587761d2dc5e39a1bd5353b0c79b8a2e03'], 'removed': ['repo/store/extra/heads/d3ed0488b491097a3594db278c11001873fc906076b4d9e28a70acb01e92da0eab39c2d59c9c3c6f3f254db57337115e721e29495b1c09c63b9df0bf2508cfad'], 'changed': []}
+files on disk: ['a.txt']
+`jj status` rc=0 in 0.02s
+--- jj status stdout ---
+The working copy has no changes.
+Working copy  (@) : pzyvxlxy 5a9ecdc2 (empty) (no description set)
+Parent commit (@-): rpylqpkx 93922516 base
+--- jj status stderr ---
+
+--- jj op log (after status) ---
+d93109a396f3 new empty commit
+0eda81b447b7 snapshot working copy
+8ab4fe8c441c new empty commit
+86e0022599eb describe commit 3d610361c85bbd0a5d18768e53e03fd01dbe6776
+8401bb377e5c snapshot working copy
+1d6ca81da660 add workspace 'default'
+000000000000
+is_stale per pyjutsu: False

@@ -1,0 +1,12 @@
+{
+  "ordinal": 18,
+  "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project",
+  "args": [
+    "workspace",
+    "forget",
+    "copyroom-b4d1a45280af"
+  ],
+  "match_ordinal": 1,
+  "point": "before",
+  "pid": 2705349
+}

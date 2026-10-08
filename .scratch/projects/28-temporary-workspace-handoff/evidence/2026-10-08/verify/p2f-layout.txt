@@ -1,0 +1,44 @@
+$ ls -la (real ls)
+total 12
+drwxr-xr-x 1 andrew users  118 Oct  8 07:49 .
+drwxr-xr-x 1 andrew users   46 Oct  8 07:49 ..
+drwxr-xr-x 1 andrew users   14 Oct  8 07:49 .copyroom-local
+-rw-r--r-- 1 andrew users 1552 Oct  8 07:49 .copyroom-local.json
+drwxr-xr-x 1 andrew users  100 Oct  8 07:49 .git
+drwxr-xr-x 1 andrew users   52 Oct  8 07:49 .jj
+-rw-r--r-- 1 andrew users   33 Oct  8 07:49 NOTES.md
+-rw-r--r-- 1 andrew users    6 Oct  8 07:49 README.md
+
+$ ls -la .git (head)
+total 16
+drwxr-xr-x 1 andrew users  100 Oct  8 07:49 .
+drwxr-xr-x 1 andrew users  118 Oct  8 07:49 ..
+-rw-r--r-- 1 andrew users  156 Oct  8 07:49 config
+-rw-r--r-- 1 andrew users   77 Oct  8 07:49 description
+-rw-r--r-- 1 andrew users   41 Oct  8 07:49 HEAD
+drwxr-xr-x 1 andrew users  414 Oct  8 07:49 hooks
+-rw-r--r-- 1 andrew users 2056 Oct  8 07:49 index
+drwxr-xr-x 1 andrew users   14 Oct  8 07:49 info
+drwxr-xr-x 1 andrew users    8 Oct  8 07:49 logs
+drwxr-xr-x 1 andrew users  128 Oct  8 07:49 objects
+drwxr-xr-x 1 andrew users   22 Oct  8 07:49 refs
+$ test -d .git
+.git exists
+$ ls -la .jj
+total 4
+drwxr-xr-x 1 andrew users  52 Oct  8 07:49 .
+drwxr-xr-x 1 andrew users 118 Oct  8 07:49 ..
+-rw-r--r-- 1 andrew users   3 Oct  8 07:49 .gitignore
+drwxr-xr-x 1 andrew users 112 Oct  8 07:50 repo
+drwxr-xr-x 1 andrew users  44 Oct  8 07:50 working_copy
+$ cat ~/.config/git/ignore
+**/.claude/settings.local.json
+*.sqlite
+$ ls .gitignore .jjignore
+ls: cannot access '.gitignore': No such file or directory
+ls: cannot access '.jjignore': No such file or directory
+$ jj git root
+/tmp/cr-verify-2585895/proj/.git
+$ cat .jj/repo/store/type
+git
+../../../.git

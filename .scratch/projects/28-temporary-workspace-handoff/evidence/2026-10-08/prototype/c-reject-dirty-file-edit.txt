@@ -1,0 +1,24 @@
+expected= 081c605e3d4692a05038569345b655647aee6187 P= 8c73938c41d9389e9a490bad40fb6f9902b4a09e
+--- jj op log BEFORE ---
+8f1212213d49 new empty commit
+79837d167e39 snapshot working copy
+d84e120ba9df new empty commit
+197ccb4cf1d6 describe commit cc3009a2e898a3af6d4fb7811cfdeffc57996b71
+808ca27dae4a snapshot working copy
+bf52be20239a add workspace 'default'
+000000000000
+publish_if exit 1 stdout: stale observed=081c605e3d4692a05038569345b655647aee6187 dirty=1 reason=dirty-working-copy stderr: 
+op log unchanged: True | op heads: ['8f1212213d49']
+sig diff of .jj (file hashes): {'added': ['repo/store/git/objects/08/87cb391f55a721eafcb0e36ab30a394b3ae22b', 'repo/store/git/objects/89/841e5f8f929527da165ee9ada8a12bab0a0b7b', 'repo/store/git/objects/d5/a09df94c94924d13f8b5cd72a193b3eddb08cb'], 'removed': [], 'changed': []}
+git object files in store BEFORE/AFTER: 11 14 (new unreferenced blobs/trees written by the in-memory snapshot)
+a.txt on disk: 'EDITED BY PLAIN PYTHON\n' new.txt on disk: 'brand new\n'
+@ still: True (jj --ignore-working-copy, no snapshot)
+--- jj status afterwards (normal CLI snapshots the bytes) ---
+Working copy changes:
+M a.txt
+A new.txt
+Working copy  (@) : zxxqvxqv 1d535b94 (no description set)
+Parent commit (@-): yntnstxm 0c44f027 base
+snapshot now in op log: ['1d07c16d4f27 snapshot working copy', '8f1212213d49 new empty commit']
+@ now: 1d535b94f420c1bf694a549fb85f6d2c83845421 contains a.txt = 'EDITED BY PLAIN PYTHON\n' and new.txt = 'brand new\n'
+OUTCOME c: PASS

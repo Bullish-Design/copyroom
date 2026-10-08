@@ -1,0 +1,48 @@
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A u.txt
+Working copy  (@) : nrvtuzln 949a5075 (no description set)
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+ws2's wc op: 9f062342d5a6
+--- default: jj describe (new op M on top): rc=0
+stderr:
+Working copy  (@) now at: xmvlsmql 6d5bf1f5 (empty) base2
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+319b9a9b6b91 parents=9f062342d5a6 | describe commit 96ba8685efcc6093cd86605ea8dbc0ffdfdb1e7f
+9f062342d5a6 parents=449f64b80dfe | snapshot working copy
+449f64b80dfe parents=67c95ea3339e | create initial working-copy commit in workspace ws2
+67c95ea3339e parents=26da68f359a1 | add workspace 'ws2'
+26da68f359a1 parents=5aa803d75abe | describe commit c58dce5106c3fefa86d23ffa2e6abda0c99a7c77
+5aa803d75abe parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+
+--- default: jj op abandon 9f062342d5a6: rc=0
+stderr:
+Abandoned 1 operations and reparented 1 descendant operations.
+e40ed0d87865 parents=449f64b80dfe | describe commit 96ba8685efcc6093cd86605ea8dbc0ffdfdb1e7f
+449f64b80dfe parents=67c95ea3339e | create initial working-copy commit in workspace ws2
+67c95ea3339e parents=26da68f359a1 | add workspace 'ws2'
+26da68f359a1 parents=5aa803d75abe | describe commit c58dce5106c3fefa86d23ffa2e6abda0c99a7c77
+5aa803d75abe parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+
+--- ws2: jj st: rc=255
+stderr:
+Internal error: The repo was loaded at operation e40ed0d87865, which seems to be a sibling of the working copy's operation 9f062342d5a6
+Hint: Run `jj op integrate 9f062342d5a6` to add the working copy's operation to the operation log.
+--- ws2: jj workspace update-stale: rc=0
+stderr:
+Updated working copy to fresh commit 949a50755e8b
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A u.txt
+Working copy  (@) : nrvtuzln 949a5075 (no description set)
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+['.jj', 'u.txt']
+--- log: rc=0
+stdout:
+nrvtuz 949a5075 [] ws=ws2@ 
+xmvlsm 6d5bf1f5 [] ws=default@ (empty) base2
+zzzzzz 00000000 [] ws= (empty)

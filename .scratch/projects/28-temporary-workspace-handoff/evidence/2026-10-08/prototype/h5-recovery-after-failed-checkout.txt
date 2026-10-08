@@ -1,0 +1,24 @@
+repo /tmp/pj-proto-2714908/pj-run-ftjfzfg3/h5-7
+bulk files present: 0 of 25000; a.txt: 'WRITER 345\n'
+--- jj status rc=1 ---
+Error: The working copy is stale (not updated since operation 414764cbfbdb).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+--- jj workspace update-stale rc=0 ---
+Concurrent modification detected, resolving automatically.
+Working copy  (@) now at: zvvsyrnn 340239fd (empty) (no description set)
+Parent commit (@-)      : uxsyxypm a5710ad0 prepared
+Added 25001 files, modified 1 files, removed 1 files
+Updated working copy to fresh commit 340239fd694a
+bulk files present: 25000 a.txt: 'a edited in P\n'
+--- jj status rc=0 ---
+The working copy has no changes.
+Working copy  (@) : zvvsyrnn 340239fd (empty) (no description set)
+Parent commit (@-): uxsyxypm a5710ad0 prepared
+--- op log ---
+cf325f62fb25 reconcile divergent operations
+34cf04435962 publish_if: h5
+5687f046c468 snapshot working copy
+414764cbfbdb new empty commit
+36b935d58fa7 snapshot working copy
+0241643f40ba new empty commit

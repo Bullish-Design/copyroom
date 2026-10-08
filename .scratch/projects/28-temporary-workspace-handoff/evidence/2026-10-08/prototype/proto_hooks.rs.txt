@@ -1,0 +1,24 @@
+//! PROTOTYPE-ONLY test instrumentation for `publish_if`. Remove before shipping.
+//!
+//! At each named stage the code looks for two environment variables:
+//!   `PJ_SIGNAL_<STAGE>=<fifo>`  open the FIFO for writing and write one byte (blocks until a
+//!                               reader opens it) -- tells a test harness "I reached this stage".
+//!   `PJ_WAIT_<STAGE>=<fifo>`    open the FIFO for reading and read one byte (blocks until a
+//!                               writer writes) -- holds this stage until the harness says go.
+//! Signal runs before wait. A FIFO is a real kernel barrier, not a sleep.
+
+use std::io::{Read, Write};
+
+pub(crate) fn hook(stage: &str) {
+    if let Ok(path) = std::env::var(format!("PJ_SIGNAL_{stage}"))
+        && let Ok(mut f) = std::fs::OpenOptions::new().write(true).open(&path)
+    {
+        let _ = f.write_all(b"x");
+    }
+    if let Ok(path) = std::env::var(format!("PJ_WAIT_{stage}"))
+        && let Ok(mut f) = std::fs::OpenOptions::new().read(true).open(&path)
+    {
+        let mut b = [0u8; 1];
+        let _ = f.read(&mut b);
+    }
+}

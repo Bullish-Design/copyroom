@@ -1,0 +1,2 @@
+DRIVER start point=A1 mode=hang cwd=/tmp/cr-crash-2578910/runs/A1k/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A1k/preview']
+CRASH point=A1 mode=hang pid=2636923 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1k/project args=('new', '0d1ec7c6d2bdbc400bacd187df6f9090e0228236', '-m', 'copyroom:update')

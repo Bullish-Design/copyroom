@@ -1,0 +1,13 @@
+{
+  "ordinal": 9,
+  "cwd": "/tmp/cr-race-2587806/runs/T4-c-r1/project",
+  "args": [
+    "new",
+    "d11df53f72ca00113252bfb570b10a52e8e08c73",
+    "-m",
+    "copyroom:update"
+  ],
+  "match_ordinal": 1,
+  "point": "before",
+  "pid": 2666990
+}

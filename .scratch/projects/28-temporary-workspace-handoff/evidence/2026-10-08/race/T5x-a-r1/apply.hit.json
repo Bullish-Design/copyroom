@@ -1,0 +1,12 @@
+{
+  "ordinal": 14,
+  "cwd": "/tmp/cr-race-2587806/runs/T5x-a-r1/project",
+  "args": [
+    "resolve",
+    "--list"
+  ],
+  "match_ordinal": 1,
+  "ok": true,
+  "point": "after",
+  "pid": 2862364
+}

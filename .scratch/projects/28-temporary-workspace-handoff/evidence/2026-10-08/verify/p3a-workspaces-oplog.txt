@@ -1,0 +1,45 @@
+### active: jj workspace list
+copyroom-084d5d95ab0e: povvnlqv 55970dd9 (empty) (no description set)
+default: qltnlnmq 7d8b6aae (empty) (no description set)
+### active: op log -n 6
+5f14dbd623dd commit 64e465ede720e4722cf5cbeb9fd4c3ac7184c98f
+dc0024ee0598 snapshot working copy
+75db8ea9929d new empty commit
+b8dd472979b3 commit 9eac32410fba72ffcf2548e59eaafb805714b568
+1824d741a96a snapshot working copy
+1ae01d6ea195 create initial working-copy commit in workspace copyroom-084d5d95ab0e
+### active: op head full
+5f14dbd623dd42434cb3638062cbd0cf17097f2a68239d42275906c574e22d48204bec0acc7ef971a078f320e7cd08ac8cb4f4a5419e47196d1f20daa11c02d1
+### preview: jj workspace list
+copyroom-084d5d95ab0e: povvnlqv 55970dd9 (empty) (no description set)
+default: qltnlnmq 7d8b6aae (empty) (no description set)
+### preview: op log -n 6
+5f14dbd623dd commit 64e465ede720e4722cf5cbeb9fd4c3ac7184c98f
+dc0024ee0598 snapshot working copy
+75db8ea9929d new empty commit
+b8dd472979b3 commit 9eac32410fba72ffcf2548e59eaafb805714b568
+1824d741a96a snapshot working copy
+1ae01d6ea195 create initial working-copy commit in workspace copyroom-084d5d95ab0e
+### preview: op head full
+5f14dbd623dd42434cb3638062cbd0cf17097f2a68239d42275906c574e22d48204bec0acc7ef971a078f320e7cd08ac8cb4f4a5419e47196d1f20daa11c02d1
+### repo path of preview .jj/repo
+../../proj/.jj/repototal 4
+drwxr-xr-x 1 andrew users  32 Oct  8 07:50 .
+drwxr-xr-x 1 andrew users 110 Oct  8 07:50 ..
+-rw-r--r-- 1 andrew users  19 Oct  8 07:50 repo
+drwxr-xr-x 1 andrew users  44 Oct  8 07:50 working_copy
+### readlink -f
+/tmp/cr-verify-2585895/preview1/.jj/repo
+/tmp/cr-verify-2585895/proj/.jj/repo
+### preview: jj log (all)
+55970dd9a025 
+a68e1f3ae955 copyroom:source snapshot 16277193d54558130fdd89d80060869ea0048b2cde63439834158b71531f23a5
+eef5b991b264 copyroom:render da2bda9e6a4b4628be6e7b10e32e791f base 1 16277193d54558130fdd89d80060869ea0048b2cde63439834158b71531f23a5
+7d8b6aae1773 
+c08c134ded2a copyroom:project inputs
+30c674468d4b copyroom:render da2bda9e6a4b4628be6e7b10e32e791f base 0 dc69653d23420b38bebff8150a753ed50234f7a17e40ab2e7fa1a6a2aaff0d2a
+000000000000 
+### @ of preview
+55970dd9a025375d1ff97f77afb75695a40b1be1
+### @ of active (post)
+7d8b6aae17736df802e231fb4723cdf7cace411a

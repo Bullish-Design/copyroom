@@ -1,0 +1,60 @@
+.rw-r--r-- 152 andrew  7 Oct 12:46 answers.json
+.rw-r--r-- 112 andrew  7 Oct 12:46 manifest.json
+drwxr-xr-x   - andrew  7 Oct 12:46 templates
+
+.scratch/projects/26-templateer-jj-slice/example/templates:
+drwxr-xr-x - andrew  7 Oct 16:51 about
+drwxr-xr-x - andrew  7 Oct 16:51 module
+drwxr-xr-x - andrew  7 Oct 16:51 pyproject
+drwxr-xr-x - andrew  7 Oct 16:51 readme
+drwxr-xr-x - andrew  7 Oct 16:51 settings
+
+.scratch/projects/26-templateer-jj-slice/example/templates/about:
+drwxr-xr-x   - andrew  7 Oct 16:51 __pycache__
+.rw-r--r-- 236 andrew  7 Oct 09:50 metadata.yml
+.rw-r--r--  24 andrew  7 Oct 09:50 prompt.md
+.rw-r--r-- 305 andrew  7 Oct 09:50 schema.py
+.rw-r--r--  82 andrew  7 Oct 09:50 template.j2
+
+.scratch/projects/26-templateer-jj-slice/example/templates/about/__pycache__:
+.rw-r--r-- 876 andrew  7 Oct 16:51 schema.cpython-313.pyc
+
+.scratch/projects/26-templateer-jj-slice/example/templates/module:
+drwxr-xr-x   - andrew  7 Oct 16:51 __pycache__
+.rw-r--r-- 245 andrew  7 Oct 09:50 metadata.yml
+.rw-r--r--  24 andrew  7 Oct 09:50 prompt.md
+.rw-r--r-- 305 andrew  7 Oct 09:50 schema.py
+.rw-r--r--  61 andrew  7 Oct 09:50 template.j2
+
+.scratch/projects/26-templateer-jj-slice/example/templates/module/__pycache__:
+.rw-r--r-- 877 andrew  7 Oct 16:51 schema.cpython-313.pyc
+
+.scratch/projects/26-templateer-jj-slice/example/templates/pyproject:
+drwxr-xr-x   - andrew  7 Oct 16:51 __pycache__
+.rw-r--r-- 231 andrew  7 Oct 09:50 metadata.yml
+.rw-r--r--  24 andrew  7 Oct 09:50 prompt.md
+.rw-r--r-- 305 andrew  7 Oct 09:50 schema.py
+.rw-r--r-- 133 andrew  7 Oct 09:50 template.j2
+
+.scratch/projects/26-templateer-jj-slice/example/templates/pyproject/__pycache__:
+.rw-r--r-- 880 andrew  7 Oct 16:51 schema.cpython-313.pyc
+
+.scratch/projects/26-templateer-jj-slice/example/templates/readme:
+drwxr-xr-x   - andrew  7 Oct 16:51 __pycache__
+.rw-r--r-- 354 andrew  7 Oct 09:52 metadata.yml
+.rw-r--r--  24 andrew  7 Oct 09:50 prompt.md
+.rw-r--r-- 305 andrew  7 Oct 09:50 schema.py
+.rw-r--r--  40 andrew  7 Oct 09:50 template.j2
+
+.scratch/projects/26-templateer-jj-slice/example/templates/readme/__pycache__:
+.rw-r--r-- 877 andrew  7 Oct 16:51 schema.cpython-313.pyc
+
+.scratch/projects/26-templateer-jj-slice/example/templates/settings:
+drwxr-xr-x   - andrew  7 Oct 16:51 __pycache__
+.rw-r--r-- 231 andrew  7 Oct 09:50 metadata.yml
+.rw-r--r--  24 andrew  7 Oct 09:50 prompt.md
+.rw-r--r-- 305 andrew  7 Oct 09:50 schema.py
+.rw-r--r--  63 andrew  7 Oct 16:54 template.j2
+
+.scratch/projects/26-templateer-jj-slice/example/templates/settings/__pycache__:
+.rw-r--r-- 879 andrew  7 Oct 16:51 schema.cpython-313.pyc

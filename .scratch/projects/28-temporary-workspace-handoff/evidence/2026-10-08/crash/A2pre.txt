@@ -1,0 +1,692 @@
+
+===== SETUP: copyroom new =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom new /tmp/cr-crash-2578910/runs/A2pre/source /tmp/cr-crash-2578910/runs/A2pre/project --answers /tmp/cr-crash-2578910/runs/A2pre/source/answers.json
+--- stdout
+{"project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render": "cf4b5a8baec1d11f97f45ce4459775f625010451"}
+--- exit: 0
+marker sha256 (pre): 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+
+===== SETUP: copyroom update (make preview) =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom update --out /tmp/cr-crash-2578910/runs/A2pre/preview
+--- stdout
+{"active_head": "fee86088cdad30eac9cc3a046bedad35753f7048", "active_tree": "1779e7676f1a191418a0289fca095cf1b050c16b8ca7ec21a1952e7c9c46e9f8", "answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e", "conflicts": [], "layer": "base", "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62", "marker_digest": "223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6", "next_render": "ee5468bed2da7c2583aa464866ba4c448803ff78", "old_render": "cf4b5a8baec1d11f97f45ce4459775f625010451", "owners": {"README.md": "readme", "config/project.yml": "settings"}, "path": "/tmp/cr-crash-2578910/runs/A2pre/preview", "preview_head": "bc092f2d672aa38a4822799aa95976ad0d968904", "preview_tree": "efd587617422e4d36accbe57af3b19b40bfc9c46fe6fbd091d1682512867dd26", "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "record_metadata": null, "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73", "revision": 1, "schema": 1, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b", "templateer_version": "0.4.1", "workspace": "copyroom-df79792c13c7"}
+--- exit: 0
+preview sidecar exists: True
+
+===== CRASH point=A2pre mode=exit =====
+$ /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 /tmp/cr-crash-2578910/driver.py A2pre exit /tmp/cr-crash-2578910/evidence/A2pre.crashlog -- update --apply /tmp/cr-crash-2578910/runs/A2pre/preview
+--- driver exit: 137 (137 = os._exit; -9 = SIGKILL)
+--- driver stdout
+
+--- driver stderr
+
+--- crashlog
+DRIVER start point=A2pre mode=exit cwd=/tmp/cr-crash-2578910/runs/A2pre/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A2pre/preview']
+CRASH point=A2pre mode=exit pid=2657616 matched=Path.replace /tmp/cr-crash-2578910/runs/A2pre/project/..copyroom-local.json.d5i8zxwo -> /tmp/cr-crash-2578910/runs/A2pre/project/.copyroom-local.json (not yet replaced)
+
+write.lock: free after crash (OS dropped flock)
+
+===== CAPTURE: post-crash =====
+-- raw jj state (--ignore-working-copy: no snapshot)
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all() --no-graph -T commit_id ++ " " ++ description.first_line() ++ if(empty, " [empty]", "") ++ "\n"
+--- stdout
+c52df375aa317b921f6f9c2f489b07009e6d2600 copyroom:update [empty]
+bc092f2d672aa38a4822799aa95976ad0d968904  [empty]
+850a6c5467fb6ccdd2f0715e956d1f8bbedfa35f copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+ee5468bed2da7c2583aa464866ba4c448803ff78 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+fee86088cdad30eac9cc3a046bedad35753f7048  [empty]
+88212c5e2ce3ee09dfbb4fe2065deeff3aad3546 copyroom:project inputs
+cf4b5a8baec1d11f97f45ce4459775f625010451 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+0000000000000000000000000000000000000000  [empty]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all()
+--- stdout
+@  vvukrlxy bullishdesignllc@gmail.com 2026-10-08 07:53:21 default@ c52df375
+│  (empty) copyroom:update
+○  pptmtroo bullishdesignllc@gmail.com 2026-10-08 07:53:19 copyroom-df79792c13c7@ bc092f2d
+│  (empty) (no description set)
+○    urzlvvzw bullishdesignllc@gmail.com 2026-10-08 07:53:19 850a6c54
+├─╮  copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+│ ○  qsvkwpvw bullishdesignllc@gmail.com 2026-10-08 07:53:19 ee5468be
+│ │  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+○ │  xkkzvsyl bullishdesignllc@gmail.com 2026-10-08 07:53:18 fee86088
+│ │  (empty) (no description set)
+○ │  rkxppsks bullishdesignllc@gmail.com 2026-10-08 07:53:18 88212c5e
+├─╯  copyroom:project inputs
+○  uospztvl bullishdesignllc@gmail.com 2026-10-08 07:53:18 cf4b5a8b
+│  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+◆  zzzzzzzz root() 00000000
+--- exit: 0
+-- marker on disk
+sha256: 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+bytes:
+{
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "layers": {
+    "base": {
+      "answers": {
+        "description": "Local example with \"quotes\" and YAML: true",
+        "module": "cedar_lab",
+        "project_name": "cedar-lab",
+        "python_version": "3.13"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings"
+      },
+      "render_digest": "bbad18c8e0668aa708d344c4a75cf1ce8a4f6cdf897eeeb7708530c87138068c",
+      "revision": 0,
+      "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+      "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    }
+  },
+  "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "project_id": "11377e021457465ca3ffb67f07be5f26",
+  "render_digest": "bbad18c8e0668aa708d344c4a75cf1ce8a4f6cdf897eeeb7708530c87138068c",
+  "revision": 0,
+  "schema": 2,
+  "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+  "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1"
+}
+
+(no .copyroom-label file exists in CopyRoom; MARKER = .copyroom-local.json)
+marker sha256 committed at @ (pre-snapshot, rc=0): 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+marker sha256 committed at @- (pre-snapshot, rc=0): 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+-- file set: project (excl .jj .git)
+..copyroom-local.json.d5i8zxwo                                 1794 0o644
+.copyroom-local.json                                           1794 0o644
+README.md                                                        55 0o644
+.copyroom-local/                                            
+config/                                                     
+.copyroom-local/write.lock                                        0 0o644
+.copyroom-local/previews/                                   
+.copyroom-local/sources/                                    
+.copyroom-local/previews/copyroom-df79792c13c7.json            1595 0o644
+.copyroom-local/sources/5e0ccfe2289fc991a38b607df04f2f0b5959.../ (10 files)
+.copyroom-local/sources/a512bfc85d922bc0787aa5d0e98874d4787f.../ (10 files)
+config/project.yml                                               95 0o644
+-- file set: run dir
+preview.copyroom-preview.json                                  1595 0o644
+preview/                                                    
+preview/.copyroom-local.json                                   1794 0o644
+preview/README.md                                                55 0o644
+preview/.copyroom-local/                                    
+preview/config/                                             
+preview/.copyroom-local/sources/                            
+preview/.copyroom-local/sources/5e0ccfe2289fc991a38b607df04f.../ (10 files)
+preview/.copyroom-local/sources/a512bfc85d922bc0787aa5d0e988.../ (10 files)
+preview/config/project.yml                                       95 0o644
+-- tmp dir (layer add tempdirs)
+(empty)
+-- preview dir listing
+copyroom-df79792c13c7.json                                     1595 0o644
+-- state file /tmp/cr-crash-2578910/runs/A2pre/project/.copyroom-local/previews/copyroom-df79792c13c7.json sha256 2aba85f9de9a45e919e3b60a91648640e91a77c18f003f48ba55740992e53fd8
+{
+  "active_head": "fee86088cdad30eac9cc3a046bedad35753f7048",
+  "active_tree": "1779e7676f1a191418a0289fca095cf1b050c16b8ca7ec21a1952e7c9c46e9f8",
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "conflicts": [],
+  "layer": "base",
+  "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+  "marker_digest": "223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6",
+  "next_render": "ee5468bed2da7c2583aa464866ba4c448803ff78",
+  "old_render": "cf4b5a8baec1d11f97f45ce4459775f625010451",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "path": "/tmp/cr-crash-2578910/runs/A2pre/preview",
+  "preview_head": "bc092f2d672aa38a4822799aa95976ad0d968904",
+  "preview_tree": "efd587617422e4d36accbe57af3b19b40bfc9c46fe6fbd091d1682512867dd26",
+  "project": "/tmp/cr-crash-2578910/runs/A2pre/project",
+  "project_id": "11377e021457465ca3ffb67f07be5f26",
+  "record_metadata": null,
+  "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73",
+  "revision": 1,
+  "schema": 1,
+  "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+  "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1",
+  "workspace": "copyroom-df79792c13c7"
+}
+
+-- state file /tmp/cr-crash-2578910/runs/A2pre/preview.copyroom-preview.json sha256 2aba85f9de9a45e919e3b60a91648640e91a77c18f003f48ba55740992e53fd8
+{
+  "active_head": "fee86088cdad30eac9cc3a046bedad35753f7048",
+  "active_tree": "1779e7676f1a191418a0289fca095cf1b050c16b8ca7ec21a1952e7c9c46e9f8",
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "conflicts": [],
+  "layer": "base",
+  "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+  "marker_digest": "223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6",
+  "next_render": "ee5468bed2da7c2583aa464866ba4c448803ff78",
+  "old_render": "cf4b5a8baec1d11f97f45ce4459775f625010451",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "path": "/tmp/cr-crash-2578910/runs/A2pre/preview",
+  "preview_head": "bc092f2d672aa38a4822799aa95976ad0d968904",
+  "preview_tree": "efd587617422e4d36accbe57af3b19b40bfc9c46fe6fbd091d1682512867dd26",
+  "project": "/tmp/cr-crash-2578910/runs/A2pre/project",
+  "project_id": "11377e021457465ca3ffb67f07be5f26",
+  "record_metadata": null,
+  "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73",
+  "revision": 1,
+  "schema": 1,
+  "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+  "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1",
+  "workspace": "copyroom-df79792c13c7"
+}
+
+-- jj workspace list / status
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj workspace list
+--- stdout
+copyroom-df79792c13c7: pptmtroo bc092f2d (empty) (no description set)
+default: vvukrlxy 95aa072b copyroom:update
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj status
+--- stdout
+Working copy changes:
+A ..copyroom-local.json.d5i8zxwo
+Working copy  (@) : vvukrlxy 95aa072b copyroom:update
+Parent commit (@-): pptmtroo bc092f2d (empty) (no description set)
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+3bb8300fd0dfec225f052814e0d07616531a6025bbd665465777ca6614c5b9b07dc4529f9ff02e0cbf1e6da39b7a0c4305f2828591b2cf26881c40ecfec77540 snapshot working copy
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+-- jj status inside secondary workspace dir /tmp/cr-crash-2578910/runs/A2pre/preview
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/preview) jj status
+--- stdout
+The working copy has no changes.
+Working copy  (@) : pptmtroo bc092f2d (empty) (no description set)
+Parent commit (@-): urzlvvzw 850a6c54 copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+--- exit: 0
+-- copyroom commands
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom status
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "has_conflicts": false, "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false}}, "ok": true, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [{"conflicts": [], "path": "/tmp/cr-crash-2578910/runs/A2pre/preview", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "workspace": "copyroom-df79792c13c7"}], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false, "working_tree_digest": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom inspect
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false}}, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [{"conflicts": [], "path": "/tmp/cr-crash-2578910/runs/A2pre/preview", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "workspace": "copyroom-df79792c13c7"}], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false, "working_tree_digest": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom preview list --project /tmp/cr-crash-2578910/runs/A2pre/project
+--- stdout
+[{"conflicts": [], "path": "/tmp/cr-crash-2578910/runs/A2pre/preview", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "workspace": "copyroom-df79792c13c7"}]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom doctor
+--- stdout
+{"jj": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj", "ok": true, "templateer": "0.4.1"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom layer list
+--- stdout
+[{"layer": "base", "owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33"}]
+--- exit: 0
+
+===== RECOVERY 1: copyroom update --apply (retry) =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom update --apply /tmp/cr-crash-2578910/runs/A2pre/preview
+--- stderr
+Error: active project changed after preview
+--- exit: 1
+
+===== RECOVERY 2: copyroom discard --preview =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom discard --preview /tmp/cr-crash-2578910/runs/A2pre/preview
+--- stdout
+{"preview": "/tmp/cr-crash-2578910/runs/A2pre/preview", "result": "discarded"}
+--- exit: 0
+
+===== CAPTURE: after-recovery-1-2 =====
+-- raw jj state (--ignore-working-copy: no snapshot)
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+a73f6793661a4eb2132c2172c3410f4d5b6ef0efbaec122e2d4b33ace9245cbee4d6844225b736c534057ccde8936da3e99762d237e47db207214c77ac168e68 forget workspace copyroom-df79792c13c7
+3bb8300fd0dfec225f052814e0d07616531a6025bbd665465777ca6614c5b9b07dc4529f9ff02e0cbf1e6da39b7a0c4305f2828591b2cf26881c40ecfec77540 snapshot working copy
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all() --no-graph -T commit_id ++ " " ++ description.first_line() ++ if(empty, " [empty]", "") ++ "\n"
+--- stdout
+95aa072b47a38eec1671ab8034bfda8dcf02118e copyroom:update
+bc092f2d672aa38a4822799aa95976ad0d968904  [empty]
+850a6c5467fb6ccdd2f0715e956d1f8bbedfa35f copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+ee5468bed2da7c2583aa464866ba4c448803ff78 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+fee86088cdad30eac9cc3a046bedad35753f7048  [empty]
+88212c5e2ce3ee09dfbb4fe2065deeff3aad3546 copyroom:project inputs
+cf4b5a8baec1d11f97f45ce4459775f625010451 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+0000000000000000000000000000000000000000  [empty]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all()
+--- stdout
+@  vvukrlxy bullishdesignllc@gmail.com 2026-10-08 07:53:21 95aa072b
+│  copyroom:update
+○  pptmtroo bullishdesignllc@gmail.com 2026-10-08 07:53:19 bc092f2d
+│  (empty) (no description set)
+○    urzlvvzw bullishdesignllc@gmail.com 2026-10-08 07:53:19 850a6c54
+├─╮  copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+│ ○  qsvkwpvw bullishdesignllc@gmail.com 2026-10-08 07:53:19 ee5468be
+│ │  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+○ │  xkkzvsyl bullishdesignllc@gmail.com 2026-10-08 07:53:18 fee86088
+│ │  (empty) (no description set)
+○ │  rkxppsks bullishdesignllc@gmail.com 2026-10-08 07:53:18 88212c5e
+├─╯  copyroom:project inputs
+○  uospztvl bullishdesignllc@gmail.com 2026-10-08 07:53:18 cf4b5a8b
+│  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+◆  zzzzzzzz root() 00000000
+--- exit: 0
+-- marker on disk
+sha256: 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+bytes:
+{
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "layers": {
+    "base": {
+      "answers": {
+        "description": "Local example with \"quotes\" and YAML: true",
+        "module": "cedar_lab",
+        "project_name": "cedar-lab",
+        "python_version": "3.13"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings"
+      },
+      "render_digest": "bbad18c8e0668aa708d344c4a75cf1ce8a4f6cdf897eeeb7708530c87138068c",
+      "revision": 0,
+      "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+      "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    }
+  },
+  "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "project_id": "11377e021457465ca3ffb67f07be5f26",
+  "render_digest": "bbad18c8e0668aa708d344c4a75cf1ce8a4f6cdf897eeeb7708530c87138068c",
+  "revision": 0,
+  "schema": 2,
+  "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+  "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1"
+}
+
+(no .copyroom-label file exists in CopyRoom; MARKER = .copyroom-local.json)
+marker sha256 committed at @ (pre-snapshot, rc=0): 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+marker sha256 committed at @- (pre-snapshot, rc=0): 223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6
+-- file set: project (excl .jj .git)
+..copyroom-local.json.d5i8zxwo                                 1794 0o644
+.copyroom-local.json                                           1794 0o644
+README.md                                                        55 0o644
+.copyroom-local/                                            
+config/                                                     
+.copyroom-local/write.lock                                        0 0o644
+.copyroom-local/previews/                                   
+.copyroom-local/sources/                                    
+.copyroom-local/sources/5e0ccfe2289fc991a38b607df04f2f0b5959.../ (10 files)
+.copyroom-local/sources/a512bfc85d922bc0787aa5d0e98874d4787f.../ (10 files)
+config/project.yml                                               95 0o644
+-- file set: run dir
+(empty)
+-- tmp dir (layer add tempdirs)
+(empty)
+-- preview dir listing
+(empty)
+-- jj workspace list / status
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj workspace list
+--- stdout
+default: vvukrlxy 95aa072b copyroom:update
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj status
+--- stdout
+Working copy changes:
+A ..copyroom-local.json.d5i8zxwo
+Working copy  (@) : vvukrlxy 95aa072b copyroom:update
+Parent commit (@-): pptmtroo bc092f2d (empty) (no description set)
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+a73f6793661a4eb2132c2172c3410f4d5b6ef0efbaec122e2d4b33ace9245cbee4d6844225b736c534057ccde8936da3e99762d237e47db207214c77ac168e68 forget workspace copyroom-df79792c13c7
+3bb8300fd0dfec225f052814e0d07616531a6025bbd665465777ca6614c5b9b07dc4529f9ff02e0cbf1e6da39b7a0c4305f2828591b2cf26881c40ecfec77540 snapshot working copy
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+-- copyroom commands
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom status
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "has_conflicts": false, "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false}}, "ok": true, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false, "working_tree_digest": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom inspect
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false}}, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33", "source_reachable": false, "working_tree_digest": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom preview list --project /tmp/cr-crash-2578910/runs/A2pre/project
+--- stdout
+[]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom doctor
+--- stdout
+{"jj": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj", "ok": true, "templateer": "0.4.1"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom layer list
+--- stdout
+[{"layer": "base", "owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "ee5468bed2da7c2583aa464866ba4c448803ff78", "revision": 0, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33"}]
+--- exit: 0
+
+===== RECOVERY 3: fresh copyroom update (new preview) =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom update --out /tmp/cr-crash-2578910/runs/A2pre/preview2
+--- stdout
+{"active_head": "95aa072b47a38eec1671ab8034bfda8dcf02118e", "active_tree": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693", "answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e", "conflicts": [], "layer": "base", "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62", "marker_digest": "223f99a29f5ff783ecd06fb88af995d9716035bf9f2da3ac899492b85c9f2bd6", "next_render": "a8db8b29665fe5207751f2372cb9a4381eb90745", "old_render": "ee5468bed2da7c2583aa464866ba4c448803ff78", "owners": {"README.md": "readme", "config/project.yml": "settings"}, "path": "/tmp/cr-crash-2578910/runs/A2pre/preview2", "preview_head": "66d6ac809b996f6afd072fcebe36b10d71b862c3", "preview_tree": "5b95fa18e479382e9591899387abeacc85f6afc793e99dd0e8d6570ff0bd0693", "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "record_metadata": null, "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73", "revision": 1, "schema": 1, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b", "templateer_version": "0.4.1", "workspace": "copyroom-4fa33677abdc"}
+--- exit: 0
+
+===== RECOVERY 4: apply fresh preview =====
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom update --apply /tmp/cr-crash-2578910/runs/A2pre/preview2
+--- stdout
+{"project": "/tmp/cr-crash-2578910/runs/A2pre/project", "render": "a8db8b29665fe5207751f2372cb9a4381eb90745"}
+--- exit: 0
+
+===== CAPTURE: after-recovery-3-4 =====
+-- raw jj state (--ignore-working-copy: no snapshot)
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+5c6b58bbf80258efe0037e2e53a6235ff9332f85f270c159af96015a365857e2dca2c0b70cef8ade2c7a7d558bfb0fe0a65059936a18e6147a98af3ef81e179f forget workspace copyroom-4fa33677abdc
+c5431d470435453c7e4dc877d83f3ccd84ec616e9b7f750ed767a6fc4d130ac61bb6032e0e28e9a1b31ab38ece7d3a3b9984ea71fab2e8fee9a7c7ff396f7868 commit 628f221a4e176085758e4913525f2864135f8a06
+83da6c75cad59c2f9e6f53e6bb8b677b89d8782902d7789e77fbfad7c5d5e34c4a9dd47b8c1784bdbf6822be9714947b4f323af343d063a03752122a7ed3b328 snapshot working copy
+0010659dee4f71f5c31e4f76fc22e2fb1df81ee1295434a0f5a7d87f97e150d147397e2ce768c953eb81490128b63143d8c0437177bbed7150d2ef9a1dd6cf7c new empty commit
+3fc17df594a007c919422bab0683056ec64300c4cee8978a4c61d5755cfb84752ea9bf01d859fababb6136371683ebec7e259f36f6d7ed7d26301f5399b995ca new empty commit
+a8588b17bc232aa1fa44ccfd6736e878eb46ca4c5c850a5ec740c9a32df16803f7759b7c1bf6875a8ce24dec0cf622c8bb08a99964dbd3bf4167205ba14eaf7d commit e5734c228f7ec6542963ed01a05634f0757522b6
+ff48e778d3c34a9a768a012026a1aa7781f914c007dae9ea24e6c5909852a982fc3e662e971eff9f89516490d7b7dbce6a5bddbc951529324ebbeb5caa750ca4 create initial working-copy commit in workspace copyroom-4fa33677abdc
+50e6fccb428a59e6a91919aef3db584b0b06aa17b27a0ac2a9d4d794ef347c5e0a69bec3cb310d06035435284f576744c4348321c90f0f721e9acd36c6c4705d add workspace 'copyroom-4fa33677abdc'
+a73f6793661a4eb2132c2172c3410f4d5b6ef0efbaec122e2d4b33ace9245cbee4d6844225b736c534057ccde8936da3e99762d237e47db207214c77ac168e68 forget workspace copyroom-df79792c13c7
+3bb8300fd0dfec225f052814e0d07616531a6025bbd665465777ca6614c5b9b07dc4529f9ff02e0cbf1e6da39b7a0c4305f2828591b2cf26881c40ecfec77540 snapshot working copy
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all() --no-graph -T commit_id ++ " " ++ description.first_line() ++ if(empty, " [empty]", "") ++ "\n"
+--- stdout
+a3ba6c28cbe3711f8462d39f843848dec98a39c6  [empty]
+be280507dd58c7eefa4585f3c7d94fb9ee1b7609 copyroom:project inputs
+66d6ac809b996f6afd072fcebe36b10d71b862c3 copyroom:preview [empty]
+a8db8b29665fe5207751f2372cb9a4381eb90745 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32 [empty]
+95aa072b47a38eec1671ab8034bfda8dcf02118e copyroom:update
+bc092f2d672aa38a4822799aa95976ad0d968904  [empty]
+850a6c5467fb6ccdd2f0715e956d1f8bbedfa35f copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+ee5468bed2da7c2583aa464866ba4c448803ff78 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+fee86088cdad30eac9cc3a046bedad35753f7048  [empty]
+88212c5e2ce3ee09dfbb4fe2065deeff3aad3546 copyroom:project inputs
+cf4b5a8baec1d11f97f45ce4459775f625010451 copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+0000000000000000000000000000000000000000  [empty]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj --ignore-working-copy log -r all()
+--- stdout
+@  uqluuqxu bullishdesignllc@gmail.com 2026-10-08 07:53:27 a3ba6c28
+│  (empty) (no description set)
+○  lolntuyn bullishdesignllc@gmail.com 2026-10-08 07:53:27 be280507
+│  copyroom:project inputs
+○    lovyovrm bullishdesignllc@gmail.com 2026-10-08 07:53:26 66d6ac80
+├─╮  (empty) copyroom:preview
+│ ○  qmvvlupy bullishdesignllc@gmail.com 2026-10-08 07:53:26 a8db8b29
+│ │  (empty) copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+○ │  vvukrlxy bullishdesignllc@gmail.com 2026-10-08 07:53:21 95aa072b
+│ │  copyroom:update
+○ │  pptmtroo bullishdesignllc@gmail.com 2026-10-08 07:53:19 bc092f2d
+│ │  (empty) (no description set)
+○ │  urzlvvzw bullishdesignllc@gmail.com 2026-10-08 07:53:19 850a6c54
+├─╮  copyroom:source snapshot 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+│ ○  qsvkwpvw bullishdesignllc@gmail.com 2026-10-08 07:53:19 ee5468be
+│ │  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 1 5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32
+○ │  xkkzvsyl bullishdesignllc@gmail.com 2026-10-08 07:53:18 fee86088
+│ │  (empty) (no description set)
+○ │  rkxppsks bullishdesignllc@gmail.com 2026-10-08 07:53:18 88212c5e
+├─╯  copyroom:project inputs
+○  uospztvl bullishdesignllc@gmail.com 2026-10-08 07:53:18 cf4b5a8b
+│  copyroom:render 11377e021457465ca3ffb67f07be5f26 base 0 a512bfc85d922bc0787aa5d0e98874d4787f2a1f8d7841cd2fce79b432cdab33
+◆  zzzzzzzz root() 00000000
+--- exit: 0
+-- marker on disk
+sha256: 3032d85197a7d01b3fafec477f19a7ec3aab457144d13757ca8d9abcd1833712
+bytes:
+{
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "layers": {
+    "base": {
+      "answers": {
+        "description": "Local example with \"quotes\" and YAML: true",
+        "module": "cedar_lab",
+        "project_name": "cedar-lab",
+        "python_version": "3.13"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings"
+      },
+      "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73",
+      "revision": 1,
+      "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+      "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    }
+  },
+  "manifest_digest": "b97cc8d15e2915e7021a0744f0f27df8c17d0b4472de9fd587a603defee20f62",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "project_id": "11377e021457465ca3ffb67f07be5f26",
+  "render_digest": "dd41a14b9e644715ff6e8b1ae1f7ebb6030942b30de110e97ef83fb2c5eb5f73",
+  "revision": 1,
+  "schema": 2,
+  "source": "/tmp/cr-crash-2578910/runs/A2pre/source",
+  "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1"
+}
+
+(no .copyroom-label file exists in CopyRoom; MARKER = .copyroom-local.json)
+marker sha256 committed at @ (pre-snapshot, rc=0): 3032d85197a7d01b3fafec477f19a7ec3aab457144d13757ca8d9abcd1833712
+marker sha256 committed at @- (pre-snapshot, rc=0): 3032d85197a7d01b3fafec477f19a7ec3aab457144d13757ca8d9abcd1833712
+-- file set: project (excl .jj .git)
+..copyroom-local.json.d5i8zxwo                                 1794 0o644
+.copyroom-local.json                                           1794 0o644
+README.md                                                        55 0o644
+.copyroom-local/                                            
+config/                                                     
+.copyroom-local/write.lock                                        0 0o644
+.copyroom-local/previews/                                   
+.copyroom-local/sources/                                    
+.copyroom-local/sources/5e0ccfe2289fc991a38b607df04f2f0b5959.../ (10 files)
+.copyroom-local/sources/a512bfc85d922bc0787aa5d0e98874d4787f.../ (10 files)
+config/project.yml                                               95 0o644
+-- file set: run dir
+(empty)
+-- tmp dir (layer add tempdirs)
+(empty)
+-- preview dir listing
+(empty)
+-- jj workspace list / status
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj workspace list
+--- stdout
+default: uqluuqxu a3ba6c28 (empty) (no description set)
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj status
+--- stdout
+The working copy has no changes.
+Working copy  (@) : uqluuqxu a3ba6c28 (empty) (no description set)
+Parent commit (@-): lolntuyn be280507 copyroom:project inputs
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) jj op log --no-graph -T id ++ " " ++ description.first_line() ++ "\n"
+--- stdout
+5c6b58bbf80258efe0037e2e53a6235ff9332f85f270c159af96015a365857e2dca2c0b70cef8ade2c7a7d558bfb0fe0a65059936a18e6147a98af3ef81e179f forget workspace copyroom-4fa33677abdc
+c5431d470435453c7e4dc877d83f3ccd84ec616e9b7f750ed767a6fc4d130ac61bb6032e0e28e9a1b31ab38ece7d3a3b9984ea71fab2e8fee9a7c7ff396f7868 commit 628f221a4e176085758e4913525f2864135f8a06
+83da6c75cad59c2f9e6f53e6bb8b677b89d8782902d7789e77fbfad7c5d5e34c4a9dd47b8c1784bdbf6822be9714947b4f323af343d063a03752122a7ed3b328 snapshot working copy
+0010659dee4f71f5c31e4f76fc22e2fb1df81ee1295434a0f5a7d87f97e150d147397e2ce768c953eb81490128b63143d8c0437177bbed7150d2ef9a1dd6cf7c new empty commit
+3fc17df594a007c919422bab0683056ec64300c4cee8978a4c61d5755cfb84752ea9bf01d859fababb6136371683ebec7e259f36f6d7ed7d26301f5399b995ca new empty commit
+a8588b17bc232aa1fa44ccfd6736e878eb46ca4c5c850a5ec740c9a32df16803f7759b7c1bf6875a8ce24dec0cf622c8bb08a99964dbd3bf4167205ba14eaf7d commit e5734c228f7ec6542963ed01a05634f0757522b6
+ff48e778d3c34a9a768a012026a1aa7781f914c007dae9ea24e6c5909852a982fc3e662e971eff9f89516490d7b7dbce6a5bddbc951529324ebbeb5caa750ca4 create initial working-copy commit in workspace copyroom-4fa33677abdc
+50e6fccb428a59e6a91919aef3db584b0b06aa17b27a0ac2a9d4d794ef347c5e0a69bec3cb310d06035435284f576744c4348321c90f0f721e9acd36c6c4705d add workspace 'copyroom-4fa33677abdc'
+a73f6793661a4eb2132c2172c3410f4d5b6ef0efbaec122e2d4b33ace9245cbee4d6844225b736c534057ccde8936da3e99762d237e47db207214c77ac168e68 forget workspace copyroom-df79792c13c7
+3bb8300fd0dfec225f052814e0d07616531a6025bbd665465777ca6614c5b9b07dc4529f9ff02e0cbf1e6da39b7a0c4305f2828591b2cf26881c40ecfec77540 snapshot working copy
+22369d71999efc8f38e59505d93af62f29113f2dc310bab4a87ff3977276243d02f8f861f16c87d0f0132a18bcdfc6de02cfc91ba774c7c604ff6fd2fa761b76 new empty commit
+d035e016217fa97ab0c74ab058d80da2cf2387f7cb80cf8ee1ebc678317f85eee27402f59fd9f19a4ebedd1e8a9ef7991aaa12d5582860f83db183d5dcf5f8b6 commit eaba2147169f335a46bafa34f57b88a236d20a2b
+76437327dc788b2ca318381cc3d34dbda451479c2a83f8f6f1317d03af3d4ccadcfbecec567a901bc85d28521418c90a890fb8327ff53b1b1bb48bae94f355df snapshot working copy
+e61e6224c8d4f54168c0e290f03626d22e639b96c2cd87cf10190845808e27a089e8a6b332dd45f4bdd56c35b400b612cad310b1f392e8be4fe52b56e90bf150 new empty commit
+de62f65fc6a01c3124ad8ce026183272f110ea64a9d46b67c0e717e05fe2fab77b0fefba217b16d481e1f90630202604ee393f7414cb44898200fe897b4a603b commit a46bbb02ed7738b69229e21139250863a3e6e0e6
+ed1200f0e4a650c84c115fbcaf10a5cc072df928a2c6098245a9bcee8444665f0ee47a958b9eb0b3f04fd587047027e7239d0c16372634760be64bcf520b216c snapshot working copy
+69fda13ad435c20d8f1d07203ee0be110507da1a58a365aced9f5d51d16d9c85f7c8e0bf06d62ee7d1c59e225d4ea0e93b24fe12a1977a4511c510e6ac894933 create initial working-copy commit in workspace copyroom-df79792c13c7
+fb2b1c8cec6ed1291ed8e65170eb495e1af7fa696cacd38c5cae8265bca9664ae1f6b59a4fb7303d5587b0098a62e87581b54ba530579e695c73ac597e0dfb52 add workspace 'copyroom-df79792c13c7'
+18a8fecf479082ed21828a62540246bb98d964caed646a135407ac2f63e7e50b7d2e0d2205dfa8c4182f8cd66ac7f84fbf89dd9876d365b9bdb6da6511b78e2a commit 7c97edcd21c8f8e4893816ac59a25c47dc6e9311
+3fa8c5e4ad0f614447c274f8362b4f653937d9cd5e0604adbf21734c66c23c1ad21211d8972bfd5b048a832af16ee059ca8d946740378ea7e9da69e0d1d7988f snapshot working copy
+61944c9fd4dd89dd904fa00f605df968cb41d9af2cfec5e739947e1672c8e85d682fe2860adab357d30d5875f37dd11ae24b4e50071d4e603920c26dd620ac1a commit 78ba87b661e148792a933dbdf5d179a63f5fb075
+e8aad1e30a6339319e986ee5469376bb32d24ccbda4ded8a8c63d36808a0990dc2e3ccb0605372e66d38b619732d7db71c1c4963d6b0a17a86bbec542a48653f snapshot working copy
+4a06f9448c37e54c383a4718a9f6e85a265fff8845104760253edcfa1cd24cfd53d521787d0b2dbcc4cae7db15dfdf3f3bcfcef29564c5b0f24d4247ec26ad7d add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+--- exit: 0
+-- copyroom commands
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom status
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "has_conflicts": false, "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "a8db8b29665fe5207751f2372cb9a4381eb90745", "revision": 1, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "source_reachable": true}}, "ok": true, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "a8db8b29665fe5207751f2372cb9a4381eb90745", "revision": 1, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "source_reachable": true, "working_tree_digest": "c423556f1999428fbbf9ac1dd501705031f3907a7c393805c855ed8e8d710dbb"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom inspect
+--- stdout
+{"answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "conflicts": [], "layers": {"base": {"owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "a8db8b29665fe5207751f2372cb9a4381eb90745", "revision": 1, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "source_reachable": true}}, "owners": {"README.md": "base", "config/project.yml": "base"}, "pending_previews": [], "project": "/tmp/cr-crash-2578910/runs/A2pre/project", "project_id": "11377e021457465ca3ffb67f07be5f26", "render_head": "a8db8b29665fe5207751f2372cb9a4381eb90745", "revision": 1, "snapshot_reachable": true, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32", "source_reachable": true, "working_tree_digest": "c423556f1999428fbbf9ac1dd501705031f3907a7c393805c855ed8e8d710dbb"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom preview list --project /tmp/cr-crash-2578910/runs/A2pre/project
+--- stdout
+[]
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom doctor
+--- stdout
+{"jj": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj", "ok": true, "templateer": "0.4.1"}
+--- exit: 0
+$ (cd /tmp/cr-crash-2578910/runs/A2pre/project) /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 -m copyroom layer list
+--- stdout
+[{"layer": "base", "owners": {"README.md": "readme", "config/project.yml": "settings"}, "render_head": "a8db8b29665fe5207751f2372cb9a4381eb90745", "revision": 1, "source": "/tmp/cr-crash-2578910/runs/A2pre/source", "source_digest": "5e0ccfe2289fc991a38b607df04f2f0b5959ddf46a139954927a7b08eb84da32"}]
+--- exit: 0

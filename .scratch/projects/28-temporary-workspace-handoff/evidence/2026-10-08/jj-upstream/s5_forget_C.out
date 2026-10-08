@@ -1,0 +1,21 @@
+
+======== S5 `jj new` in w1 paused at C (published, wc not updated); default runs `jj workspace forget w1` ========
+--- Q (default): jj workspace forget w1: rc=0
+--- P (jj new in w1) result: rc=0
+stderr:
+Working copy  (@) now at: sqlzxqyk 970eb225 (empty) S1-new
+Parent commit (@-)      : yxolmmtv 6f1d64f0 w1-work
+-- after: heads ['d1a73e4c0ba1']
+sqlzxq 970eb225 ws=[] bm=[] (empty) S1-new
+yxolmm 6f1d64f0 ws=[] bm=[] w1-work
+zxwowy 9bd2dc8e ws=[] bm=[] (empty) default-work
+npzlyz c98c9a61 ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- w1: jj st: rc=0
+stdout:
+No working copy
+--- default: jj workspace list: rc=0
+stdout:
+default: zxwowysk 9bd2dc8e (empty) default-work
+workspace_store: b'\n\x11\n\x07default\x12\x06../../'

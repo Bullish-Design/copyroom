@@ -1,0 +1,31 @@
+== SIGKILL at stage LOCKED ==
+--- jj log BEFORE ---
+@  4ee056066db2 @ [] empty=true
+│ ○  2282446dc072   [prepared] empty=false
+├─╯
+○  99b2d959fab8   [base] empty=false
+◆  000000000000   [] empty=true
+lock free while publish_if is parked at stage (should be False = held): False
+publish_if exit status (negative = signal): -9
+working_copy.lock free after SIGKILL: True | op_heads lock free: True
+lock files left on disk after SIGKILL: ['.jj/working_copy/working_copy.lock']
+op heads dir (before any jj command): ['4ec7f116981c']
+new ops visible: []
+sig diff of .jj vs before: {'added': ['working_copy/working_copy.lock'], 'removed': [], 'changed': []}
+files on disk: ['a.txt']
+`jj status` rc=0 in 0.03s
+--- jj status stdout ---
+The working copy has no changes.
+Working copy  (@) : mqzrlrow 4ee05606 (empty) (no description set)
+Parent commit (@-): lyqzrkqx 99b2d959 base
+--- jj status stderr ---
+
+--- jj op log (after status) ---
+4ec7f116981c new empty commit
+b1bca757d055 snapshot working copy
+14d5303e667d new empty commit
+fc16cdd478ec describe commit 7ff03ae54275fcab94324da3db33926420df4ea1
+d1946250a1fa snapshot working copy
+a4723fd45beb add workspace 'default'
+000000000000
+is_stale per pyjutsu: False

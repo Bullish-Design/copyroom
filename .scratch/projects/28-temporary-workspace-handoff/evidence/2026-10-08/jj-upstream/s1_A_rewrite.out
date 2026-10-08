@@ -1,0 +1,54 @@
+
+======== S1 `jj new` (in w1) paused at A (loaded head X, before snapshot); Q rewrites w1@ CONTENT from default, publishes+checks out nothing in w1 ========
+P loaded head: ['75a0d8de9431']
+--- Q: default: jj squash --from <tmp> --into w1@ (content change of w1@): rc=0
+--- Q: jj squash --into w1@ --use-destination-message: rc=0
+stderr:
+Working copy  (@) now at: zwrnpxps 5d3f326c (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 1 files
+--- P (jj new) result: rc=0
+stderr:
+Working copy  (@) now at: wuyvouyn 6d1cfd37 (empty) S1-new
+Parent commit (@-)      : xozpmkts d1a6f7b6 w1-work
+-- state after P: op heads = ['37a67800de4b', 'd0775d36854b']
+[from head 37a67800de4b]
+37a67800de4b parents=75a0d8de9431 | new empty commit
+75a0d8de9431 parents=f8298a12a42f | describe commit cbdc5c5437cb7b6a8503511e8d90f7a2a217dc48
+f8298a12a42f parents=fabc94b91b4c | snapshot working copy
+fabc94b91b4c parents=a41a3800eca4 | create initial working-copy commit in workspace w1
+a41a3800eca4 parents=1a2718496285 | add workspace 'w1'
+1a2718496285 parents=557dbf811827 | new empty commit
+557dbf811827 parents=7e9fc3809cfd | create bookmark main pointing to commit 1fe5fb8f8f94bfb76940e8928016a7b04328ace9
+7e9fc3809cfd parents=c5a720a129aa | describe commit 33e2a2e0db34dc03ab6f0f0bdf9d015b6eb6a505
+
+[from head d0775d36854b]
+d0775d36854b parents=eb4582f5d212 | squash commits into d1a6f7b6cc7358f0f02672dd7e9fedbf22a858d7
+eb4582f5d212 parents=dd8f1c128c2e | snapshot working copy
+dd8f1c128c2e parents=75a0d8de9431 | new empty commit
+75a0d8de9431 parents=f8298a12a42f | describe commit cbdc5c5437cb7b6a8503511e8d90f7a2a217dc48
+f8298a12a42f parents=fabc94b91b4c | snapshot working copy
+fabc94b91b4c parents=a41a3800eca4 | create initial working-copy commit in workspace w1
+a41a3800eca4 parents=1a2718496285 | add workspace 'w1'
+1a2718496285 parents=557dbf811827 | new empty commit
+
+commits:
+wuyvou f3d8b554 ws=[] bm=[] (empty) S1-new
+zwrnpx 5d3f326c ws=[default@] bm=[] (empty) 
+xozpmk 6d3434be ws=[w1@] bm=[] w1-work
+kuvvpv cec0e2b4 ws=[] bm=[] (empty) default-work
+kylylq 1fe5fb8f ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- default: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : zwrnpxps 5d3f326c (empty) (no description set)
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+   default wc op: e1471e1568b0 | files: []
+--- w1: jj st: rc=1
+stderr:
+Error: The working copy is stale (not updated since operation 37a67800de4b).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+   w1 wc op: 37a67800de4b | files: ['a.txt', 'w.txt']

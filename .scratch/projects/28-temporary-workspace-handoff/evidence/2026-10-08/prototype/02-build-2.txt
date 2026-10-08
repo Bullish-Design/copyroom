@@ -1,0 +1,2 @@
+   Compiling pyjutsu v0.22.0 (/tmp/pj-proto-2714908/pyjutsu)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.66s

@@ -1,0 +1,23 @@
+
+======== S2/S3 user edits file while `jj commit` is paused in editor (after snapshot, before checkout) ========
+--- P result: rc=0
+stderr:
+Working copy  (@) now at: zlvlwork 0b2708cf (empty) (no description set)
+Parent commit (@-)      : rvsxtsmt 2a05dbbf committed-by-P
+disk w.txt: w1 v2 EDITED DURING COMMIT | n.txt exists: True
+--- w1: jj st: rc=0
+stdout:
+Working copy changes:
+A n.txt
+M w.txt
+Working copy  (@) : zlvlwork 1c76988a (no description set)
+Parent commit (@-): rvsxtsmt 2a05dbbf committed-by-P
+--- w1: jj diff -r @- --git (what was committed): rc=0
+stdout:
+diff --git a/w.txt b/w.txt
+new file mode 100644
+index 0000000000..0b3932db40
+--- /dev/null
++++ b/w.txt
+@@ -0,0 +1,1 @@
++w1 v1

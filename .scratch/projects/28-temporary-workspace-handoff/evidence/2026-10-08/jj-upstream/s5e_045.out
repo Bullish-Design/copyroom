@@ -1,0 +1,27 @@
+
+======== S3+S5 `jj commit` in w1 paused in editor; default runs `jj workspace forget w1` fully ========
+--- Q (default): jj workspace forget w1: rc=0
+--- P (jj commit in w1) result: rc=0
+stderr:
+Working copy  (@) now at: wvtqsprx d1a4e6cb (empty) (no description set)
+Parent commit (@-)      : tsymklwr 4de035bc committed-by-P
+-- after: heads ['095aee3df971', '5a49ce73b170']
+wvtqsp d1a4e6cb ws=[] bm=[] (empty) 
+tsymkl 4de035bc ws=[] bm=[] committed-by-P
+kxlvoo 52739b72 ws=[] bm=[] (empty) default-work
+vwwqzw db81530b ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- w1: jj st: rc=0
+stdout:
+No working copy.
+--- default: jj workspace list: rc=0
+stdout:
+default: . kxlvoosw 52739b72 (empty) default-work
+workspace_store: b'\n\x10\n\x07default\x12\x05../..'
+--- w1: jj new (mutating cmd in forgotten ws): rc=1
+stderr:
+Error: Workspace `w1` doesn't have a working-copy commit
+--- w1: jj --ignore-working-copy st: rc=0
+stdout:
+No working copy.

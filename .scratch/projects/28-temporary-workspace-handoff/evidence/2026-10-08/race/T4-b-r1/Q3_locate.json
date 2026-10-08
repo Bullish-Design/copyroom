@@ -1,0 +1,19 @@
+{
+  "in_working_copy_files": [],
+  "visible_commits": [
+    {
+      "commit": "682e54d6ad60e726af5880f9d5511834a8d1594e",
+      "change": "nttstkmpyylyyyxrvrnuqlvrsuyuzwqq",
+      "is_head": false,
+      "ancestor_of_at": false,
+      "is_at": false,
+      "reachable_from_heads": [
+        "cedef5e9f372606cd95bfac38c0c756f9e6f30f4"
+      ],
+      "desc": ""
+    }
+  ],
+  "only_in_op_log_commits": [],
+  "older_versions_of_visible_changes": [],
+  "bookmarks": {}
+}

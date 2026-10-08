@@ -1,0 +1,21 @@
+{
+  "in_working_copy_files": [],
+  "visible_commits": [
+    {
+      "commit": "19769e656c1d0fc46ef140b45041266aadc76dd4",
+      "change": "rmwpwlvkpvllytqrlryloqvoukrqpvlw",
+      "is_head": true,
+      "ancestor_of_at": false,
+      "is_at": false,
+      "reachable_from_heads": [
+        "19769e656c1d0fc46ef140b45041266aadc76dd4"
+      ],
+      "desc": "foreign-work FOREIGNT4ar1"
+    }
+  ],
+  "only_in_op_log_commits": [],
+  "older_versions_of_visible_changes": [
+    "87f29a238ef355a8f7f3b517b76b9a7e3d5f1aa0"
+  ],
+  "bookmarks": {}
+}

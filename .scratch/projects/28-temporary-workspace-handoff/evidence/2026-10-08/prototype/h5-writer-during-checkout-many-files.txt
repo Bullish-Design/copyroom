@@ -1,0 +1,16 @@
+run 0: checkout wall 4.14s, writer iterations 50965, a.txt='WRITER 50965\n', w_new='WRITER NEW 50965\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 1: checkout wall 4.23s, writer iterations 56705, a.txt='WRITER 56705\n', w_new='WRITER NEW 56705\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 2: checkout wall 3.84s, writer iterations 49232, a.txt='WRITER 49232\n', w_new='WRITER NEW 49232\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 3: checkout wall 4.17s, writer iterations 56387, a.txt='WRITER 56387\n', w_new='WRITER NEW 56387\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 4: checkout wall 3.76s, writer iterations 49867, a.txt='WRITER 49867\n', w_new='WRITER NEW 49867\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 5: checkout wall 3.97s, writer iterations 53399, a.txt='WRITER 53399\n', w_new='WRITER NEW 53399\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 6: checkout wall 4.45s, writer iterations 59264, a.txt='WRITER 59264\n', w_new='WRITER NEW 59264\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 7: checkout wall 0.04s, writer iterations 345, a.txt='WRITER 345\n', w_new='WRITER NEW 345\n', rc=2 err='error published-but-unchecked-out: operation 34cf04435962f05a402d44d280c8728f74ac67e5211cb8a1e17211456d19a56683380cc62b180f6c5ab7b5bb8e860b4c6c384f86da90ef2091a1918e76abe982 was published but the working copy could not be checked out (Failed to open file /tmp/pj-proto-2714908/pj-run-ftjfzfg3/h5-7/a.txt for writing); run update_stale to reconcile', status lines=[]
+run 8: checkout wall 3.75s, writer iterations 51516, a.txt='WRITER 51516\n', w_new='WRITER NEW 51516\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 9: checkout wall 3.91s, writer iterations 50598, a.txt='WRITER 50598\n', w_new='WRITER NEW 50598\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 10: checkout wall 0.03s, writer iterations 186, a.txt='WRITER 186\n', w_new='WRITER NEW 186\n', rc=2 err='error published-but-unchecked-out: operation f9615f50f3cb5d2fdb046b0594fa2d4c6194629618edfcd5d6eb744d67052db4d5b72cf26e9b17054d31d226d549cde6da09afbe3600515b74de0d651d948d4a was published but the working copy could not be checked out (Failed to open file /tmp/pj-proto-2714908/pj-run-ftjfzfg3/h5-10/a.txt for writing); run update_stale to reconcile', status lines=[]
+run 11: checkout wall 4.17s, writer iterations 59499, a.txt='WRITER 59499\n', w_new='WRITER NEW 59499\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+run 12: checkout wall 0.04s, writer iterations 546, a.txt='WRITER 546\n', w_new='WRITER NEW 546\n', rc=2 err='error published-but-unchecked-out: operation 4d0831bf86e13068ab8932abc0bea24973aa6378c15a23b52b4b271af5df446f3e9b8e63af92fa61643b49b692a676e370371052976ff2bbdc6577d912e0c64e was published but the working copy could not be checked out (Failed to open file /tmp/pj-proto-2714908/pj-run-ftjfzfg3/h5-12/a.txt for writing); run update_stale to reconcile', status lines=[]
+run 13: checkout wall 3.87s, writer iterations 51819, a.txt='WRITER 51819\n', w_new='WRITER NEW 51819\n', rc=0 err='', status lines=['M a.txt', 'A w_new.txt']
+11 x ('pub_rc=0', 'a.txt=WRITER-whole', 'bulk_all_25000=True', 'status=dirty:M a.txt,A w_new.txt')
+3 x ('pub_rc=2', 'a.txt=WRITER-whole', 'bulk_all_25000=False', 'status=dirty:')

@@ -1,0 +1,2 @@
+DRIVER start point=A3 mode=exit cwd=/tmp/cr-crash-2578910/runs/A3/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A3/preview']
+CRASH point=A3 mode=exit pid=2615631 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3/project args=('commit', '-m', 'copyroom:project inputs')

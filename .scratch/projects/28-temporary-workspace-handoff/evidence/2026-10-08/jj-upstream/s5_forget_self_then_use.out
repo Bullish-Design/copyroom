@@ -1,0 +1,20 @@
+
+======== S5 forget current workspace then run commands in it ========
+--- w1: jj workspace forget: rc=0
+stderr:
+Warning: The current workspace 'w1' no longer exists after this operation. The working copy was left untouched.
+Hint: Restore to an operation that contains the workspace (e.g. `jj undo` or `jj redo`).
+--- w1: jj st: rc=0
+stdout:
+No working copy
+--- w1: jj new: rc=1
+stderr:
+Error: Workspace `w1` doesn't have a working-copy commit
+--- w1: jj --ignore-working-copy log -r @: rc=1
+stderr:
+Error: Workspace `w1` doesn't have a working-copy commit
+oqxnup b482678b ws=[] bm=[] w1-work
+onqnnv 8e1c3be0 ws=[] bm=[] (empty) default-work
+wpxtsq a910aa1c ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+

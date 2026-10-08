@@ -1,0 +1,51 @@
+ids 7a97542c dc95d85b 31a424b4
+--- create: rc=0
+stderr:
+Created 1 bookmarks pointing to ylxvxqwv 7a97542c main | (empty) c1
+heads: ['1dc48a30136f']
+upvpso dc95d85b [] ws= (empty) c2
+ylxvxq 7a97542c [main] ws= (empty) c1
+oypkwr 31a424b4 [] ws= (empty) base
+zzzzzz 00000000 [] ws= (empty) 
+
+== P blocked on working_copy.lock (it already loaded op ['1dc48a30136f'] )
+--- Q: jj --ignore-working-copy bookmark set main -r BASE --allow-backwards: rc=0
+stderr:
+Moved 1 bookmarks to oypkwrov 31a424b4 main | (empty) base
+heads after Q: ['66e7fa904329']
+--- P finishes (exit code, stderr): rc=0
+stderr:
+Moved 1 bookmarks to upvpsowr dc95d85b main | (empty) c2
+heads after P: ['66e7fa904329', 'efa9394cbacc']
+--- jj log (first load merges): rc=0
+stdout:
+upvpso c2 [main??]
+ylxvxq c1 []
+oypkwr base [main??]
+zzzzzz  []
+stderr:
+Concurrent modification detected, resolving automatically.
+--- jj bookmark list: rc=0
+stdout:
+main (conflicted):
+  - ylxvxqwv 7a97542c (empty) c1
+  + oypkwrov 31a424b4 (empty) base
+  + upvpsowr dc95d85b (empty) c2
+stderr:
+Hint: Some bookmarks have conflicts. Use `jj bookmark set <name> -r <rev>` to resolve.
+--- jj new main  (use conflicted bookmark): rc=1
+stderr:
+Error: Name `main` is conflicted
+Hint: Use commit ID to select single revision from: 31a424b4123a, dc95d85be643
+Hint: Use `bookmarks(main)` to select all revisions
+Hint: To set which revision the bookmark points to, run `jj bookmark set main -r <REVISION>`
+2ad6dbb2092f parents=66e7fa904329,efa9394cbacc | reconcile divergent operations
+66e7fa904329 parents=1dc48a30136f | point bookmark main to commit 31a424b4123ac1b3b96ffd05ccce930393345b39
+efa9394cbacc parents=1dc48a30136f | point bookmark main to commit dc95d85be643fa384a5b69dc9eccaea22980e3a7
+1dc48a30136f parents=42633f7e98a5 | create bookmark main pointing to commit 7a97542cb7c180acf4fd0b5dae7c89f39aa9b16f
+42633f7e98a5 parents=6b41b7d695de | new empty commit
+6b41b7d695de parents=dd0a46e364ff | new empty commit
+dd0a46e364ff parents=77f5b966a29b | describe commit 3d7465b993afa3f0a0f2b7a36ede25fc53a9c5c7
+77f5b966a29b parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+

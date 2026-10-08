@@ -1,0 +1,22 @@
+{
+  "kind": "d1x",
+  "token": "FOREIGNT4d1xr1",
+  "procs": [
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "--at-operation=c7bec76fae35d57212030bfdcad79219bf689f4d6f9f0041eb60d200bdfb72e836ce7b0e3155c226f57de7ee9587359b09ec90849655c8855dcb3049a2d494a2",
+        "new",
+        "-m",
+        "forked-FOREIGNT4d1xr1"
+      ],
+      "pid": 2886282,
+      "rc": 0,
+      "out": "",
+      "err": ""
+    }
+  ],
+  "bookmarks": [],
+  "path": null,
+  "forked_at": "c7bec76fae35d57212030bfdcad79219bf689f4d6f9f0041eb60d200bdfb72e836ce7b0e3155c226f57de7ee9587359b09ec90849655c8855dcb3049a2d494a2"
+}

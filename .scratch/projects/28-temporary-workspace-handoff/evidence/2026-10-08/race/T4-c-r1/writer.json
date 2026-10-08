@@ -1,0 +1,24 @@
+{
+  "kind": "c",
+  "token": "FOREIGNT4cr1",
+  "procs": [
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "bookmark",
+        "set",
+        "foreign",
+        "-r",
+        "@"
+      ],
+      "pid": 2667192,
+      "rc": 0,
+      "out": "",
+      "err": "Warning: Target revision is empty.\nCreated 1 bookmarks pointing to zyqkzksz 741ac493 foreign | (empty) (no description set)\n"
+    }
+  ],
+  "bookmarks": [
+    "foreign"
+  ],
+  "path": null
+}

@@ -1,0 +1,13 @@
+jj --version: jj 0.43.0
+command -v jj: /nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj
+readlink -f jj: /nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj
+command -v copyroom: /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/copyroom
+readlink -f copyroom: /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/copyroom
+python: /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python -> /nix/store/q42zvpmwalvp3j8r26v6jk2i1x2bzjdd-python3-3.13.14-env/bin/python3.13
+Python 3.13.14
+git: /nix/store/k3wl6cg7q50zkx47af3msmg1yrg1f203-git-2.54.0/bin/git git version 2.54.0
+uname: Linux server 6.18.38 #1-NixOS SMP PREEMPT_DYNAMIC Sat Jul  4 11:44:22 UTC 2026 x86_64 GNU/Linux
+copyroom --version: exit code 3, stderr "Error: Missing command." (flag does not print in this checkout; observed twice)
+copyroom.__version__ (python -c, inside devenv): 0.7.7  (copyroom.__file__ = /home/andrew/Documents/Projects/copyroom/src/copyroom/__init__.py)
+templateer_version (from preview sidecar): 0.4.1
+console script copyroom -> copyroom.cli:main (pyproject.toml line 22); lab drives copyroom.cli.main(argv) in-process after patching JJ.run

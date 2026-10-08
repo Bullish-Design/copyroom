@@ -1,0 +1,2146 @@
+[
+ {
+  "i": 0,
+  "kind": "newcommit",
+  "delta_ms": 0,
+  "pub_rc": 0,
+  "pub_out": "80288a33c8ccddfad7955f9cd965715e9323880f98d264dc5d0da9f93bf0435e185aed7d8917805cafbf58dab81ab01f149615d094c3e5c28e6f081dd0f0b773",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vnmpnnxs 7a456889 (empty) competitor\\nParent commit (@-)      : myzwmsuk e159d30b (emp",
+  "comp_err": "",
+  "heads": [
+   "4b217cb2bd7f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "e159d30b4dab"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "e159d30b4dab empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 1,
+  "kind": "new1",
+  "delta_ms": 0,
+  "pub_rc": 0,
+  "pub_out": "5c5ee9f9741b156c56ac0a891a5b153435be15915b70218cdb863443e1020c920acf28361addbd0eddb85de9631262f990e2cfc69fd04e6faf9a92d67698b5a3",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: rlrzmpsl 050f4a73 (empty) competitor\\nParent commit (@-)      : rkykzvvy 96e9ba6e (emp",
+  "comp_err": "",
+  "heads": [
+   "bd19e2120891"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "96e9ba6eb7af"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "96e9ba6eb7af empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 2,
+  "kind": "newcommit",
+  "delta_ms": 3,
+  "pub_rc": 0,
+  "pub_out": "2849d6b7856c54065b93b4436ca00bc21c435a98624342b01831b6e1dd8bb25aa0a3353fb144c1e40b64d571393aeb76bdf53b2fb03f42901dfb983bb8fcf109",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: rpnzzmnl 8aad27c6 (empty) competitor\\nParent commit (@-)      : ltlxsupz b9153028 (emp",
+  "comp_err": "",
+  "heads": [
+   "b7e6e387c53a"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "b9153028e1cf"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "b9153028e1cf empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 3,
+  "kind": "new1",
+  "delta_ms": 3,
+  "pub_rc": 0,
+  "pub_out": "4d5156c0a44b7843b2017e8fd366ac25cbca135f5024a48a22f5abbdcf22825b02a778adf63500a8c79e3f1205ccc81abe63cd2771ec5824b69e84f47ac4c611",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wqxnmtxq d04e10e8 (empty) competitor\\nParent commit (@-)      : opsrvltl 9ce34172 (emp",
+  "comp_err": "",
+  "heads": [
+   "2c0c634b61e0"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "9ce341723ece"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "9ce341723ece empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 4,
+  "kind": "newcommit",
+  "delta_ms": -3,
+  "pub_rc": 0,
+  "pub_out": "62c100f7759f5deb353737302f546f26373c0f94284a89ee186b9b2dc98c3cae1d50d7b87d527f901065d9f19fb3af0e343b311d4441795e4a14e50ea56ce351",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xrwpqqux 0a685ffd (empty) competitor\\nParent commit (@-)      : qknsmonx aee71e2c (emp",
+  "comp_err": "",
+  "heads": [
+   "591bb5e414c7"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "aee71e2cb664"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "aee71e2cb664 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 5,
+  "kind": "new1",
+  "delta_ms": -3,
+  "pub_rc": 0,
+  "pub_out": "707f6d866be2db46326083934af608cbda1ae5c51668f36f80b1e6f6c995dcd1b3d50caa6f8602ec6ddc37fddc2cb7fb2be0a0a71f7b899c9b6f38844bf1533b",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: rryylozw 07c3be20 (empty) competitor\\nParent commit (@-)      : lpvuotxp 44f0205f (emp",
+  "comp_err": "",
+  "heads": [
+   "ac6e13953124"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "44f0205f3eea"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "44f0205f3eea empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 6,
+  "kind": "newcommit",
+  "delta_ms": 6,
+  "pub_rc": 0,
+  "pub_out": "074a948c320279e352541ea1fb816a940080c712ddd19a7dd4ab9301be407f3d137f9fac8ac0e8f94a772110ee9f724d202cafe8a1cb20fd29e5397e4c0e5702",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: orsquxvr fc1e5ae0 (empty) competitor\\nParent commit (@-)      : mokwsvuz eb8c4e96 (emp",
+  "comp_err": "",
+  "heads": [
+   "3204b67238ae"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "eb8c4e964529"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "eb8c4e964529 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 7,
+  "kind": "new1",
+  "delta_ms": 6,
+  "pub_rc": 0,
+  "pub_out": "44d0d3670bcd420eba729a2ec0e049e605cdcd77f1a4af28db0d6c55623b5c50542259787940fe2616ab74fb4175d102b5a2ae5c95b70b31b290d4fb93ec4d0e",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lsyxwpmm 1cfa1c78 (empty) competitor\\nParent commit (@-)      : mktntlkn 3dc4f468 (emp",
+  "comp_err": "",
+  "heads": [
+   "0dbb6340c1bd"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "3dc4f468433b"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "3dc4f468433b empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 8,
+  "kind": "newcommit",
+  "delta_ms": -6,
+  "pub_rc": 0,
+  "pub_out": "ec56d3c8161a8e4ee4f3150a7d230785735f63e696a7fa8dd9a4e23c67674b978bebd91e7f367b0010e09b57f47b8f10412578520c71369089460bcfa9bdb74b",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: loulmpns 4f815731 (empty) competitor\\nParent commit (@-)      : kmwvvrnt 73f1f4b3 (emp",
+  "comp_err": "",
+  "heads": [
+   "d87615488bf2"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "73f1f4b300d6"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "73f1f4b300d6 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 9,
+  "kind": "new1",
+  "delta_ms": -6,
+  "pub_rc": 0,
+  "pub_out": "9d3c8fb7fb2e5d5cf5b8cad0095af3f7c38b1d2af39ca8bb80bac217462947fb4c63702ceb7ddb51d9545bca364f673751b2f5537fdfd41eed973c4b0789fd2d",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: mtwztrrz bedb3120 (empty) competitor\\nParent commit (@-)      : kusnltqn 0f8349c1 (emp",
+  "comp_err": "",
+  "heads": [
+   "4bd41f614b94"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "0f8349c16f81"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "0f8349c16f81 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 10,
+  "kind": "newcommit",
+  "delta_ms": 10,
+  "pub_rc": 0,
+  "pub_out": "13f099e03e485e635d3c32adf390227598c8783596e6d15d4d4314361ee9684cf7a7ed525da763b85544b7007054869f506e1dabe1751404597105a780448168",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: oyqozxzk 4b34b554 (empty) competitor\\nParent commit (@-)      : unpzuvqk e8661300 (emp",
+  "comp_err": "",
+  "heads": [
+   "98fd08e87202"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "e8661300e9bc"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "e8661300e9bc empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 11,
+  "kind": "new1",
+  "delta_ms": 10,
+  "pub_rc": 0,
+  "pub_out": "87988d99d39e9c69a7cd57779c88348db6b71e40387b43571be6bedf98daa4a76d03cf175890808860401b202d127547c4aef3382b64c8dd8892224f16129be1",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wooxornq 68a2e7b5 (empty) competitor\\nParent commit (@-)      : quwttmyp fcccf2b7 (emp",
+  "comp_err": "",
+  "heads": [
+   "56c0f9be0727"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "fcccf2b7c872"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "fcccf2b7c872 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 12,
+  "kind": "newcommit",
+  "delta_ms": -10,
+  "pub_rc": 0,
+  "pub_out": "d6874cf74eb273a5dbf485dcfd708ba51e198c9ea44469788cb236da46bf45be53752b9077be006a0f79a338c95ea6166538d4d788a879f50793836df14923f1",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: kzlyxmrx aaafaec7 (empty) competitor\\nParent commit (@-)      : xtnylpoy b4cd395b (emp",
+  "comp_err": "",
+  "heads": [
+   "9b6e159f92ff"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "b4cd395be5f6"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "b4cd395be5f6 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 13,
+  "kind": "new1",
+  "delta_ms": -10,
+  "pub_rc": 0,
+  "pub_out": "fc906e595497ddda0715b6479431d5562da515aec35b8103c4392b504f35a27d4989c0ef1104923abe3075c56d668a4a3ab21fd0e18eed4eda7e0856e5b96404",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lmwyllun c8a95449 (empty) competitor\\nParent commit (@-)      : slkntrxk 3cb11efe (emp",
+  "comp_err": "",
+  "heads": [
+   "56af30afd6e9"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "3cb11efe010a"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "3cb11efe010a empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 14,
+  "kind": "newcommit",
+  "delta_ms": 15,
+  "pub_rc": 0,
+  "pub_out": "e2c3ea6ff6cb5dff17c8d5532e3fc91e83300acbf50b9f14cab7e32ca04ceb296e3c3801cd60a3425e6955613661061d3bab2e7dce6c9ab04ee640cb2bda62d6",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: toxulyuk a2766f69 (empty) competitor\\nParent commit (@-)      : znnqplnt 070f48ff (emp",
+  "comp_err": "",
+  "heads": [
+   "1a48ede9265f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "070f48ff5320"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "070f48ff5320 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 15,
+  "kind": "new1",
+  "delta_ms": 15,
+  "pub_rc": 0,
+  "pub_out": "bdf354cc826e38ed66825822aaf4a6427c32715e19337998b4c1c73e1b8841e9ccb5fe1e45ddb8d7fe05fef9e6313b6627995faa5bd2fdf5808622e7b2dad91c",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: mwlkwkmz 3b1a55d4 (empty) competitor\\nParent commit (@-)      : nsnkqyvr 647ed959 (emp",
+  "comp_err": "",
+  "heads": [
+   "6464574232b0"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "647ed959cab7"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "647ed959cab7 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 16,
+  "kind": "newcommit",
+  "delta_ms": -15,
+  "pub_rc": 0,
+  "pub_out": "0f81e4ec63d389ce1c18a2e671c77c0990b32b4d59f215876d42639b707accdf4cd4365b31d086b8df23e2f23e0014556f1b078890d59c27c17e9eb742cbaa15",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: upoqxkux 06661067 (empty) competitor\\nParent commit (@-)      : pnxytpzx 238cda8a (emp",
+  "comp_err": "",
+  "heads": [
+   "338109c2d1e1"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "238cda8aec0a"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "238cda8aec0a empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 17,
+  "kind": "new1",
+  "delta_ms": -15,
+  "pub_rc": 0,
+  "pub_out": "a13423865f178aad9e658467bb945288a99a835cd3edb2402851a6f0529fcbc8094e42812617467554e546c493c31ae1219d83681eba7cd0aeb1b824c33b931a",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xowxpxko 19f74068 (empty) competitor\\nParent commit (@-)      : yvzsppks 83b26bb0 (emp",
+  "comp_err": "",
+  "heads": [
+   "46edd1acea0f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "83b26bb03597"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "83b26bb03597 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 18,
+  "kind": "newcommit",
+  "delta_ms": 20,
+  "pub_rc": 0,
+  "pub_out": "ad6cf8ecfd3dd80d627fceab6d814c398c052ce4d2541c61f324ac31d8239cf94c1cb772eb14bb283db454c4a556615303a2901737609c3862719a85f6d54407",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: psoorlnq 69a889cf (empty) competitor\\nParent commit (@-)      : kzvmwtyt 4011c60b (emp",
+  "comp_err": "",
+  "heads": [
+   "d2c47ec25b95"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "4011c60b3d04"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "4011c60b3d04 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 19,
+  "kind": "new1",
+  "delta_ms": 20,
+  "pub_rc": 0,
+  "pub_out": "793021e317a3ffcf2e145657ddd89167895c21b98007681a091fc4c220f2d1890d37cc7fbcaa96afcbbae7c8f86b8c10f7b2680875419e86877e8e59d544f3e2",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: mtruowrp 731abb12 (empty) competitor\\nParent commit (@-)      : zzrmrwtx 8022f1f1 (emp",
+  "comp_err": "",
+  "heads": [
+   "2a93bce58331"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "8022f1f11b0f"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "8022f1f11b0f empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 20,
+  "kind": "newcommit",
+  "delta_ms": -20,
+  "pub_rc": 0,
+  "pub_out": "c4879bb1286b44ca345e26f5ccd66402794eda338be5df268076ff63f0776d39ad45f218fdcfde801208ccda080c8410dc5ac7a920d1f09b15418b64c04b412b",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: mmoqkmtl 1729d824 (empty) competitor\\nParent commit (@-)      : wpsxquot 6649e343 (emp",
+  "comp_err": "",
+  "heads": [
+   "cc159b3584b0"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "6649e3438f44"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "6649e3438f44 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 21,
+  "kind": "new1",
+  "delta_ms": -20,
+  "pub_rc": 0,
+  "pub_out": "f292190fc6cce4dd49f4e9030d5a6f9e76c264014d5a15f8a177fc745fa70a57c5e894d04398e2949df305491f98ca7cd0165a4d886b0b7067042d3f72bd2145",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: osmkqqpk f85af27a (empty) competitor\\nParent commit (@-)      : vrtryyxn 42426e8d (emp",
+  "comp_err": "",
+  "heads": [
+   "c42393136aec"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "42426e8db15d"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "42426e8db15d empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 22,
+  "kind": "newcommit",
+  "delta_ms": 30,
+  "pub_rc": 0,
+  "pub_out": "3ae0394dd5b2cc051bb5a7625dc42a3f7249fc286baf5f6f0a98366ac435b9d50c284294e502b93ff4fa4180d95c78e720b0ac222e588eb19558ffc106afe5a3",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vmnysknn dc156071 (empty) competitor\\nParent commit (@-)      : wttoookn 01e9a9ca (emp",
+  "comp_err": "",
+  "heads": [
+   "eeb7d7c1d66f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "01e9a9ca53a1"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "01e9a9ca53a1 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 23,
+  "kind": "new1",
+  "delta_ms": 30,
+  "pub_rc": 0,
+  "pub_out": "bbd24671128ed20a5919031d1725f550261f0c89038bbbbeea96568e69c6dc0aad1940fbd86af2b32a8307d3abfdb033bf14d27d8aa7814bcc425b289df4873c",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wwwsykkx db3e45da (empty) competitor\\nParent commit (@-)      : tupqrxns af8f55d9 (emp",
+  "comp_err": "",
+  "heads": [
+   "9c6352bd1832"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "af8f55d94ec4"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "af8f55d94ec4 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 24,
+  "kind": "newcommit",
+  "delta_ms": -30,
+  "pub_rc": 1,
+  "pub_out": "stale observed=f44ba315d626d2f7fc24bd4f5fd4b7ae86fb7c54 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lvlknusm f44ba315 (empty) competitor\\nParent commit (@-)      : qkmsvysv e031e9c7 (emp",
+  "comp_err": "",
+  "heads": [
+   "15b3ec9aef0d"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 25,
+  "kind": "new1",
+  "delta_ms": -30,
+  "pub_rc": 1,
+  "pub_out": "stale observed=2ad2f0dcd535ffcb3dba4f084518228ace1be019 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: nkslvwxx 2ad2f0dc (empty) competitor\\nParent commit (@-)      : mkppppxv c8488e30 (emp",
+  "comp_err": "",
+  "heads": [
+   "66b74e3ab348"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 26,
+  "kind": "newcommit",
+  "delta_ms": 45,
+  "pub_rc": 0,
+  "pub_out": "ed01b2e2e381b4b83c38083fe50725234cf875ede2f683e874040ee3c41920d7eb1233429bff8d7e5b70c643549f26b06a37f3e68f39b8940144a51eec130dfa",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vltrzmsk 5c51e73c (empty) competitor\\nParent commit (@-)      : qzlkxlmm 08dca2d7 (emp",
+  "comp_err": "",
+  "heads": [
+   "26c2daa9b992"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "08dca2d7d1df"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "08dca2d7d1df empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 27,
+  "kind": "new1",
+  "delta_ms": 45,
+  "pub_rc": 0,
+  "pub_out": "2b160997c5981efe4db3d80973256c2c8d59a340f973751e33a599a93b4f04527b6b3eeb258724e2b9c388e934a0bc4c9a636534c3550157d1f49a0421937c0e",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wurrxsqp 3b4904c1 (empty) competitor\\nParent commit (@-)      : zkzuqwxx eb7ac1c8 (emp",
+  "comp_err": "",
+  "heads": [
+   "3b247f387cd2"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "eb7ac1c8b4f9"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "eb7ac1c8b4f9 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 28,
+  "kind": "newcommit",
+  "delta_ms": -45,
+  "pub_rc": 1,
+  "pub_out": "stale observed=453018f6117cfc96c9db59e74f99644dda199437 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: qwormrlt 453018f6 (empty) competitor\\nParent commit (@-)      : nlmrqpkm 91f18c49 (emp",
+  "comp_err": "",
+  "heads": [
+   "8a53f5cfd18b"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 29,
+  "kind": "new1",
+  "delta_ms": -45,
+  "pub_rc": 1,
+  "pub_out": "stale observed=b5a7047fbd8b8afc572afc5f7c11147d7cc63096 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: yuqqmvto b5a7047f (empty) competitor\\nParent commit (@-)      : myqlxmwm 86ef0019 (emp",
+  "comp_err": "",
+  "heads": [
+   "7a00349bbd06"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 30,
+  "kind": "newcommit",
+  "delta_ms": 60,
+  "pub_rc": 0,
+  "pub_out": "9f0aa42d6224f870ac28fbe2760fdfe39b3f98b2d3d8aaf332845ab85b0be6a1e1b316c1aa87251323449314c4935b6dba3a717642108e5dd5a9317249e5a8e0",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: rovnqqmy 538413e6 (empty) competitor\\nParent commit (@-)      : zkqymzoy dd3c8146 (emp",
+  "comp_err": "",
+  "heads": [
+   "bec507e513db"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "dd3c8146a590"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "dd3c8146a590 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 31,
+  "kind": "new1",
+  "delta_ms": 60,
+  "pub_rc": 0,
+  "pub_out": "cff332cfeb7562623737049e3328562acf6605b3e4442c6c589eb2d3ca4e0530dc9d63e4fe67d74a7e35185242701c44d25886c3509762d5d0c38791a279158f",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zostpywu 14e8ab79 (empty) competitor\\nParent commit (@-)      : rnwnquol 1c99aef0 (emp",
+  "comp_err": "",
+  "heads": [
+   "c1a7725fe933"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "1c99aef06113"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "1c99aef06113 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 32,
+  "kind": "newcommit",
+  "delta_ms": -60,
+  "pub_rc": 1,
+  "pub_out": "stale observed=bb53b5d1b3776a8839eb8bf7b0a6c48a2535eaf0 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xuopznvv c6dc3738 (empty) competitor\\nParent commit (@-)      : ysqnrtkx 9c7f7476 (emp",
+  "comp_err": "",
+  "heads": [
+   "989b6253c54a"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 33,
+  "kind": "new1",
+  "delta_ms": -60,
+  "pub_rc": 1,
+  "pub_out": "stale observed=caba40cab9b28952bae6732bcb45368124901c98 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vwsmvzto caba40ca (empty) competitor\\nParent commit (@-)      : xrowooxq 6520f0b2 (emp",
+  "comp_err": "",
+  "heads": [
+   "1c287ec2edd0"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 34,
+  "kind": "newcommit",
+  "delta_ms": 90,
+  "pub_rc": 0,
+  "pub_out": "e6f499105e8b128603ad401c55d1cff0c035d0c9fe6ed979c009b1aa43b4e23fbcfcc0b8ce57d4854094f143ed29607a6d258bf3dbda938aee9d24ebd5d093f0",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: kmzsuynx f5662798 (empty) competitor\\nParent commit (@-)      : xpoxmxmw 50f12eab (emp",
+  "comp_err": "",
+  "heads": [
+   "1a38fab37742"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "50f12eabdfb7"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "50f12eabdfb7 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 35,
+  "kind": "new1",
+  "delta_ms": 90,
+  "pub_rc": 0,
+  "pub_out": "c15960a397cf0981a680478689bc43e4ff3c75eb68ad45a89b9f4c84f278b818a9e4f523c1b8ccd5a2d5d5768fb5b97ff8d8c7e14d0b1cae19bada045b497c55",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zrzolpou 8d2e6b87 (empty) competitor\\nParent commit (@-)      : wlmtlkvp 54d8cdba (emp",
+  "comp_err": "",
+  "heads": [
+   "d9914a2b75e7"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "54d8cdbabbce"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "54d8cdbabbce empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 36,
+  "kind": "newcommit",
+  "delta_ms": -90,
+  "pub_rc": 1,
+  "pub_out": "stale observed=908e9149d066f9d68dab5d0591b865c95c171ba8 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vkrnstyt 0d12fa62 (empty) competitor\\nParent commit (@-)      : vnmyuyrz 72e92da7 (emp",
+  "comp_err": "",
+  "heads": [
+   "ff1c9e204f03"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 37,
+  "kind": "new1",
+  "delta_ms": -90,
+  "pub_rc": 1,
+  "pub_out": "stale observed=58a8664aa7e325875877f0fb14e1ec0d320c1e78 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zulttpqr 58a8664a (empty) competitor\\nParent commit (@-)      : pwtvuxls adf2da3a (emp",
+  "comp_err": "",
+  "heads": [
+   "deeaac12e9d5"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 38,
+  "kind": "newcommit",
+  "delta_ms": 130,
+  "pub_rc": 0,
+  "pub_out": "9230f63e75b16f07538682080b06f31429e25aa086a65b6d830bdf5647273505f04bbf8d423ed30cd36c89bd5c685de90c8a175c97e6ba859d77b7abcb182e47",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xpuunqtz 80963d2f (empty) competitor\\nParent commit (@-)      : yovwpooq d21a77a7 (emp",
+  "comp_err": "",
+  "heads": [
+   "c9714e3ac613"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "d21a77a76ffd"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "d21a77a76ffd empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 39,
+  "kind": "new1",
+  "delta_ms": 130,
+  "pub_rc": 0,
+  "pub_out": "c89382cf8d610c59585be6b2994da8e570293b3ae6ebb9ca60cefc6cf2354f2a75122601a1cd82292585008476cc1b61e98748a5ee01f3e5eec52a85b884fe60",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: prxrnvnr 3c717851 (empty) competitor\\nParent commit (@-)      : wuxyvoxt 105a05c9 (emp",
+  "comp_err": "",
+  "heads": [
+   "829dfbb9696d"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "105a05c9a793"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "105a05c9a793 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 40,
+  "kind": "newcommit",
+  "delta_ms": -130,
+  "pub_rc": 1,
+  "pub_out": "stale observed=497cf5e9e29dead8af15a1f36ee8664ebffe79f5 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: pzwvzonx 955aff27 (empty) competitor\\nParent commit (@-)      : rptpsxvp 2d48df05 (emp",
+  "comp_err": "",
+  "heads": [
+   "4bd02b4c93bf"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 41,
+  "kind": "new1",
+  "delta_ms": -130,
+  "pub_rc": 1,
+  "pub_out": "stale observed=0f7c2ccf15919bb199a29a8765d783939f00fbd3 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zlowuwkt 0f7c2ccf (empty) competitor\\nParent commit (@-)      : wvvokrpq f6bdd948 (emp",
+  "comp_err": "",
+  "heads": [
+   "be513f1b8c20"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 42,
+  "kind": "newcommit",
+  "delta_ms": -170,
+  "pub_rc": 1,
+  "pub_out": "stale observed=5eed4bd13f3aee127d0965f06fdc03e82fb29517 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lpzqxsox 53b10143 (empty) competitor\\nParent commit (@-)      : vypzktvt 4efa2427 (emp",
+  "comp_err": "",
+  "heads": [
+   "71b45a59e7e0"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 43,
+  "kind": "new1",
+  "delta_ms": -170,
+  "pub_rc": 1,
+  "pub_out": "stale observed=ea30a649b7594a73bc66f8fe66da08e55436c57b dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xluxumry ea30a649 (empty) competitor\\nParent commit (@-)      : zvqommrz b4e2a359 (emp",
+  "comp_err": "",
+  "heads": [
+   "cbd86bc0d025"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 44,
+  "kind": "newcommit",
+  "delta_ms": -220,
+  "pub_rc": 1,
+  "pub_out": "stale observed=4d7e5a2f35a08ea70f2beb38c23e6fef85eecb25 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: yrtmkkqo 65d84e7c (empty) competitor\\nParent commit (@-)      : xwvtuwqy 2d609912 (emp",
+  "comp_err": "",
+  "heads": [
+   "22cca368941f"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 45,
+  "kind": "new1",
+  "delta_ms": -220,
+  "pub_rc": 1,
+  "pub_out": "stale observed=e2089f6fe4203ed3def28e6c2906c49e2f0e23b4 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xwotxmsn e2089f6f (empty) competitor\\nParent commit (@-)      : nwusmolt d65e515e (emp",
+  "comp_err": "",
+  "heads": [
+   "62d02099036c"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 46,
+  "kind": "newcommit",
+  "delta_ms": -300,
+  "pub_rc": 1,
+  "pub_out": "stale observed=4ae010b9843bf8445e42406fdebfb595fc54fb4a dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: yzzsootq c04a4b54 (empty) competitor\\nParent commit (@-)      : zovpwqlp 10e6bfd2 (emp",
+  "comp_err": "",
+  "heads": [
+   "6e03696b90f6"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 47,
+  "kind": "new1",
+  "delta_ms": -300,
+  "pub_rc": 1,
+  "pub_out": "stale observed=3c33172549cb6d3f36a13eba51f0fafe3a86a895 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: qzwquqxs 3c331725 (empty) competitor\\nParent commit (@-)      : vxtpxttt acb1fd5e (emp",
+  "comp_err": "",
+  "heads": [
+   "287a8add067d"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 48,
+  "kind": "newcommit",
+  "delta_ms": 0,
+  "pub_rc": 0,
+  "pub_out": "740ef72e7e544b2e74c2a0cba42d1ce4333b974776d7105c036502a0e02fb651e84fbb52d2793ba3fc76540f60a447afabc212a0a93d41f9a27eb65f279e475d",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: suuozkts 9efdcf1a (empty) competitor\\nParent commit (@-)      : utzxrysl 2503da98 (emp",
+  "comp_err": "",
+  "heads": [
+   "037e33041e12"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "2503da983746"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "2503da983746 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 49,
+  "kind": "new1",
+  "delta_ms": 0,
+  "pub_rc": 0,
+  "pub_out": "844951aa45a2bafd59a37109dcb1fd7669f977ebac6ac872cfb6c6af4d8686b1a2756a28c89a8710ecb5d19d734f9f73816767f9b67dbf90c7add3ec15f0b6ab",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: mkzoymzp fd449069 (empty) competitor\\nParent commit (@-)      : lpywwxqu f97b1ab1 (emp",
+  "comp_err": "",
+  "heads": [
+   "7147869f3c11"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "f97b1ab1b6a5"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "f97b1ab1b6a5 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 50,
+  "kind": "newcommit",
+  "delta_ms": 3,
+  "pub_rc": 0,
+  "pub_out": "9cf139364a6d12572a5b3e2192ed2dcc5c3834208b01c67c044b5e1faa7b6e1f567fc064cf0c38765fb03799fbe3717e51f2032dcbdfbc182bcb77803a2f9d5e",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: ktzpwrsy 082ee088 (empty) competitor\\nParent commit (@-)      : vswnnplo a0a56c5e (emp",
+  "comp_err": "",
+  "heads": [
+   "e0ef540e6b53"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "a0a56c5e61d8"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "a0a56c5e61d8 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 51,
+  "kind": "new1",
+  "delta_ms": 3,
+  "pub_rc": 0,
+  "pub_out": "3011fde1ec986facd2de531fae6bd5c6cab935c6d11ba4df0875a6a0ceb9b6d5de5d942f1c66c185a08bed0c23daf0ca384e03fb1b7d31a95b3726067eb71afb",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: uknsonon b9177553 (empty) competitor\\nParent commit (@-)      : nmyzvuwt 99b4937d (emp",
+  "comp_err": "",
+  "heads": [
+   "31f730bba6fb"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "99b4937d6e77"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "99b4937d6e77 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 52,
+  "kind": "newcommit",
+  "delta_ms": -3,
+  "pub_rc": 0,
+  "pub_out": "4ef1b8e91c9fda5a0fbf0b40930fbaa5bc07aa48554ee0d107d07d3583fc34229f3e2c6ae12b97236c3abe8af219b200f3114926964aaa46cef8794f751c32d7",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: spmxytnq cab0d6b7 (empty) competitor\\nParent commit (@-)      : ozxwnwqz 8348be44 (emp",
+  "comp_err": "",
+  "heads": [
+   "d295ea105b8b"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "8348be4427c7"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "8348be4427c7 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 53,
+  "kind": "new1",
+  "delta_ms": -3,
+  "pub_rc": 0,
+  "pub_out": "60029b3117b2e312cb6e237bc4bd35b30e2eb403bf7913567d9ca3444527be8f730c3779303e79e9e9b18a64cf266f3ebb9f3bd7597782d4f81f3a844691935c",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: uvwvqpou 5260f9fd (empty) competitor\\nParent commit (@-)      : oxotpyrw 41592347 (emp",
+  "comp_err": "",
+  "heads": [
+   "3c393cb07efe"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "41592347968d"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "41592347968d empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 54,
+  "kind": "newcommit",
+  "delta_ms": 6,
+  "pub_rc": 0,
+  "pub_out": "8007e328d2f8c36e69bcde1793e7cfe265739c47b8714bbc8551ae034758184da69f07b3d9f9d8549642ae69c37976c268839c24add161ebdea0751a26585223",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: kxkyxwkv e7b324c8 (empty) competitor\\nParent commit (@-)      : twwtknyp cf615d0b (emp",
+  "comp_err": "",
+  "heads": [
+   "0aa7c8049aec"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "cf615d0b24e0"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "cf615d0b24e0 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 55,
+  "kind": "new1",
+  "delta_ms": 6,
+  "pub_rc": 0,
+  "pub_out": "a9f0c575900982951e1943c76355a44af6ced48c8bb80c1677ab813e3edd5be8b8f3e00cd96f4db9a7f6173d03bd9af323e8d0fc208c2f4a5e8b14d418a0a91d",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vvyuxpvv f7d99ca3 (empty) competitor\\nParent commit (@-)      : ttwlqupp 3ee3b071 (emp",
+  "comp_err": "",
+  "heads": [
+   "fa8f7c64479f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "3ee3b071a489"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "3ee3b071a489 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 56,
+  "kind": "newcommit",
+  "delta_ms": -6,
+  "pub_rc": 0,
+  "pub_out": "aca04a854854db10b48fc39870d06cc8d02bebe27aeb4ad77f6771c7075be79941bab8d13e6621e47b188c125fb54836e3a71d494f70cf35b643827051f0b577",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vzonktyx 620eae7b (empty) competitor\\nParent commit (@-)      : monxxzwu 1478faca (emp",
+  "comp_err": "",
+  "heads": [
+   "895d69fcdd0f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "1478facaaec7"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "1478facaaec7 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 57,
+  "kind": "new1",
+  "delta_ms": -6,
+  "pub_rc": 0,
+  "pub_out": "54d1fe2f194cc9b628178855dca1532afd1b21655476ca1c8a9cdcc871f8331b4bed5618c24f204720a502efc93d404cc88324de95b334871e9cc27c4a2daae2",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: oupvrksv 86937b78 (empty) competitor\\nParent commit (@-)      : pkvsnnxn 75c4d65b (emp",
+  "comp_err": "",
+  "heads": [
+   "dbc5f6c0dd11"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "75c4d65b83ce"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "75c4d65b83ce empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 58,
+  "kind": "newcommit",
+  "delta_ms": 10,
+  "pub_rc": 0,
+  "pub_out": "95330ee0ea0b7483270b9a341d22d64ba27b3c9241ac72752ad4544e319c84f5a74f44f3234a9fbc61cc1fbd84ca72baa902ef6a2b5cf5b542b883f7324c41cc",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lwrkwsvu 1c28c15e (empty) competitor\\nParent commit (@-)      : toxptppr 0136a363 (emp",
+  "comp_err": "",
+  "heads": [
+   "05d80bfdf7b4"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "0136a3634edb"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "0136a3634edb empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 59,
+  "kind": "new1",
+  "delta_ms": 10,
+  "pub_rc": 0,
+  "pub_out": "154330379e18f23c95979610776d467a641d0b76c1832cf077d57bbe5815476dd1a10004ddb02dc8d3754f05b41e5d0b7c0ccde59a71e93df6f63b8c02a5fd73",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: ullptpkm d96312fb (empty) competitor\\nParent commit (@-)      : zpuzxszn 6d53b1eb (emp",
+  "comp_err": "",
+  "heads": [
+   "4fde23b3f0db"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "6d53b1ebedf2"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "6d53b1ebedf2 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 60,
+  "kind": "newcommit",
+  "delta_ms": -10,
+  "pub_rc": 0,
+  "pub_out": "91b2ab7a6d4c318cb65f946d3eac3ba9b3b349922b59e21ea6130fdf1ac0f3b6ad1a7be2a3af95008d4bb03c50bf2224589ec76966449322f44a9ae10ae47514",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lptlxptl d5327a30 (empty) competitor\\nParent commit (@-)      : slmumyxm cf6933fd (emp",
+  "comp_err": "",
+  "heads": [
+   "96be9f707194"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "cf6933fd7797"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "cf6933fd7797 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 61,
+  "kind": "new1",
+  "delta_ms": -10,
+  "pub_rc": 0,
+  "pub_out": "c78fedd38998f3b701b2b4ba558f0ab6d43d6c14b04fee669a149ea557df7d719e40a8af0c823fc1025259f4f2269ea52b805d5b1eb4084e8d9f54c54cf7d858",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wsszqspm 53671f46 (empty) competitor\\nParent commit (@-)      : vrttmqsm 4eb7184e (emp",
+  "comp_err": "",
+  "heads": [
+   "640298adb53e"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "4eb7184e6c97"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "4eb7184e6c97 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 62,
+  "kind": "newcommit",
+  "delta_ms": 15,
+  "pub_rc": 0,
+  "pub_out": "81a19364421c011134cb79f1b2d7cce2bb9fa2930625a90fd4bab09f7c1b18a48793e0c474946a73e868cc747955d579511d48cf775d0cfff0595275496904c5",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vtzypnyk cb04d3d0 (empty) competitor\\nParent commit (@-)      : pptqrtoy 4ba7fe8b (emp",
+  "comp_err": "",
+  "heads": [
+   "843c0013029b"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "4ba7fe8b65c9"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "4ba7fe8b65c9 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 63,
+  "kind": "new1",
+  "delta_ms": 15,
+  "pub_rc": 0,
+  "pub_out": "38a2f9ed010f6ab9bb301e7bbfaa87c01c4d283647395a678756339f8152e6650f0ea47d793168d4abff19317d2790d171e23bb085510e5dc609bfb1fcd74195",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lpzsmqrz 23024187 (empty) competitor\\nParent commit (@-)      : kluwyytq 929101f4 (emp",
+  "comp_err": "",
+  "heads": [
+   "e81536d7a795"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "929101f46404"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "929101f46404 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 64,
+  "kind": "newcommit",
+  "delta_ms": -15,
+  "pub_rc": 0,
+  "pub_out": "cd1f56488faa2b754faf30ba9fc595c12479f057054ebb95a963d8d4393d3e88ecb88d2333366fb5d577bcfbb288e32e4176a8790c4c3aa0a524357abdf6b01f",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vssqsvlx 2516a844 (empty) competitor\\nParent commit (@-)      : xlrumvnk f89017c7 (emp",
+  "comp_err": "",
+  "heads": [
+   "4558777ac19b"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "f89017c7f1d5"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "f89017c7f1d5 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 65,
+  "kind": "new1",
+  "delta_ms": -15,
+  "pub_rc": 0,
+  "pub_out": "c7a5e214b11fd1e086fc1bd8218abf6d09935377ae8e27d51f597d1215bc035fc2dee97e096ddfa92986623fd66288ebaf7ac23ff9109c522c843c5618bff3d0",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: sxtzyyql 75eaf8ee (empty) competitor\\nParent commit (@-)      : uqvuwpor c5536a5a (emp",
+  "comp_err": "",
+  "heads": [
+   "a8067031c31c"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "c5536a5a1812"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "c5536a5a1812 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 66,
+  "kind": "newcommit",
+  "delta_ms": 20,
+  "pub_rc": 0,
+  "pub_out": "c4ce3b43a2a4e07d7c2354101337834f7668cd793bd191445e8df45d0723be06cb4995ab48954547dda3cd6eefc454ec25e1fd15afc8cc5bb9e8d7608494fce2",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lwstwppu 13a980d1 (empty) competitor\\nParent commit (@-)      : ytmswons ca2dd285 (emp",
+  "comp_err": "",
+  "heads": [
+   "c9d78b72670d"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "ca2dd28553ae"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "ca2dd28553ae empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 67,
+  "kind": "new1",
+  "delta_ms": 20,
+  "pub_rc": 0,
+  "pub_out": "a04baba8a77453231aa2767d5cf92686734c26e851031e0c8f11ba640f575f6367038f94a89769976d8ecf549259fbb59a9f6cbe95352be8ee9141ebdce95a58",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: trxusvvz 71686edd (empty) competitor\\nParent commit (@-)      : lpsnxmvq 25aa948a (emp",
+  "comp_err": "",
+  "heads": [
+   "b8aae5f4ac3e"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "25aa948a2743"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "25aa948a2743 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 68,
+  "kind": "newcommit",
+  "delta_ms": -20,
+  "pub_rc": 0,
+  "pub_out": "2563c73a2077349549287ce363bb3029b8c9ec096a6fa4ee594edf6d0e186d6eafef4d6150db59a0fb77f33a21e4d5be9686d7c9966a4b72121db651896a2535",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: ypmsnztt 6051a9a8 (empty) competitor\\nParent commit (@-)      : wmyqrxvk 16451863 (emp",
+  "comp_err": "",
+  "heads": [
+   "9ccacfe189d7"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "16451863c057"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "16451863c057 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 69,
+  "kind": "new1",
+  "delta_ms": -20,
+  "pub_rc": 0,
+  "pub_out": "16ddb57f63fe68110b8e81d268e8012c9a8bc39d15cc3f80f4d69fe11b39521e9b25c58c5e1ce9a1468d431b5d70b488e629c13eb27d5365cb9c4960b2ee32ee",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lvpywmtm 1d743889 (empty) competitor\\nParent commit (@-)      : tywrmkkp 4bae3870 (emp",
+  "comp_err": "",
+  "heads": [
+   "69544b5df4e1"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "4bae3870ec3f"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "4bae3870ec3f empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 70,
+  "kind": "newcommit",
+  "delta_ms": 30,
+  "pub_rc": 0,
+  "pub_out": "7cf991e382e0e908a65efc10d03fd5697f54b49c6d1287b7e5f0fc06745a3c67bc5cdb0849c856b170f35f68cee539d8cf0b316e2e734ffe3fcd15251ffeb714",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zuyplxol 3ab58ae5 (empty) competitor\\nParent commit (@-)      : ukvxxppx 15100715 (emp",
+  "comp_err": "",
+  "heads": [
+   "9e54e30a781f"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "15100715b5c0"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "15100715b5c0 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 71,
+  "kind": "new1",
+  "delta_ms": 30,
+  "pub_rc": 0,
+  "pub_out": "c94767f45875af0cdbaca79d6f27d9f46a6459ac1a6674aa67b5627f6f1fba361aabf61953c7eec15a93f8102a7d455f9d37a7861af195d8a73bb9079dc10d3d",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lqunppkn 626a028d (empty) competitor\\nParent commit (@-)      : plpmvvol d77081f9 (emp",
+  "comp_err": "",
+  "heads": [
+   "1f2a63729ea0"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "d77081f93f80"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "d77081f93f80 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 72,
+  "kind": "newcommit",
+  "delta_ms": -30,
+  "pub_rc": 1,
+  "pub_out": "stale observed=f6b6e2034255cd83795f56e53c7fded055bddeaa dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wsvovpqs f6b6e203 (empty) competitor\\nParent commit (@-)      : ostrkwtt 49282b22 (emp",
+  "comp_err": "",
+  "heads": [
+   "7b2357ecb6be"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 73,
+  "kind": "new1",
+  "delta_ms": -30,
+  "pub_rc": 1,
+  "pub_out": "stale observed=5bc37af5e46f2e4fa0e1bf691cf9859f87865120 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: ykqvqvnm 5bc37af5 (empty) competitor\\nParent commit (@-)      : soluwurn 7ae50504 (emp",
+  "comp_err": "",
+  "heads": [
+   "a2af1d7dc99e"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 74,
+  "kind": "newcommit",
+  "delta_ms": 45,
+  "pub_rc": 0,
+  "pub_out": "cd456fe48395f81c21359203a3d8db3a616e63078168e71370f6418ea28e10c86adb6732a8d764e56b7a09c6ba2ae42661bdf1d516c6e9bb5e3be0afee5ead4c",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wypuxlty 9c2a522a (empty) competitor\\nParent commit (@-)      : rmstyryp 6b3def77 (emp",
+  "comp_err": "",
+  "heads": [
+   "554f21aeefda"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "6b3def774d53"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "6b3def774d53 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 75,
+  "kind": "new1",
+  "delta_ms": 45,
+  "pub_rc": 0,
+  "pub_out": "e91567ce1193afa14b10fa077c9ec15abbe9fde07dd351030b96b2868a4391754b30c0829277a8a6e33bd98ba75139533655b7a8eaa33859d1072356d3ace415",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: qmyukxpq 0f0bfb62 (empty) competitor\\nParent commit (@-)      : wsnrotks 4d20b0e9 (emp",
+  "comp_err": "",
+  "heads": [
+   "27bc797218f6"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "4d20b0e9fffa"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "4d20b0e9fffa empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 76,
+  "kind": "newcommit",
+  "delta_ms": -45,
+  "pub_rc": 1,
+  "pub_out": "stale observed=92cafe354293cb7794f5985d8946b3b3b996cea4 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: pknpzsrz 92cafe35 (empty) competitor\\nParent commit (@-)      : xoxmznly c13b6fa0 (emp",
+  "comp_err": "",
+  "heads": [
+   "567b1d6350c9"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 77,
+  "kind": "new1",
+  "delta_ms": -45,
+  "pub_rc": 1,
+  "pub_out": "stale observed=a181c16514624884f5b5e730de3f8e8413f71531 dirty=0 reason=op-heads-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: muznsuzu a181c165 (empty) competitor\\nParent commit (@-)      : wpxxoyny 689849a4 (emp",
+  "comp_err": "",
+  "heads": [
+   "831416176e2b"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 78,
+  "kind": "newcommit",
+  "delta_ms": 60,
+  "pub_rc": 0,
+  "pub_out": "693c8e17bfc8ad93080a5a5f51e60d7cbaa36a829f275db4c0fa229f38fbf5910c63aa7d679d71e796af7b94904d9d53aab1e6dfaca8f74f6af3e2d3b9b329e0",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vlwszyyp 33d8578d (empty) competitor\\nParent commit (@-)      : swpypkmm 83005314 (emp",
+  "comp_err": "",
+  "heads": [
+   "7fcdc8c041c2"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "830053140855"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "830053140855 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 79,
+  "kind": "new1",
+  "delta_ms": 60,
+  "pub_rc": 0,
+  "pub_out": "251c63d55070f22986619dfbcc099f8a8e278740814d41cfb8817f78b121fe0fac9c2b7faf8f24f6e0a08a6f1d45e7f825dccfcf52e0dca8a7f257574953a322",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lyssqytr 6decaab8 (empty) competitor\\nParent commit (@-)      : ktqrnzxr d87c403e (emp",
+  "comp_err": "",
+  "heads": [
+   "4df949503d1e"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "d87c403e5f20"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "d87c403e5f20 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 80,
+  "kind": "newcommit",
+  "delta_ms": -60,
+  "pub_rc": 1,
+  "pub_out": "stale observed=b94acc3b660a6ce4c00f806a5568df4e79078d7d dirty=1 reason=dirty-working-copy",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: swxmzypv b94acc3b (empty) competitor\\nParent commit (@-)      : tzwkuuox ee9b7dcc (emp",
+  "comp_err": "",
+  "heads": [
+   "5c2a44a91c6c"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 81,
+  "kind": "new1",
+  "delta_ms": -60,
+  "pub_rc": 1,
+  "pub_out": "stale observed=d988a9db78fc54971e319e86c86d83aa2a7cf8c8 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: pyrttppr d988a9db (empty) competitor\\nParent commit (@-)      : mvmwymxn 7f493a8d (emp",
+  "comp_err": "",
+  "heads": [
+   "adeb4269ad7d"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 82,
+  "kind": "newcommit",
+  "delta_ms": 90,
+  "pub_rc": 0,
+  "pub_out": "9e906a343ef90b451538e9c4f6487e635b75d3c00796178d846d2be432417656187dc85e785c10cc46ca5b9b21dabc8fb3294ccf1ea999a4694a6fe7fddb0e57",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: wzkkmppz 7e67b1b5 (empty) competitor\\nParent commit (@-)      : wvptywxx d63481c1 (emp",
+  "comp_err": "",
+  "heads": [
+   "2d7778b4aa66"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "d63481c116b9"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "d63481c116b9 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 83,
+  "kind": "new1",
+  "delta_ms": 90,
+  "pub_rc": 0,
+  "pub_out": "84492b6ee46369e960f491cdbc2bed2c1bcdbd42f20a83ad3045fbfd29fe654bc08fa77ed0e131c706e19575e4dd2f8333f4baab96c38c676cdef120fd933a7d",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xmssqvps 23548969 (empty) competitor\\nParent commit (@-)      : ykruwpnq 48f6ee24 (emp",
+  "comp_err": "",
+  "heads": [
+   "2822aca8f6f1"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "48f6ee24a379"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "48f6ee24a379 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 84,
+  "kind": "newcommit",
+  "delta_ms": -90,
+  "pub_rc": 1,
+  "pub_out": "stale observed=b6299fd8f23f950a9e8665baa1b59579a0cbee57 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lotoqpmw 0fa29139 (empty) competitor\\nParent commit (@-)      : krlmyszx 2f55d8ca (emp",
+  "comp_err": "",
+  "heads": [
+   "8568b37c46db"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 85,
+  "kind": "new1",
+  "delta_ms": -90,
+  "pub_rc": 1,
+  "pub_out": "stale observed=a90a21130ba9606109c46f9102bbb318ba982ba6 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: kpqzwsoo a90a2113 (empty) competitor\\nParent commit (@-)      : rprrxpwl aaada250 (emp",
+  "comp_err": "",
+  "heads": [
+   "8f110861dfca"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 86,
+  "kind": "newcommit",
+  "delta_ms": 130,
+  "pub_rc": 0,
+  "pub_out": "a6c13c8dd88c1c03ec95f91766f6ec3bb85f50425bcaba5c50f05b18af4ba9367f8c1578218f36d98280818d1b030bdec15394a26b4054257a0d7781b4c07a59",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: tvqkzkxp c20e1804 (empty) competitor\\nParent commit (@-)      : spywyowo 681ce1a1 (emp",
+  "comp_err": "",
+  "heads": [
+   "2c8bc6407efa"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "681ce1a125ef"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "681ce1a125ef empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 87,
+  "kind": "new1",
+  "delta_ms": 130,
+  "pub_rc": 0,
+  "pub_out": "3bf5f0e3cf37f77f9b57494c5fad972f5dd6ea8b2fb6cc4bc0c5ec3c9ff8d8b0645bc509070dc7b06040b411e2fb9467bf4dde5c60e0990c76dfff1fa622175f",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: vtpyozny 5cd4d89c (empty) competitor\\nParent commit (@-)      : uvnlwmqv ad55a9cd (emp",
+  "comp_err": "",
+  "heads": [
+   "8737a6643cb4"
+  ],
+  "ours_ops": 1,
+  "ours_commit": [
+   "ad55a9cd93d8"
+  ],
+  "comp_after_ours": true,
+  "comp_intact": true,
+  "kids_of_P": "ad55a9cd93d8 empty=true desc=[] parents=1",
+  "stale": false,
+  "p_on_disk": true,
+  "outcome": "A_published_then_competitor_after"
+ },
+ {
+  "i": 88,
+  "kind": "newcommit",
+  "delta_ms": -130,
+  "pub_rc": 1,
+  "pub_out": "stale observed=de19815ffc75410d44eea46667a80b7ecbbc67e5 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: pqvpunwz 9337e1cd (empty) competitor\\nParent commit (@-)      : mwwpuzlo 8a19b6eb (emp",
+  "comp_err": "",
+  "heads": [
+   "a35acf5eba9e"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 89,
+  "kind": "new1",
+  "delta_ms": -130,
+  "pub_rc": 1,
+  "pub_out": "stale observed=0bd5c34d4a7f507038fa9982c096cad41c0152fb dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: usqrkwvs 0bd5c34d (empty) competitor\\nParent commit (@-)      : nqwnykwz 6fb0419e (emp",
+  "comp_err": "",
+  "heads": [
+   "02c669efd36e"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 90,
+  "kind": "newcommit",
+  "delta_ms": -170,
+  "pub_rc": 1,
+  "pub_out": "stale observed=adc77f32f497882ba9bd6bd4b0825ba35f866848 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: okornywn d7f3308a (empty) competitor\\nParent commit (@-)      : tpylprus 86abb675 (emp",
+  "comp_err": "",
+  "heads": [
+   "103b58a8bdb2"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 91,
+  "kind": "new1",
+  "delta_ms": -170,
+  "pub_rc": 1,
+  "pub_out": "stale observed=5ddab1dfece3154e3ec22be94bc33f4985e15204 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: zwqlnkuq 5ddab1df (empty) competitor\\nParent commit (@-)      : stvsuqzx 9a146d94 (emp",
+  "comp_err": "",
+  "heads": [
+   "2c6cc120ad29"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 92,
+  "kind": "newcommit",
+  "delta_ms": -220,
+  "pub_rc": 1,
+  "pub_out": "stale observed=a9f781e79b3991aebb26ff4a12d5b49247f236eb dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: lymsqzqo faa9eed7 (empty) competitor\\nParent commit (@-)      : umslpkxz dd5822f9 (emp",
+  "comp_err": "",
+  "heads": [
+   "4c7d7c6d1126"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 93,
+  "kind": "new1",
+  "delta_ms": -220,
+  "pub_rc": 1,
+  "pub_out": "stale observed=8d8e0648c3d43271dfb8c8b3c9b80544a4339853 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xroorxny 8d8e0648 (empty) competitor\\nParent commit (@-)      : uvtpmosu 6ab9c861 (emp",
+  "comp_err": "",
+  "heads": [
+   "2fb34b5c08cd"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 94,
+  "kind": "newcommit",
+  "delta_ms": -300,
+  "pub_rc": 1,
+  "pub_out": "stale observed=cbcb8c62463b218b319746a1aa089c55175af559 dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: rwuwnnxt 551242c9 (empty) competitor\\nParent commit (@-)      : yzrsyqsm 88c94b6f (emp",
+  "comp_err": "",
+  "heads": [
+   "bfc6ebf93196"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ },
+ {
+  "i": 95,
+  "kind": "new1",
+  "delta_ms": -300,
+  "pub_rc": 1,
+  "pub_out": "stale observed=214de3e63ca59367fcaeea9b72c95ec8fb3a094e dirty=0 reason=commit-moved",
+  "pub_err": "",
+  "comp_out": "(0, 0, 'Working copy  (@) now at: xyrvwplx 214de3e6 (empty) competitor\\nParent commit (@-)      : rvyllupx db143da1 (emp",
+  "comp_err": "",
+  "heads": [
+   "ddc3424b291a"
+  ],
+  "ours_ops": 0,
+  "ours_commit": [],
+  "comp_after_ours": null,
+  "comp_intact": true,
+  "kids_of_P": "",
+  "stale": false,
+  "p_on_disk": false,
+  "outcome": "B_rejected_nothing_published"
+ }
+]

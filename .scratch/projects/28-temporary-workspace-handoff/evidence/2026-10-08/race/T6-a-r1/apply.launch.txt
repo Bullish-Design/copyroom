@@ -1,0 +1,25 @@
+launch: /home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3 /tmp/cr-race-2587806/barrier_driver.py  (cwd=/tmp/cr-race-2587806/runs/T6-a-r1/project)
+equivalent CLI call: copyroom update --apply /tmp/cr-race-2587806/runs/T6-a-r1/preview
+patched: copyroom.local.jj.JJ.run (class attribute) before copyroom.cli.main(argv)
+spec: {
+  "argv": [
+    "update",
+    "--apply",
+    "/tmp/cr-race-2587806/runs/T6-a-r1/preview"
+  ],
+  "trace": "/tmp/cr-race-2587806/evidence/T6-a-r1/apply.trace.jsonl",
+  "hit": "/tmp/cr-race-2587806/evidence/T6-a-r1/apply.hit.json",
+  "barrier": {
+    "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project",
+    "prefix": [
+      "workspace",
+      "forget"
+    ],
+    "contains": [],
+    "nth": 1,
+    "when": "before",
+    "ready": "/tmp/cr-race-2587806/evidence/T6-a-r1/apply.ready.fifo",
+    "release": "/tmp/cr-race-2587806/evidence/T6-a-r1/apply.release.fifo"
+  }
+}
+driver pid: 2705349

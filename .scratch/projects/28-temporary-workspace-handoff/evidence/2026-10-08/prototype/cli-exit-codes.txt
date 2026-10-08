@@ -1,0 +1,10 @@
+# usage error
+usage: python -m pyjutsu publish-if [-h] --repo REPO --expected EXPECTED
+                                    --onto ONTO -m MESSAGE
+python -m pyjutsu publish-if: error: the following arguments are required: --expected, --onto, -m/--message
+exit=3
+# infra error (not a workspace)
+error: There is no Jujutsu repo in /tmp/pj-empty-2972457
+exit=2
+error: There is no Jujutsu repo in /tmp/pj-empty-2972457
+exit=2

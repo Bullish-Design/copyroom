@@ -1,0 +1,47 @@
+writer CLI: /nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj
+expected= 5db93a98acd55f489fd73308fe37de1ea945bb3e P= 1666e0fe9d59cee783f5a352fa3c6f259131d50e
+--- jj log BEFORE publish_if ---
+@  0cf8dfa9173b @ [] empty=true
+○  77a8f939a51c   [foreign work] empty=false
+○  5db93a98acd5   [] empty=true
+│ ○  1666e0fe9d59   [prepared] empty=false
+├─╯
+○  7600c614ba5d   [base] empty=false
+◆  000000000000   [] empty=true
+--- jj op log BEFORE ---
+324c279b4bab commit c0f63e29b36e2201129c243442bd3cc3ddcf33bf
+3a8f4a6a9308 snapshot working copy
+6b6ce546c53f new empty commit
+d047e3e9330c new empty commit
+a764ccc25c59 snapshot working copy
+8f3360bee830 new empty commit
+2d2ab7a0e857 describe commit 1218e4d62550d6765a9c77f13555c0ae120abf75
+d6b389e7f1ac snapshot working copy
+2dfcd1b4601f add workspace 'default'
+000000000000
+publish_if exit 1 stdout: stale observed=0cf8dfa9173b72fbc3bdb4ab72e6a3a96bafb5be dirty=0 reason=commit-moved stderr: 
+--- jj log AFTER ---
+@  0cf8dfa9173b @ [] empty=true
+○  77a8f939a51c   [foreign work] empty=false
+○  5db93a98acd5   [] empty=true
+│ ○  1666e0fe9d59   [prepared] empty=false
+├─╯
+○  7600c614ba5d   [base] empty=false
+◆  000000000000   [] empty=true
+--- jj op log AFTER ---
+324c279b4bab commit c0f63e29b36e2201129c243442bd3cc3ddcf33bf
+3a8f4a6a9308 snapshot working copy
+6b6ce546c53f new empty commit
+d047e3e9330c new empty commit
+a764ccc25c59 snapshot working copy
+8f3360bee830 new empty commit
+2d2ab7a0e857 describe commit 1218e4d62550d6765a9c77f13555c0ae120abf75
+d6b389e7f1ac snapshot working copy
+2dfcd1b4601f add workspace 'default'
+000000000000
+op log unchanged: True | @ unchanged: True | op heads: ['324c279b4bab']
+sig diff of .jj: {'added': [], 'removed': [], 'changed': []}
+foreign.txt on disk: foreign bytes
+foreign commit has file: foreign bytes
+jj status: The working copy has no changes. | Working copy  (@) : tqzmottp 0cf8dfa9 (empty) (no description set) | Parent commit (@-): svzvyswn 77a8f939 foreign work
+OUTCOME b/jj043: PASS

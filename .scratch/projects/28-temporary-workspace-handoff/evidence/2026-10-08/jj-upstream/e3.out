@@ -1,0 +1,126 @@
+--- workspace add: rc=0
+stderr:
+Created workspace in "../ws2"
+Working copy  (@) now at: rnwxmkun 63ba0b16 (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+--- ws2: jj st (snapshots b.txt): rc=0
+stdout:
+Working copy changes:
+A b.txt
+Working copy  (@) : rnwxmkun c0e0f43a (no description set)
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+--- ws2: jj debug working-copy: rc=0
+stdout:
+Type: "local"
+Current operation: OperationId("067906f0dc651ac441acbb684238d709c785c90bf8b888e748196ad2456a9a7ef4591614e01d5b665661abe753b3ec0772b67a6fe81426c8bef9f022432d91a0")
+Current tree: MergedTree { tree_ids: Resolved(TreeId("157e7feb6f1e8d98940fd59ec50ac8dcb215b7e5")), labels: Unlabeled, .. }
+checkout file (hex): 1240067906f0dc651ac441acbb684238d709c785c90bf8b888e748196ad2456a9a7ef4591614e01d5b665661abe753b3ec0772b67a6fe81426c8bef9f022432d91a01a037773
+tree_state file exists: True
+heads: ['067906f0dc65']
+=== CASE 1: default ws rewrites ws2's @ (content change) -> ws2 stale
+--- default: jj describe -r ws2@ -m renamed (metadata only): rc=0
+--- ws2: jj st  [tree unchanged => should be Fresh, no error]: rc=0
+stdout:
+Working copy changes:
+A b.txt
+Working copy  (@) : rnwxmkun 2b125019 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+--- default: create file in new commit and squash into ws2@: rc=0
+stderr:
+Working copy  (@) now at: wwmnqxvm 5eed5e89 (empty) tmp
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 1 files
+--- default: jj squash --into ws2@ : rc=0
+stderr:
+Working copy  (@) now at: xorvuuvm 914d7095 (empty) (no description set)
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 1 files
+heads: ['8a8829794c63']
+--- ws2: jj st  [tree changed => stale]: rc=1
+stderr:
+Error: The working copy is stale (not updated since operation a69e8da122ed).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+--- ws2: jj log -r @ (also fails?): rc=1
+stderr:
+Error: The working copy is stale (not updated since operation a69e8da122ed).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+--- ws2: jj --ignore-working-copy st (allowed, shows possibly stale): rc=0
+stdout:
+Working copy changes:
+A b.txt
+A c.txt
+Working copy  (@) : rnwxmkun a884b928 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+--- ws2: jj new (mutating command while stale): rc=1
+stderr:
+Error: The working copy is stale (not updated since operation a69e8da122ed).
+Hint: Run `jj workspace update-stale` to update it.
+See https://docs.jj-vcs.dev/latest/working-copy/#stale-working-copy for more information.
+ws2 files before update-stale: ['.jj', 'b.txt']
+--- ws2: jj debug working-copy: rc=0
+stdout:
+Type: "local"
+Current operation: OperationId("a69e8da122ed031777edcd3853e4c54b13ef76db819615e0e39829f9f8e1d1220a2552e5c2c9068c44371885f6bb792255635896d3a7b4a431d9416f578b142f")
+Current tree: MergedTree { tree_ids: Resolved(TreeId("157e7feb6f1e8d98940fd59ec50ac8dcb215b7e5")), labels: Unlabeled, .. }
+--- ws2: jj workspace update-stale: rc=0
+stderr:
+Working copy  (@) now at: rnwxmkun a884b928 renamed-by-default
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 1 files, modified 0 files, removed 0 files
+Updated working copy to fresh commit a884b9282416
+ws2 files after: ['.jj', 'b.txt', 'c.txt']
+--- ws2: jj debug working-copy: rc=0
+stdout:
+Type: "local"
+Current operation: OperationId("8a8829794c63532d3b56038d6361f32592c9f676eaceed3b48a0e70a0e4126af06f9542b510759db798bfb79c5bded893fc039eb51cbb7558321171e50ab01d2")
+Current tree: MergedTree { tree_ids: Resolved(TreeId("b8ea084b4a412f0b698aabd47f8721afd87ab0ec")), labels: Unlabeled, .. }
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A b.txt
+A c.txt
+Working copy  (@) : rnwxmkun a884b928 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+=== CASE 2: wc operation lost (op abandon) -> recovery commit
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A b.txt
+A c.txt
+A d.txt
+Working copy  (@) : rnwxmkun 918f9ca2 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+43a2e92e1188 parents=8a8829794c63 | snapshot working copy
+8a8829794c63 parents=8e89eff1d1cc | squash commits into 2b1250197e2b41c654aab2b917e9ec3057ad33da
+8e89eff1d1cc parents=33537e648194 | snapshot working copy
+33537e648194 parents=a69e8da122ed | new empty commit
+a69e8da122ed parents=067906f0dc65 | describe commit c0e0f43ad9721b9decd4d6004a3e3cae30f6e5e9
+067906f0dc65 parents=52a575dd4375 | snapshot working copy
+52a575dd4375 parents=c599489fdf9e | create initial working-copy commit in workspace ws2
+c599489fdf9e parents=e01dba1c4a83 | add workspace 'ws2'
+e01dba1c4a83 parents=ccb7dec77489 | des
+--- default: jj op abandon (last 2 ops incl. ws2's wc op): rc=1
+stderr:
+Error: Cannot abandon the current operation 43a2e92e1188
+Hint: Run `jj undo` to revert the current operation, then use `jj op abandon`
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A b.txt
+A c.txt
+A d.txt
+Working copy  (@) : rnwxmkun 918f9ca2 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+--- ws2: jj workspace update-stale: rc=0
+stderr:
+Attempted recovery, but the working copy is not stale
+--- ws2: jj st: rc=0
+stdout:
+Working copy changes:
+A b.txt
+A c.txt
+A d.txt
+Working copy  (@) : rnwxmkun 918f9ca2 renamed-by-default
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)

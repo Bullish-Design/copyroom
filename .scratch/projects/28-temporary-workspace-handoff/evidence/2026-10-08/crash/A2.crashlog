@@ -1,0 +1,2 @@
+DRIVER start point=A2 mode=exit cwd=/tmp/cr-crash-2578910/runs/A2/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A2/preview']
+CRASH point=A2 mode=exit pid=2613974 matched=write_json path=/tmp/cr-crash-2578910/runs/A2/project/.copyroom-local.json

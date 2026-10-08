@@ -1,0 +1,21 @@
+• Running devenv:files:cleanup
+• Running devenv:python:uv
+✓ Running devenv:files:cleanup in 19.0ms
+✓ Running devenv:python:uv in 69.0ms
+• Running devenv:enterShell
+✓ Running devenv:enterShell in 25.8ms
+• Running devenv:enterTest
+✓ Running devenv:enterTest in 3.01µs (no command)
+ok      pyjutsu:.agents  /tmp/pj-proto-2714908/pyjutsu/.agents
+ok      pyjutsu:.claude/skills  /tmp/pj-proto-2714908/pyjutsu/.claude/skills
+ok      pyjutsu:.envrc  /tmp/pj-proto-2714908/pyjutsu/.envrc
+ok      pyjutsu:.loci  /tmp/pj-proto-2714908/pyjutsu/.loci
+ok      pyjutsu:devenv.local.nix  /tmp/pj-proto-2714908/pyjutsu/devenv.local.nix
+   Compiling pyo3-build-config v0.24.2
+   Compiling pyo3-ffi v0.24.2
+   Compiling pyo3-macros-backend v0.24.2
+   Compiling pyo3 v0.24.2
+   Compiling pyo3-macros v0.24.2
+   Compiling pyjutsu v0.22.0 (/tmp/pj-proto-2714908/pyjutsu)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.91s
+devenv shell -- cargo build --features pyo3/extension-module  22.91s user 2.00s system 142% cpu 17.485 total

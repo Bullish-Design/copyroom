@@ -1,0 +1,42 @@
+expected(@)= 13a1d30e26d7baf623a50a9aef712338f730e965 P= 02e4c46a557641b5fddc361002d80944fdbb3c95
+--- jj log BEFORE ---
+@  13a1d30e26d7 @ [] empty=true
+│ ○  02e4c46a5576   [prepared] empty=false
+├─╯
+○  352b79b6bae2   [base] empty=false
+◆  000000000000   [] empty=true
+--- jj op log BEFORE ---
+65b7adf783e1 new empty commit
+0fce28d9c2e1 snapshot working copy
+188f462e5981 new empty commit
+38f3663e80ad describe commit 9f91dc11ae2afd8a5fb35abec78546ec1b89c7da
+245fc1f18970 snapshot working copy
+349e5637f70f add workspace 'default'
+000000000000
+exit 0 stdout 9e50f33908cf28892a744b4d21a84f23e1c127dd730d5449dc088704eacc1217ce735759fb41c241fba64338b458ceefd354599866b428be14d39f5f4f2c2ae8 stderr 
+--- jj log AFTER ---
+@  f9ad9dad3f35 @ [] empty=true
+○  02e4c46a5576   [prepared] empty=false
+○  352b79b6bae2   [base] empty=false
+◆  000000000000   [] empty=true
+--- jj op log AFTER ---
+9e50f33908cf publish_if: happy
+65b7adf783e1 new empty commit
+0fce28d9c2e1 snapshot working copy
+188f462e5981 new empty commit
+38f3663e80ad describe commit 9f91dc11ae2afd8a5fb35abec78546ec1b89c7da
+245fc1f18970 snapshot working copy
+349e5637f70f add workspace 'default'
+000000000000
+new operations: ['9e50f33908cf'] count= 1
+op heads dir: ['9e50f33908cf']
+@ parent == P: True  @ empty: true
+@ commit/parents: f9ad9dad3f3594ec3833e3575f94231e67e534e5 1
+diff P->@ (empty means equal trees): ''
+files on disk: ['a.txt', 'p.txt']
+p.txt: prepared
+--- jj status (a normal jj command; must show no stale WC) ---
+The working copy has no changes.
+Working copy  (@) : wsrwtvxo f9ad9dad (empty) (no description set)
+Parent commit (@-): qqvuzqtv 02e4c46a prepared
+op log after jj status (a clean status must add no op): 0 extra ops

@@ -1,0 +1,2 @@
+DRIVER start point=L1 mode=hang cwd=/tmp/cr-crash-2578910/runs/L1k/project args=['layer', 'add', '--source', '/tmp/cr-crash-2578910/runs/L1k/overlay', '--answers', '/tmp/cr-crash-2578910/runs/L1k/overlay/answers.json', '--as', 'docs']
+CRASH point=L1 mode=hang pid=2640546 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1k/project args=('new', '403a1877ef280cdff9ac31bf34ba8717952a736e', '-m', 'copyroom:layer add docs')

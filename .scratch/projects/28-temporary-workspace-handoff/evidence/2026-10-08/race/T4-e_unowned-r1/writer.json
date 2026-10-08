@@ -1,0 +1,19 @@
+{
+  "kind": "e_unowned",
+  "token": "FOREIGNT4e_unownedr1",
+  "procs": [
+    {
+      "argv": [
+        "/home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3",
+        "-c",
+        "open('notes.txt','a').write('FOREIGNT4e_unownedr1\\n')"
+      ],
+      "pid": 2689936,
+      "rc": 0,
+      "out": "",
+      "err": ""
+    }
+  ],
+  "bookmarks": [],
+  "path": "notes.txt"
+}

@@ -1,0 +1,3 @@
+
+Error: preview must be outside the project
+update exit 2

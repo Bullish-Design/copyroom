@@ -1,0 +1,19 @@
+{"start": true, "pid": 2705349, "python": "/home/andrew/Documents/Projects/copyroom/.devenv/state/venv/bin/python3", "jj_which": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj", "argv": ["update", "--apply", "/tmp/cr-race-2587806/runs/T6-a-r1/preview"]}
+{"ordinal": 1, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 2, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "heads(::@ & subject(glob:\"copyroom:render 3745e7be8a3e4f31a95905a956b6ae1f base *\"))", "-T", "commit_id ++ \"\\n\""], "ok": true}
+{"ordinal": 3, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "64c4e7d3873364f16833c636bdc87112940cd8bc-", "-T", "commit_id"], "ok": true}
+{"ordinal": 4, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/preview", "args": ["resolve", "--list"], "ok": true}
+{"ordinal": 5, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/preview", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 6, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 7, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 8, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 9, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["new", "a795c42068e82748322f09e4eee826cf8b60e847", "-m", "copyroom:update"], "ok": true}
+{"ordinal": 10, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "@", "-T", "commit_id"], "ok": true}
+{"ordinal": 11, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 12, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["op", "log", "--at-op=b5c8548c9a39135887bd1d3d8d8c75bbde1bd01938825d516f861678aabc261b427b8f5475f170512b316cebebe44e96e24b1659fc2afc4b58a8db157939caab", "--no-graph", "-n", "1", "-T", "parents.map(|parent| parent.id()).join(\" \")"], "ok": true}
+{"ordinal": 13, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "2a8d78cd7f2d8f91e0aa735608f33226de163e1e-", "-T", "commit_id"], "ok": true}
+{"ordinal": 14, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["resolve", "--list"], "ok": true}
+{"ordinal": 15, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["commit", "-m", "copyroom:project inputs"], "ok": true}
+{"ordinal": 16, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["op", "log", "--at-op=@", "--ignore-working-copy", "--no-graph", "-n", "1", "-T", "id"], "ok": true}
+{"ordinal": 17, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["log", "--no-graph", "-r", "heads(::@ & subject(glob:\"copyroom:render 3745e7be8a3e4f31a95905a956b6ae1f base *\"))", "-T", "commit_id ++ \"\\n\""], "ok": true}
+{"ordinal": 18, "cwd": "/tmp/cr-race-2587806/runs/T6-a-r1/project", "args": ["workspace", "forget", "copyroom-b4d1a45280af"], "match_ordinal": 1, "ok": true}

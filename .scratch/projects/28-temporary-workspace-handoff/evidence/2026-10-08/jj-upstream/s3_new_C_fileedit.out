@@ -1,0 +1,21 @@
+
+======== S1/S2 user edits tracked file on disk while `jj new main` is paused after publish, before checkout (C) ========
+user edited w.txt on disk; releasing P
+--- P result: rc=0
+stderr:
+Working copy  (@) now at: xvnozlwo 23f5101a (empty) S1-new-on-main
+Parent commit (@-)      : xxrroprn 3ac8d9a8 main | base
+Added 0 files, modified 0 files, removed 1 files
+disk files: ['a.txt']
+w.txt exists: False
+--- w1: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : xvnozlwo 23f5101a (empty) S1-new-on-main
+Parent commit (@-): xxrroprn 3ac8d9a8 main | base
+xvnozl 23f5101a ws=[w1@] bm=[] (empty) S1-new-on-main
+plmpsq 48a57dfd ws=[] bm=[] w1-work
+muqnyn c966bd71 ws=[default@] bm=[] (empty) default-work
+xxrrop 3ac8d9a8 ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+

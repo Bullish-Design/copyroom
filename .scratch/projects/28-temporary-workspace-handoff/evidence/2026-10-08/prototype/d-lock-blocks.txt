@@ -1,0 +1,11 @@
+holder has the lock (barrier through FIFO)
+1.0 s after reaching BEFORE_LOCK: publish_if still running: True | op log unchanged: True | LOCKED signal received yet: False
+exit 0 stdout bf09ba7b49ebefd8efa67cd6... stderr 
+holder: held for 3.00s
+publish_if started at +0.50s after lock acquisition; reached BEFORE_LOCK at +0.70s
+LOCKED (publish_if got the lock) at +3.00s; holder released at +3.00s
+publish_if finished at +3.09s; wall time of publish_if = 2.59s (python startup included)
+block time from BEFORE_LOCK to LOCKED = 2.31s
+got lock only after release: True
+new ops: ['bf09ba7b49eb']
+OUTCOME d: PASS

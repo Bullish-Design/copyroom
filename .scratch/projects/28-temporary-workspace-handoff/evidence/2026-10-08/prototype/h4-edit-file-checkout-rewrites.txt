@@ -1,0 +1,20 @@
+publish_if parked after publish, before checkout, WC lock held. Writer runs: open('a.txt','w').write('WRITER EDIT of a.txt\n')
+publish_if rc 0 out b1157cba7e34c984afbd err 
+files on disk: {'a.txt': 'a edited in P\n', 'p.txt': 'prepared\n'}
+--- jj status after (first normal command snapshots any surviving write) ---
+The working copy has no changes.
+Working copy  (@) : zuuvlorp 892f4a9f (empty) (no description set)
+Parent commit (@-): yxlspytr 7069d7bf prepared
+--- jj op log (first 4) ---
+b1157cba7e34 publish_if: limits
+3c6f1cdce2da new empty commit
+62b6c40ad362 snapshot working copy
+70ba0b2bb6eb new empty commit
+--- jj log ---
+@  892f4a9ff2c7 @ [] empty=true
+○  7069d7bf4d30   [prepared] empty=false
+○  74468ee09ba4   [base] empty=false
+◆  000000000000   [] empty=true
+@ contains a.txt: 'a edited in P\n'
+@ contains p.txt: 'prepared\n'
+@ contains w_new.txt: no

@@ -1,0 +1,59 @@
+
+======== S1 `jj new` (in w1) paused at C (op published, wc not updated); Q rewrites w1@ CONTENT from default ========
+P published; heads: ['0891f22aff4a']
+wc op of w1 (not updated): 6de905633261
+--- Q (default ws): jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : tknoxupy 4be0d672 (empty) default-work
+Parent commit (@-): nlmsxmsn fbc0afe0 main | base
+--- Q: w1 workspace seen from default (log): rc=0
+stdout:
+uowtyy 0b13390c ws=[w1@] bm=[] (empty) S1-new
+klmuwm 92bb4ecd ws=[] bm=[] w1-work
+tknoxu 4be0d672 ws=[default@] bm=[] (empty) default-work
+nlmsxm fbc0afe0 ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty)
+--- Q2 (in w1, same workspace): jj log -r @ -- blocks at WC lock?: rc=0
+stdout:
+(see below)
+Q2 blocked on wc lock: True
+--- P (jj new) result: rc=0
+stderr:
+Working copy  (@) now at: uowtyykt 0b13390c (empty) S1-new
+Parent commit (@-)      : klmuwmrx 92bb4ecd w1-work
+--- Q2 result: rc=0
+stdout:
+S1-new
+-- state after P: op heads = ['e6e852219eda']
+[from head e6e852219eda]
+e6e852219eda parents=0891f22aff4a | new empty commit
+0891f22aff4a parents=6de905633261 | new empty commit
+6de905633261 parents=0ab67f38e71c | describe commit a52d03588ddbeee60c40d6bf8557d693cd45a038
+0ab67f38e71c parents=d6324efa6564 | snapshot working copy
+d6324efa6564 parents=54616f788bbb | create initial working-copy commit in workspace w1
+54616f788bbb parents=82b17c10c2e9 | add workspace 'w1'
+82b17c10c2e9 parents=84ab872d17d5 | new empty commit
+84ab872d17d5 parents=38ab0b2451eb | create bookmark main pointing to commit fbc0afe0a458d5c54abd9b06a5b059507de317da
+
+commits:
+ynyqnp 33d6fe53 ws=[default@] bm=[] (empty) tmp
+uowtyy 0b13390c ws=[w1@] bm=[] (empty) S1-new
+klmuwm 92bb4ecd ws=[] bm=[] w1-work
+tknoxu 4be0d672 ws=[] bm=[] (empty) default-work
+nlmsxm fbc0afe0 ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- default: jj st: rc=0
+stdout:
+Working copy changes:
+A q.txt
+Working copy  (@) : ynyqnpvq 63399213 tmp
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+   default wc op: 814e32348c92 | files: ['q.txt']
+--- w1: jj st: rc=0
+stdout:
+The working copy has no changes.
+Working copy  (@) : uowtyykt 0b13390c (empty) S1-new
+Parent commit (@-): klmuwmrx 92bb4ecd w1-work
+   w1 wc op: 814e32348c92 | files: ['a.txt', 'w.txt']

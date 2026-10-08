@@ -1,0 +1,21 @@
+
+======== S5 `jj workspace forget w1` (from default) paused at A; Q in w1 runs `jj new` fully (publishes, updates w1 wc) ========
+--- Q (in w1): jj new -m Q-new: rc=0
+stderr:
+Working copy  (@) now at: wpxmtvkt 7c30a200 (empty) Q-new
+Parent commit (@-)      : rmspspux d27b9b92 w1-work
+--- P forget result: rc=0
+-- after: heads ['8983c2a6e975', 'a82ba53c3051']
+wpxmtv 7c30a200 ws=[] bm=[] (empty) Q-new
+rmspsp d27b9b92 ws=[] bm=[] w1-work
+uyusvr f8b80154 ws=[] bm=[] (empty) default-work
+yooxtn fc83eabf ws=[] bm=[main] base
+zzzzzz 00000000 ws=[] bm=[] (empty) 
+
+--- w1: jj st: rc=0
+stdout:
+No working copy
+--- default: jj workspace list: rc=0
+stdout:
+default: uyusvrwy f8b80154 (empty) default-work
+workspace_store: b'\n\x11\n\x07default\x12\x06../../'

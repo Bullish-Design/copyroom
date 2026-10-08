@@ -1,0 +1,99 @@
+{
+  "case": "T4-e_unowned-r1",
+  "timing": "T4",
+  "writer": "e_unowned",
+  "exit_code": 1,
+  "Q1_success": false,
+  "stdout": "",
+  "stderr": "Error: apply overlapped a jj operation: expected parent operation f4ec78db0e2a563f2214c49a94ae46ed9100220e44facee49d22e92332730a203d0ef35be8944d1aa11a31e9c2f23c109b70342c87b2ca7074e0d21d8e8b51a6; current operation 5f89dea13f94b7961dcbda6e51889819b063a21088d506431a16b83e8fd8e27247fff2905b690edea5f3997e0db73c807c9b7ef9ec261ebf3f2e4b75b262656e has parent(s) 24a755be97c82cbfa7828c12f76115d531091e80a82a830436b1b7714d0958c4122a1d5a7dc64499f3b98ef5d5be78cab13b4bf2871133b562f1a12df41b94cf. The preview is kept. Inspect jj op log and recover the foreign operation before retrying.; repository advanced during apply (saved operation f4ec78db0e2a563f2214c49a94ae46ed9100220e44facee49d22e92332730a203d0ef35b",
+  "Q2_at_moved_before_rejection": true,
+  "new_ops_after_release": [
+    "new empty commit",
+    "snapshot working copy"
+  ],
+  "op_restore_ran": false,
+  "at_before_release": "ebbd07468db96a3d7dceeb9ec2f68a18752c8a13",
+  "at_after": "7b839a071e0bda999023a5bccad2e052d747b0ae",
+  "tree_equals_preview_tree": true,
+  "tree_equals_old_active_tree": false,
+  "marker_unchanged_vs_B0": true,
+  "marker_revision_before_after": [
+    0,
+    0
+  ],
+  "render_head_after": [
+    "d32bedcb98e0d9d28d44ade0e5369745da20e061"
+  ],
+  "old_render": "7943c3887e4f28ea3943811474b48e83e1ff6ba1",
+  "next_render": "d32bedcb98e0d9d28d44ade0e5369745da20e061",
+  "preview_dir_exists_after": true,
+  "sidecar_exists_after": true,
+  "Q3_writer_work": "commit c2c55e44 (NOT an ancestor of @; non-head, reachable only below head(s) ac058742)",
+  "Q3_detail": {
+    "in_working_copy_files": [],
+    "visible_commits": [
+      {
+        "commit": "c2c55e44c2e06ad1b7fa39cf6d80e6abca6a4b3f",
+        "change": "wxtkmvlorzmoslztouyqwzokvsqwwzom",
+        "is_head": false,
+        "ancestor_of_at": false,
+        "is_at": false,
+        "reachable_from_heads": [
+          "ac0587426a3e9561f4d86c3b40d4b8b5bfd68360"
+        ],
+        "desc": ""
+      }
+    ],
+    "only_in_op_log_commits": [],
+    "older_versions_of_visible_changes": [],
+    "bookmarks": {}
+  },
+  "files_after": [
+    ".copyroom-local.json",
+    ".copyroom-local/previews/copyroom-c79602b484de.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/answers.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/manifest.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/template.j2",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/answers.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/manifest.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/template.j2",
+    ".copyroom-local/write.lock",
+    "README.md",
+    "config/project.yml",
+    "notes.txt"
+  ],
+  "barrier_hit": {
+    "ordinal": 9,
+    "cwd": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project",
+    "args": [
+      "new",
+      "844cc32f2af439def5bf01ef38e1c8115831308a",
+      "-m",
+      "copyroom:update"
+    ],
+    "match_ordinal": 1,
+    "point": "before",
+    "pid": 2689723
+  },
+  "writer_pids": [
+    2689936
+  ],
+  "writer_rc": [
+    0
+  ],
+  "writer_err": []
+}

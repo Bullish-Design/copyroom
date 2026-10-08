@@ -1,0 +1,8 @@
+Working copy  (@) now at: qltnlnmq 7d8b6aae (empty) (no description set)
+Parent commit (@-)      : ozvxtolu c08c134d copyroom:project inputs
+Added 0 files, modified 1 files, removed 0 files
+The working copy has no changes.
+Working copy  (@) : qltnlnmq 7d8b6aae (empty) (no description set)
+Parent commit (@-): ozvxtolu c08c134d copyroom:project inputs
+marker identical to original
+6 README.md

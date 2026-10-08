@@ -1,0 +1,6 @@
+src/copyroom/local/source.py:15:MARKER = ".copyroom-local.json"
+src/copyroom/local/source.py:17:SOURCE_DIR = f"{STATE_DIR}/sources"
+src/copyroom/local/source.py:18:PREVIEW_DIR = f"{STATE_DIR}/previews"
+src/copyroom/local/source.py:19:LOCK_FILE = f"{STATE_DIR}/write.lock"
+src/copyroom/local/workflow.py:43:PREVIEW_SUFFIX = ".copyroom-preview.json"
+src/copyroom/local/workflow.py:44:WORKSPACE_PREFIX = "copyroom-"

@@ -1,0 +1,107 @@
+{
+  "case": "T4-a-r1",
+  "timing": "T4",
+  "writer": "a",
+  "exit_code": 1,
+  "Q1_success": false,
+  "stdout": "",
+  "stderr": "Error: apply overlapped a jj operation: expected parent operation d3200d1bf8978cab1c308c02a12bb7ef09739dede23b08501faee3007cc52e454eef14f69742d4d9d612626c057cbbaa8a682fc8a3bb44a125179a8e99400855; current operation 48da9275edfb506899a05e05c9b9c360709dc60829b9f84e9e7392b0c44072a41c9a4d1fbf9866430d8670b69fbb0288dd24b915daf076ebe3ccd5056fded62e has parent(s) b513aa0198885d089b0d2f15d18e84dba04d53bc3b02a47891a634a30aaa05469e0f16b263c8220d60049af1f01f2db1eeb9969d392e2e36537f236a3d5198a5. The preview is kept. Inspect jj op log and recover the foreign operation before retrying.; repository advanced during apply (saved operation d3200d1bf8978cab1c308c02a12bb7ef09739dede23b08501faee3007cc52e454eef14f6",
+  "Q2_at_moved_before_rejection": true,
+  "new_ops_after_release": [
+    "new empty commit"
+  ],
+  "op_restore_ran": false,
+  "at_before_release": "202abf1398d620645c10d4c735ed4442ba30fd19",
+  "at_after": "fc367e16daadc209ae86c1c2c571d17a087f800b",
+  "tree_equals_preview_tree": true,
+  "tree_equals_old_active_tree": false,
+  "marker_unchanged_vs_B0": true,
+  "marker_revision_before_after": [
+    0,
+    0
+  ],
+  "render_head_after": [
+    "d368d21b3bdf0a01dcdfdde0a2062d9dd9e97d0f"
+  ],
+  "old_render": "093a1115a3cb5bcf83893370e4b090dd0af6b9a2",
+  "next_render": "d368d21b3bdf0a01dcdfdde0a2062d9dd9e97d0f",
+  "preview_dir_exists_after": true,
+  "sidecar_exists_after": true,
+  "Q3_writer_work": "commit 19769e65 (side head)",
+  "Q3_detail": {
+    "in_working_copy_files": [],
+    "visible_commits": [
+      {
+        "commit": "19769e656c1d0fc46ef140b45041266aadc76dd4",
+        "change": "rmwpwlvkpvllytqrlryloqvoukrqpvlw",
+        "is_head": true,
+        "ancestor_of_at": false,
+        "is_at": false,
+        "reachable_from_heads": [
+          "19769e656c1d0fc46ef140b45041266aadc76dd4"
+        ],
+        "desc": "foreign-work FOREIGNT4ar1"
+      }
+    ],
+    "only_in_op_log_commits": [],
+    "older_versions_of_visible_changes": [
+      "87f29a238ef355a8f7f3b517b76b9a7e3d5f1aa0"
+    ],
+    "bookmarks": {}
+  },
+  "files_after": [
+    ".copyroom-local.json",
+    ".copyroom-local/previews/copyroom-1aa415a6748b.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/answers.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/manifest.json",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/readme/template.j2",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/metadata.yml",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/prompt.md",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/schema.py",
+    ".copyroom-local/sources/3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0/templates/settings/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/answers.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/manifest.json",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/template.j2",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/metadata.yml",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/prompt.md",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/schema.py",
+    ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/template.j2",
+    ".copyroom-local/write.lock",
+    "README.md",
+    "config/project.yml",
+    "notes.txt"
+  ],
+  "barrier_hit": {
+    "ordinal": 9,
+    "cwd": "/tmp/cr-race-2587806/runs/T4-a-r1/project",
+    "args": [
+      "new",
+      "37ba2bc88249596e58a74970f8c5fc2afe7abb84",
+      "-m",
+      "copyroom:update"
+    ],
+    "match_ordinal": 1,
+    "point": "before",
+    "pid": 2654966
+  },
+  "writer_pids": [
+    2655107,
+    2655141,
+    2655142
+  ],
+  "writer_rc": [
+    0,
+    0,
+    0
+  ],
+  "writer_err": [
+    "Working copy  (@) now at: rmwpwlvk 690f279a (empty) foreign\nParent commit (@-)      : krlssnyt c610cf43 (empty) (no description set)",
+    "Working copy  (@) now at: opuwqxmz 202abf13 (empty) (no description set)\nParent commit (@-)      : rmwpwlvk 19769e65 foreign-work FOREIGNT4ar1"
+  ]
+}

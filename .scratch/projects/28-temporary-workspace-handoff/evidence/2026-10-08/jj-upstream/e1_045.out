@@ -1,0 +1,42 @@
+== initial heads: ['434725b6851d']
+434725b6851d parents=958ca11a54ec | new empty commit
+958ca11a54ec parents=0266a969395b | describe commit 181eb365d006f3a6f741940e4b383e418e798108
+0266a969395b parents=88507cebca27 | snapshot working copy
+88507cebca27 parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+
+== P is in editor. heads: ['434725b6851d']
+--- Q: jj bookmark create qmark -r @: rc=0
+stderr:
+Created 1 bookmarks pointing to tonvwwlx ff9199ee qmark | (empty) work
+== after Q heads: ['46e882741e86']
+--- P finishes: rc=0
+stderr:
+Working copy  (@) now at: tonvwwlx c0d94a65 (empty) P-describe
+Parent commit (@-)      : ytrsrxvm ec586355 base
+== after P heads (expect 2): ['46e882741e86', 'a512ccca994d']
+--- jj --at-op=@ op log (divergent heads, never merges): rc=1
+stderr:
+Error: The "@" expression resolved to more than one operation
+Hint: Try specifying one of the operations by ID: 46e882741e86, a512ccca994d
+heads still: ['46e882741e86', 'a512ccca994d']
+== next ordinary command: jj log -r @ (READ-ONLY command)
+--- jj log -r @: rc=0
+stdout:
+P-describe
+stderr:
+Concurrent modification detected, resolving automatically.
+== heads after merge: ['5a43dbd6feca']
+5a43dbd6feca parents=46e882741e86,a512ccca994d | reconcile divergent operations
+46e882741e86 parents=434725b6851d | create bookmark qmark pointing to commit ff9199eedac0bd3c57c08862dadc70a37c66db7d
+a512ccca994d parents=434725b6851d | describe commit ff9199eedac0bd3c57c08862dadc70a37c66db7d
+434725b6851d parents=958ca11a54ec | new empty commit
+958ca11a54ec parents=0266a969395b | describe commit 181eb365d006f3a6f741940e4b383e418e798108
+0266a969395b parents=88507cebca27 | snapshot working copy
+88507cebca27 parents=000000000000 | add workspace 'default'
+000000000000 parents= | 
+
+tonvww c0d94a65 [qmark] ws= (empty) P-describe
+ytrsrx ec586355 [] ws= base
+zzzzzz 00000000 [] ws= (empty) 
+

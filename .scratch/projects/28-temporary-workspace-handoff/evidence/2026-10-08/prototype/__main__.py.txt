@@ -1,0 +1,48 @@
+"""PROTOTYPE console entry point: ``python -m pyjutsu publish-if``.
+
+    python -m pyjutsu publish-if --repo DIR --expected COMMIT_ID --onto COMMIT_ID -m DESCRIPTION
+
+stdout (exit 0): the new operation id, one line.
+stdout (exit 1): ``stale observed=<commit id> dirty=<0|1> reason=<reason>``; nothing was published.
+exit 2: infrastructure error (workspace cannot load, lock or I/O failure, published-but-not-checked-out).
+exit 3: usage error (argparse).
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+from . import StalePublishError, StaleWorkingCopyError, Workspace
+from .errors import PyjutsuError
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="python -m pyjutsu")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("publish-if")
+    p.add_argument("--repo", required=True)
+    p.add_argument("--expected", required=True)
+    p.add_argument("--onto", required=True)
+    p.add_argument("-m", "--message", required=True)
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:  # argparse exits 2 on usage errors; the family contract says 3
+        return 0 if exc.code == 0 else 3
+    try:
+        ws = Workspace.load(args.repo)
+        print(ws.publish_if(args.expected, args.onto, args.message))
+        return 0
+    except StalePublishError as exc:
+        print(f"stale observed={exc.observed} dirty={int(exc.dirty)} reason={exc.reason}")
+        return 1
+    except StaleWorkingCopyError as exc:
+        print(f"error published-but-unchecked-out: {exc}", file=sys.stderr)
+        return 2
+    except PyjutsuError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

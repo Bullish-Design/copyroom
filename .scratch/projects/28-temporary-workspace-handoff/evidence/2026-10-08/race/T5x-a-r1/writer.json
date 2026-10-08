@@ -1,0 +1,43 @@
+{
+  "kind": "a",
+  "token": "FOREIGNT5xar1",
+  "procs": [
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "new",
+        "-m",
+        "foreign"
+      ],
+      "pid": 2862697,
+      "rc": 0,
+      "out": "",
+      "err": "Working copy  (@) now at: qltmxuyk a3550ebf (empty) foreign\nParent commit (@-)      : trrkmqlq 85f827a9 (empty) copyroom:update\n"
+    },
+    {
+      "argv": [
+        "sh",
+        "-c",
+        "printf '%s\\n' FOREIGNT5xar1 > foreign.txt"
+      ],
+      "pid": 2862709,
+      "rc": 0,
+      "out": "",
+      "err": ""
+    },
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "commit",
+        "-m",
+        "foreign-work FOREIGNT5xar1"
+      ],
+      "pid": 2862710,
+      "rc": 0,
+      "out": "",
+      "err": "Working copy  (@) now at: nluoqovn 6c9297d5 (empty) (no description set)\nParent commit (@-)      : qltmxuyk 42038f99 foreign-work FOREIGNT5xar1\n"
+    }
+  ],
+  "bookmarks": [],
+  "path": "foreign.txt"
+}

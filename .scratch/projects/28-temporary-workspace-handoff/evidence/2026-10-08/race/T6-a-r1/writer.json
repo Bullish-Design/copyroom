@@ -1,0 +1,43 @@
+{
+  "kind": "a",
+  "token": "FOREIGNT6ar1",
+  "procs": [
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "new",
+        "-m",
+        "foreign"
+      ],
+      "pid": 2705593,
+      "rc": 0,
+      "out": "",
+      "err": "Working copy  (@) now at: vswslrvt 312ba55c (empty) foreign\nParent commit (@-)      : munzrmsx c1af4d83 (empty) (no description set)\n"
+    },
+    {
+      "argv": [
+        "sh",
+        "-c",
+        "printf '%s\\n' FOREIGNT6ar1 > foreign.txt"
+      ],
+      "pid": 2705616,
+      "rc": 0,
+      "out": "",
+      "err": ""
+    },
+    {
+      "argv": [
+        "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+        "commit",
+        "-m",
+        "foreign-work FOREIGNT6ar1"
+      ],
+      "pid": 2705619,
+      "rc": 0,
+      "out": "",
+      "err": "Working copy  (@) now at: tvwrvknu 9084100e (empty) (no description set)\nParent commit (@-)      : vswslrvt e927b432 foreign-work FOREIGNT6ar1\n"
+    }
+  ],
+  "bookmarks": [],
+  "path": "foreign.txt"
+}

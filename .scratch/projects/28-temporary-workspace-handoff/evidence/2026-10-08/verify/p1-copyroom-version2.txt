@@ -1,0 +1,6 @@
+
+Usage: copyroom [OPTIONS] COMMAND [ARGS]...
+Try 'copyroom --help' for help.
+
+Error: Missing command.
+exit 3

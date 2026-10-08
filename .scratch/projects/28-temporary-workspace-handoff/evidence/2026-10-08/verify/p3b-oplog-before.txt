@@ -1,0 +1,4 @@
+--- op log -n 3 (active) before
+6af6f8022db0 restore into commit a0df50397636a56995841ec1921396717a6b9649
+fbc368518be6 snapshot working copy
+42a1e15dca5f snapshot working copy

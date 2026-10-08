@@ -1,0 +1,2 @@
+DRIVER start point=A5 mode=exit cwd=/tmp/cr-crash-2578910/runs/A5/project args=['update', '--apply', '/tmp/cr-crash-2578910/runs/A5/preview']
+CRASH point=A5 mode=exit pid=2665998 matched=shutil.rmtree path=/tmp/cr-crash-2578910/runs/A5/preview

@@ -1,0 +1,7 @@
+   Compiling pyo3-build-config v0.24.2
+   Compiling pyo3-ffi v0.24.2
+   Compiling pyo3-macros-backend v0.24.2
+   Compiling pyo3 v0.24.2
+   Compiling pyo3-macros v0.24.2
+    Checking pyjutsu v0.22.0 (/tmp/pj-proto-2714908/pyjutsu)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.07s

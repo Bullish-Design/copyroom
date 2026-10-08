@@ -1,0 +1,196 @@
+    /// PROTOTYPE. Conditionally publish "a fresh empty working-copy commit on top of `onto`".
+    ///
+    /// Everything runs inside ONE hold of the working-copy lock (`working_copy.lock`):
+    ///  1. take the working-copy lock (`start_working_copy_mutation`);
+    ///  2. load the repo at head *under the lock*, refuse a stale working copy, then SNAPSHOT the
+    ///     on-disk tree **in memory only**. A snapshot is a separate published operation in the
+    ///     jj CLI (`cli_util.rs:2180`), but here we never open the transaction that would publish
+    ///     it: `LockedWorkingCopy::snapshot` only mutates the in-memory tree state, and the state
+    ///     file is written only by `finish` (`local_working_copy.rs:2922`);
+    ///  3. if the snapshot tree differs from `@`'s tree (dirty), or `@` != `expected_wc_commit`:
+    ///     drop the lock handle without `finish` and raise `StalePublishError`. No operation is
+    ///     written, no state file changes, the on-disk files are untouched;
+    ///  4. otherwise build a transaction: `MutableRepo::check_out(name, onto)` = new empty commit
+    ///     with the single parent `onto`, set as this workspace's `@`;
+    ///  5. `Transaction::write` (op written, NOT published), then compare-and-swap the op heads
+    ///     under the op-heads lock: publish only if the heads are still exactly `[base op]`;
+    ///  6. check out the new commit and `finish` the working copy at the new operation;
+    ///  7. release the lock (drop).
+    ///
+    /// Returns the new operation id (hex). On a failed precondition raises `StalePublishError`
+    /// (attributes `observed`, `dirty`, `reason`) and changes nothing visible.
+    fn publish_if(
+        &self,
+        py: Python<'_>,
+        expected_wc_commit: &str,
+        onto: &str,
+        description: String,
+    ) -> PyResult<String> {
+        let expected = CommitId::try_from_hex(expected_wc_commit)
+            .ok_or_else(|| PyjutsuError::new_err("invalid expected_wc_commit (need full hex id)"))?;
+        let onto_id = CommitId::try_from_hex(onto)
+            .ok_or_else(|| PyjutsuError::new_err("invalid onto (need full hex commit id)"))?;
+
+        let mut guard = self.locked()?;
+        let ws: &mut Workspace = &mut guard;
+        let name = ws.workspace_name().to_owned();
+        let loader = ws.repo_loader().clone(); // `RepoLoader: Clone`; lets us reload under the lock
+
+        // Snapshot inputs, computed exactly as `snapshot()` does (before the lock borrows `ws`).
+        let max_new_file_size = ws
+            .repo_loader()
+            .settings()
+            .get_value_with("snapshot.max-new-file-size", HumanByteSize::try_from)
+            .map_or(1 << 20, |size| size.0);
+        let auto_track = ws
+            .repo_loader()
+            .settings()
+            .get_string("snapshot.auto-track")
+            .unwrap_or_else(|_| "all()".to_owned());
+        let path_converter = RepoPathUiConverter::Fs {
+            cwd: ws.workspace_root().to_path_buf(),
+            base: ws.workspace_root().to_path_buf(),
+        };
+        let mut fileset_diagnostics = FilesetDiagnostics::new();
+        let fileset_aliases = FilesetAliasesMap::new();
+        let fileset_ctx = FilesetParseContext {
+            aliases_map: &fileset_aliases,
+            path_converter: &path_converter,
+        };
+        let auto_track_matcher =
+            fileset::parse(&mut fileset_diagnostics, &auto_track, &fileset_ctx)
+                .map_err(map_fileset_err)?
+                .to_matcher();
+        let mut base_ignores = GitIgnoreFile::empty();
+        if let Some(git_backend) = loader.store().backend_impl::<GitBackend>() {
+            let info_exclude = git_backend.git_repo_path().join("info").join("exclude");
+            base_ignores = base_ignores
+                .chain_with_file(RepoPath::root(), info_exclude)
+                .map_err(map_workingcopy_err)?;
+        }
+
+        // 1. Take the working-copy lock. Blocks (GIL released) while another process holds it.
+        proto_hooks::hook("BEFORE_LOCK");
+        let mut locked_ws = py
+            .allow_threads(|| pollster::block_on(ws.start_working_copy_mutation()))
+            .map_err(map_workingcopy_err)?;
+        proto_hooks::hook("LOCKED");
+
+        // 2a. Load the repo at head UNDER the lock, so every operation published before we got
+        //     the lock is visible.
+        let repo = py
+            .allow_threads(|| pollster::block_on(loader.load_at_head()))
+            .map_err(map_backend_err)?;
+        let Some(wc_commit_id) = repo.view().get_wc_commit_id(&name).cloned() else {
+            return Err(PyjutsuError::new_err("workspace has no working-copy commit"));
+        };
+        let wc_commit = repo
+            .store()
+            .get_commit(&wc_commit_id)
+            .map_err(map_backend_err)?;
+        let observed = wc_commit_id.hex();
+
+        // 2b. A stale working copy must not be snapshotted (its files belong to an older `@`).
+        match pollster::block_on(WorkingCopyFreshness::check_stale(
+            locked_ws.locked_wc(),
+            &wc_commit,
+            &repo,
+        ))
+        .map_err(map_backend_err)?
+        {
+            WorkingCopyFreshness::Fresh => {}
+            _ => return Err(stale_publish_err(py, &observed, false, "stale-working-copy")),
+        }
+
+        // 2c. SNAPSHOT, in memory only. Nothing is persisted unless `finish` runs.
+        let nothing = NothingMatcher;
+        let options = SnapshotOptions {
+            base_ignores,
+            progress: None,
+            start_tracking_matcher: auto_track_matcher.as_ref(),
+            force_tracking_matcher: &nothing,
+            max_new_file_size,
+        };
+        let (snap_tree, _stats) = py
+            .allow_threads(|| pollster::block_on(locked_ws.locked_wc().snapshot(&options)))
+            .map_err(map_workingcopy_err)?;
+        let dirty = snap_tree.tree_ids_and_labels() != wc_commit.tree().tree_ids_and_labels();
+
+        // 3. Precondition. A dirty tree means the snapshot WOULD rewrite `@` to a new commit id,
+        //    which can never equal an id the caller saw earlier => reject. We do not write that
+        //    commit; `observed` is the currently published `@`.
+        if dirty {
+            return Err(stale_publish_err(py, &observed, true, "dirty-working-copy"));
+        }
+        if wc_commit_id != expected {
+            return Err(stale_publish_err(py, &observed, false, "commit-moved"));
+        }
+
+        // 4. New empty commit on `onto`, set as this workspace's `@` (abandons the old `@` if it
+        //    is discardable, exactly like `jj new`/`jj edit`).
+        let onto_commit = repo
+            .store()
+            .get_commit(&onto_id)
+            .map_err(|e| PyjutsuError::new_err(format!("onto commit not found: {e}")))?;
+        let base_op_id = repo.operation().id().clone();
+        let mut tx = repo.start_transaction();
+        let new_wc = pollster::block_on(tx.repo_mut().check_out(name.clone(), &onto_commit))
+            .map_err(map_backend_err)?;
+        pollster::block_on(tx.repo_mut().rebase_descendants()).map_err(map_backend_err)?;
+
+        // 5. Write the operation (unpublished), then compare-and-swap the op heads.
+        let unpublished = pollster::block_on(tx.write(description)).map_err(map_backend_err)?;
+        let new_op_id = unpublished.operation().id().clone();
+        let parent_ids = unpublished.operation().parent_ids().to_vec();
+        proto_hooks::hook("BEFORE_PUBLISH");
+        let op_heads = loader.op_heads_store().clone();
+        let cas = py.allow_threads(|| {
+            pollster::block_on(async {
+                let _lock = op_heads.lock().await?;
+                let heads = op_heads.get_op_heads().await?;
+                // PJ_NO_CAS is an experiment switch (what happens WITHOUT the compare-and-swap).
+                if std::env::var_os("PJ_NO_CAS").is_none()
+                    && heads.as_slice() != std::slice::from_ref(&base_op_id)
+                {
+                    return Ok::<bool, jj_lib::op_heads_store::OpHeadsStoreError>(false);
+                }
+                op_heads.update_op_heads(&parent_ids, &new_op_id).await?;
+                Ok(true)
+            })
+        });
+        match cas.map_err(map_backend_err)? {
+            true => {}
+            false => {
+                // Someone published between our load and our CAS. Leave our op unpublished
+                // (orphaned object in the op store) and report what is current now.
+                let _ = unpublished.leave_unpublished();
+                let now = py
+                    .allow_threads(|| pollster::block_on(loader.load_at_head()))
+                    .ok()
+                    .and_then(|r| r.view().get_wc_commit_id(&name).map(|c| c.hex()))
+                    .unwrap_or_else(|| observed.clone());
+                return Err(stale_publish_err(py, &now, false, "op-heads-moved"));
+            }
+        }
+        // PUBLISHED by our own `update_op_heads` above. `leave_unpublished` only consumes the
+        // `#[must_use]` handle; it does not undo anything.
+        let _ = unpublished.leave_unpublished();
+        proto_hooks::hook("AFTER_PUBLISH");
+
+        // 6. Check out the new `@` and record the working copy at the new operation.
+        let op_hex = new_op_id.hex();
+        let checkout = py.allow_threads(|| -> Result<(), String> {
+            pollster::block_on(locked_ws.locked_wc().check_out(&new_wc))
+                .map_err(|e| e.to_string())?;
+            proto_hooks::hook("AFTER_CHECKOUT");
+            pollster::block_on(locked_ws.finish(new_op_id.clone())).map_err(|e| e.to_string())
+        });
+        checkout.map_err(|e| {
+            StaleWorkingCopyError::new_err(format!(
+                "operation {op_hex} was published but the working copy could not be checked out \
+                 ({e}); run update_stale to reconcile"
+            ))
+        })?;
+        // 7. `locked_ws` was consumed by `finish`; the working-copy lock is released.
+        Ok(op_hex)
+    }

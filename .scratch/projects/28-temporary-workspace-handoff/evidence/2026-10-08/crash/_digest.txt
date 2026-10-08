@@ -1,0 +1,484 @@
+===== A1
+  crash: rc=137 CRASH point=A1 mode=exit pid=2611316 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1/project args=('new', 'f7ae41a7eb8face2287af465849169bdff8bcdc3',
+  post-crash:workspace-list: rc=0 copyroom-3f4209ab5c25: wzywlxov f7ae41a7 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: typrmwxx 37e7fe56 (empty) copyroom:update
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  fresh-apply: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: monqtwxu 3effcae9 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A2
+  crash: rc=137 CRASH point=A2 mode=exit pid=2613974 matched=write_json path=/tmp/cr-crash-2578910/runs/A2/project/.copyroom-local.json
+  post-crash:workspace-list: rc=0 copyroom-9e08bae379e0: lumrrwtl 0eae856a (empty) (no description set)
+  post-crash:jj-status: rc=0 Working copy changes:
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: syumyrkm 91859d6c copyroom:update
+  after-recovery-1-2:jj-status: rc=0 Working copy changes:
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: syumyrkm 91859d6c copyroom:update
+  after-recovery-3-4:jj-status: rc=0 Working copy changes:
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A3
+  crash: rc=137 CRASH point=A3 mode=exit pid=2615631 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3/project args=('commit', '-m', 'copyroom:project inputs')
+  post-crash:workspace-list: rc=0 copyroom-409ff2b57407: xxulvkkr 8f63a161 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: urukwsvk 75ce2535 (empty) (no description set)
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: urukwsvk 75ce2535 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A4
+  crash: rc=137 CRASH point=A4 mode=exit pid=2617658 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A4/project args=('workspace', 'forget', 'copyroom-8af700a30ecb')
+  post-crash:workspace-list: rc=0 default: mmswyrwl 0cccb682 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 No working copy
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: mmswyrwl 0cccb682 (empty) (no description set)
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: mmswyrwl 0cccb682 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A5
+  crash: rc=137 CRASH point=A5 mode=exit pid=2619725 matched=shutil.rmtree path=/tmp/cr-crash-2578910/runs/A5/preview
+  post-crash:workspace-list: rc=0 default: zostvuwl d6164050 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=2 Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A5/preview
+  discard: rc=2 Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A5/preview
+  after-recovery-1-2:workspace-list: rc=0 default: zostvuwl d6164050 (empty) (no description set)
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 <json>
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: zostvuwl d6164050 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 <json>
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A6
+  crash: rc=137 CRASH point=A6 mode=exit pid=2621300 matched=Path.unlink /tmp/cr-crash-2578910/runs/A6/project/.copyroom-local/previews/copyroom-fce5788e388f.json (st
+  post-crash:workspace-list: rc=0 default: xrmumwln 4ed519ce (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=2 Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A6/preview
+  discard: rc=2 Error: preview workspace is missing: /tmp/cr-crash-2578910/runs/A6/preview
+  after-recovery-1-2:workspace-list: rc=0 default: xrmumwln 4ed519ce (empty) (no description set)
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: xrmumwln 4ed519ce (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== L1
+  crash: rc=137 CRASH point=L1 mode=exit pid=2622596 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1/project args=('new', '693e8a6a82da9010855950ae1d93b527119f6f89',
+  post-crash:workspace-list: rc=0 copyroom-4518fe1f65aa: xpszzrqs 693e8a6a (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-layer-add: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L1/tmp/copyroom-layer-4av_8zqc/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/t
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-4518fe1f65aa: xpszzrqs 693e8a6a (empty) (no description set)
+  after-recovery:jj-status: rc=0 The working copy has no changes.
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+===== L2
+  crash: rc=137 CRASH point=L2 mode=exit pid=2623551 matched=write_json path=/tmp/cr-crash-2578910/runs/L2/project/.copyroom-local.json
+  post-crash:workspace-list: rc=0 copyroom-96b913d00e00: srxppozv 57470242 (empty) (no description set)
+  post-crash:jj-status: rc=0 Working copy changes:
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-layer-add: rc=3 Error: layer already exists: docs
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L2/tmp/copyroom-layer-1t7erezb/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/t
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-96b913d00e00: srxppozv 57470242 (empty) (no description set)
+  after-recovery:jj-status: rc=0 Working copy changes:
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+===== L3
+  crash: rc=137 CRASH point=L3 mode=exit pid=2624595 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L3/project args=('commit', '-m', 'copyroom:layer marker docs')
+  post-crash:workspace-list: rc=0 copyroom-38f2083c2117: ylywzowy be19554c (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-layer-add: rc=3 Error: layer already exists: docs
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L3/tmp/copyroom-layer-_grtgftb/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/t
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-38f2083c2117: ylywzowy be19554c (empty) (no description set)
+  after-recovery:jj-status: rc=0 The working copy has no changes.
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+===== L4
+  crash: rc=137 CRASH point=L4 mode=exit pid=2625949 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L4/project args=('workspace', 'forget', 'copyroom-9fda21ada72a')
+  post-crash:workspace-list: rc=0 default: rqtqnokq 1af0be99 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 No working copy
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-layer-add: rc=3 Error: layer already exists: docs
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L4/tmp/copyroom-layer-fwx2r9ff/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/t
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 default: rqtqnokq 1af0be99 (empty) (no description set)
+  after-recovery:jj-status: rc=0 The working copy has no changes.
+  after-recovery:jj-status:workspace: rc=0 No working copy
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+===== A1w
+  crash: rc=137 CRASH point=A1 mode=exit pid=2627320 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1w/project args=('new', '904290aeb13a8f8af145cfce9f51d72a151bc9dc'
+  post-crash:workspace-list: rc=0 copyroom-c3734e2fadef: wmqupoyv 904290ae (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: ykoknnyy 76940a2b (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: ykoknnyy 8a76121a (no description set)
+  after-recovery-1-2:jj-status: rc=0 Working copy changes:
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  fresh-apply: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: rkoumwrp eaf251a2 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== A2w
+  crash: rc=137 CRASH point=A2 mode=exit pid=2629404 matched=write_json path=/tmp/cr-crash-2578910/runs/A2w/project/.copyroom-local.json
+  post-crash:workspace-list: rc=0 copyroom-055f3d77f0f1: ytwtupqr b5ee9676 (empty) (no description set)
+  post-crash:jj-status: rc=0 Working copy changes:
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: sxuwuvll c9d9359b (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: sxuwuvll e4a8de6b (no description set)
+  after-recovery-1-2:jj-status: rc=0 Working copy changes:
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: sxuwuvll e4a8de6b (no description set)
+  after-recovery-3-4:jj-status: rc=0 Working copy changes:
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== A3w
+  crash: rc=137 CRASH point=A3 mode=exit pid=2631190 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3w/project args=('commit', '-m', 'copyroom:project inputs')
+  post-crash:workspace-list: rc=0 copyroom-f5db148d5708: onuwnxzs 9f7500f7 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: rnqpnntx ebe089f3 (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: rnqpnntx 12b3fecc (no description set)
+  after-recovery-1-2:jj-status: rc=0 Working copy changes:
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: rnqpnntx 12b3fecc (no description set)
+  after-recovery-3-4:jj-status: rc=0 Working copy changes:
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== L1w
+  crash: rc=137 CRASH point=L1 mode=exit pid=2632604 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1w/project args=('new', '42edd7e349ad331b1a12b24b03edd0cca28c77c0'
+  post-crash:workspace-list: rc=0 copyroom-a07e44c1428b: llvmxtlx 42edd7e3 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: ztskllux 299f95fe (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-layer-add: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L1w/tmp/copyroom-layer-by7ihwsp/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-a07e44c1428b: llvmxtlx 42edd7e3 (empty) (no description set)
+  after-recovery:jj-status: rc=0 Working copy changes:
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== L2w
+  crash: rc=137 CRASH point=L2 mode=exit pid=2633634 matched=write_json path=/tmp/cr-crash-2578910/runs/L2w/project/.copyroom-local.json
+  post-crash:workspace-list: rc=0 copyroom-6f2a5e7b9029: tzmnkqsw 7b1e8e11 (empty) (no description set)
+  post-crash:jj-status: rc=0 Working copy changes:
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: xtpwyrtm 25a7a92e (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-layer-add: rc=3 Error: layer already exists: docs
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L2w/tmp/copyroom-layer-ktxul4rc/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-6f2a5e7b9029: tzmnkqsw 7b1e8e11 (empty) (no description set)
+  after-recovery:jj-status: rc=0 Working copy changes:
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== L3w
+  crash: rc=137 CRASH point=L3 mode=exit pid=2635276 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L3w/project args=('commit', '-m', 'copyroom:layer marker docs')
+  post-crash:workspace-list: rc=0 copyroom-2b49bf80d94a: lnzrvulm b37ccdf7 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  writer-commit: rc=0 Working copy  (@) now at: upzkrrtu e8ea7b72 (empty) (no description set)
+  writer-check-before-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+  retry-layer-add: rc=3 Error: layer already exists: docs
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L3w/tmp/copyroom-layer-26ci_z15/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-2b49bf80d94a: lnzrvulm b37ccdf7 (empty) (no description set)
+  after-recovery:jj-status: rc=0 Working copy changes:
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>
+  writer-check-after-recovery {'README has writer edit': True, 'writer-notes.txt on disk': True, 'writer-wip.txt on disk (uncommitted)': True, 'writer commit visible in jj (all())': True, 'writer commit is ancestor of @': True}
+===== A1k
+  crash: rc=-9 CRASH point=A1 mode=hang pid=2636923 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A1k/project args=('new', '0d1ec7c6d2bdbc400bacd187df6f9090e0228236'
+  post-crash:workspace-list: rc=0 copyroom-b210abc2298d: wzzpxpyk 0d1ec7c6 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: mowzvzpn 37d22f03 (empty) copyroom:update
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  fresh-apply: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: lmwmyonr b6e236c0 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== A3k
+  crash: rc=-9 CRASH point=A3 mode=hang pid=2639370 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/A3k/project args=('commit', '-m', 'copyroom:project inputs')
+  post-crash:workspace-list: rc=0 copyroom-572c96f04b66: yzsntwum 2260884b (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:preview: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 <json>
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-apply: rc=1 Error: active project changed after preview
+  discard: rc=0 <json>
+  after-recovery-1-2:workspace-list: rc=0 default: nwumpxrz 95bc52e2 (empty) (no description set)
+  after-recovery-1-2:jj-status: rc=0 The working copy has no changes.
+  after-recovery-1-2:status: rc=0 <json>
+  after-recovery-1-2:inspect: rc=0 <json>
+  after-recovery-1-2:list-previews: rc=0 []
+  after-recovery-1-2:doctor: rc=0 <json>
+  after-recovery-1-2:layer-list: rc=0 <json>
+  fresh-update: rc=0 <json>
+  after-recovery-3-4:workspace-list: rc=0 default: nwumpxrz 95bc52e2 (empty) (no description set)
+  after-recovery-3-4:jj-status: rc=0 The working copy has no changes.
+  after-recovery-3-4:status: rc=0 <json>
+  after-recovery-3-4:inspect: rc=0 <json>
+  after-recovery-3-4:list-previews: rc=0 []
+  after-recovery-3-4:doctor: rc=0 <json>
+  after-recovery-3-4:layer-list: rc=0 <json>
+===== L1k
+  crash: rc=-9 CRASH point=L1 mode=hang pid=2640546 matched=JJ.run cwd=/tmp/cr-crash-2578910/runs/L1k/project args=('new', '403a1877ef280cdff9ac31bf34ba8717952a736e'
+  post-crash:workspace-list: rc=0 copyroom-c69eb4bff13d: prnwoyun 403a1877 (empty) (no description set)
+  post-crash:jj-status: rc=0 The working copy has no changes.
+  post-crash:jj-status:workspace: rc=0 The working copy has no changes.
+  post-crash:status: rc=0 <json>
+  post-crash:inspect: rc=0 <json>
+  post-crash:list-previews: rc=0 []
+  post-crash:doctor: rc=0 <json>
+  post-crash:layer-list: rc=0 <json>
+  retry-layer-add: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  discard-tmp: rc=2 Error: cannot read /tmp/cr-crash-2578910/runs/L1k/tmp/copyroom-layer-8vtlhirt/workspace.copyroom-preview.json: [Errno 2] No such file or directory: '/
+  layer-add-other-name: rc=2 Error: output path collision: docs/guide.md and docs/guide.md
+  after-recovery:workspace-list: rc=0 copyroom-c69eb4bff13d: prnwoyun 403a1877 (empty) (no description set)
+  after-recovery:jj-status: rc=0 The working copy has no changes.
+  after-recovery:jj-status:workspace: rc=0 The working copy has no changes.
+  after-recovery:status: rc=0 <json>
+  after-recovery:inspect: rc=0 <json>
+  after-recovery:list-previews: rc=0 []
+  after-recovery:doctor: rc=0 <json>
+  after-recovery:layer-list: rc=0 <json>

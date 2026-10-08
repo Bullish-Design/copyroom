@@ -1,0 +1,191 @@
+== B0_after_preview ==
+-- op_log
+f4ec78db0e2a563f2214c49a94ae46ed9100220e44facee49d22e92332730a203d0ef35be8944d1aa11a31e9c2f23c109b70342c87b2ca7074e0d21d8e8b51a6 commit 252f5e9d8b3ec8b6cd3c76ab6557fd5c35c007f7
+7781110e9e5d429e6d12895a3acbefd018c1b092372768ab9dc49767d5e7bdb972e6b9c31f1c6bc936c1fe0417076112acc806d8a2b146f1df3fe45d88800fb7 snapshot working copy
+ed8c20520f20d9a642223e4ce9d04c3835bbd0cf82a7d8b678c89c8a28114c33546781b23ec4cf640a00ac667f06a1a0cd6dfc7f9d3b3b58f8014ddaed0a0dcf new empty commit
+514041acfc460781be0956c8232d244d5e55a6aaf53164a7f089a4e7321e9ab2262cb6f65ce95c0fdd720ad12ef8e0bbf2d20eb63432f1ba79082d13add4c4bb commit 51a7cf499bec13841086159f9240904f08d0dbca
+9b6a9698044ca5dce7bf42eef11a7077ceb7a1d860534da70e93956ad7eb48a8ee6f8679be9556b42249b0499a32215159a36c6bdee2e6fed06ed47613b6fafd snapshot working copy
+c0fa11baff6d8ef9508e98cbe9a6b666162b731c65bc9e9aa25f30599e33e56f232cf5616fe436b60f4f4eedd413f5a6c2538b8bfd4d713b42561e3332612324 create initial working-copy commit in workspace copyroom-c79602b484de
+aa0bf30c1980bb4edb62620365388f7e745239476e447dd84c0abdb5a8ace406a4d88791e2d262434d3cfc0f630a6bd791253e51fdbbaa1b6dc3421f65977830 add workspace 'copyroom-c79602b484de'
+fbd2e0313d4c04e78f95a54f586f18b80a15fdf1b3dab64d7c6704e771a9773d29eb1827bd849b9c3d1b8b24735c4fd6c5e47af696a880cc0a13b038f9f2bb78 commit ee03943e0af3ce6629d27d1eb418037c4a4f0ff4
+dda02d8003def3d2562136bb41f339aae1cef062731b1a76e52805715a5bbb8f51b993b7082038fc36c856a6d2f28adad8c6f092d11a3ec38f219bc5efbec36b snapshot working copy
+eb65731fa102b7ba95a56b6ca2057cf1e7e6b2d1d262c58f7911e754e8ec229cd8fa5ef99fb97c4a61dec1010f82f302f35b9a5ab274cd9e75743eef57523487 commit 892b1fccde9f1196cec2694e5d7efffcb84f9e5e
+8ecd7358331acbab4b926185c6b219870cd35d39a19817b8c6f2b8c2b2a2819dfb1ce1e23dd631bfbded0c0196b12158b13798df4a8baa1ba9267066d0b38b0b snapshot working copy
+93b752c27f3931e9c21a6ffcd0e6f3dd80167c33bb541f88d25ef0e413ce3c79d0ea852d41687ff88aed4c2c74efd3c2a620fca7f8eacda77ef0ae40bc2b2583 commit 38d07f7f19bcf049ad12fc285cad1219814853cb
+5c5ce8d91c79cfd9123c82a4ae7a41dae337a73e9b5ffd4c9356e39eb1ccd947d2ffcec060274ae3981d9897c61b7e8638f19422a9fb86a39e07474efe2c1047 snapshot working copy
+740d40ebd849f659f2e63d86510c60517985d54a85d35d394f13ca59de3f414d3fdb9a399c6d330615b509302a80af058a2861e2a5832f47d125dd946e3804a6 add workspace 'default'
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+
+-- log_all
+844cc32f2af439def5bf01ef38e1c8115831308a  | parents=4b9d88a9
+4b9d88a9134fce0137428749cd5e1adf2f7912dc copyroom:source snapshot 3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0 | parents=ebbd0746,d32bedcb
+d32bedcb98e0d9d28d44ade0e5369745da20e061 copyroom:render 18950bf1fe184d98ba7b11444f0040af base 1 3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0 | parents=7943c388
+ebbd07468db96a3d7dceeb9ec2f68a18752c8a13  | parents=752f1307
+752f13070c3ed8a21f9cad6de74e493c30734f87 user-notes | parents=c79676cc
+c79676cc6f26e05829e822e88f9393a4f92ca0e4 copyroom:project inputs | parents=7943c388
+7943c3887e4f28ea3943811474b48e83e1ff6ba1 copyroom:render 18950bf1fe184d98ba7b11444f0040af base 0 9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb | parents=00000000
+0000000000000000000000000000000000000000  | parents=
+
+-- heads_all
+844cc32f2af439def5bf01ef38e1c8115831308a 
+
+-- at
+ebbd07468db96a3d7dceeb9ec2f68a18752c8a13
+-- at_parents
+752f13070c3ed8a21f9cad6de74e493c30734f87 user-notes
+
+-- workspace_list
+copyroom-c79602b484de: pkntomvq 844cc32f (empty) (no description set)
+default: wxtkmvlo ebbd0746 (empty) (no description set)
+
+-- bookmarks
+
+-- tree_digest
+fa8cca735e5490784cb17839aab50586643c32971bdff270473256ca63d561d9
+-- marker_sha256
+e83d6ce8baa84c3956c65558aa6458e2683b9bb3acd5557d87c46ce87430e327
+-- marker_literal
+{
+  "answers": {
+    "description": "Disposable race lab",
+    "module": "race_lab",
+    "project_name": "race-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "layers": {
+    "base": {
+      "answers": {
+        "description": "Disposable race lab",
+        "module": "race_lab",
+        "project_name": "race-lab",
+        "python_version": "3.13"
+      },
+      "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+      "manifest_digest": "c53b81f662eeb47c13bbd89d999f43a8a0af2914e03d8f5f2aac647f3eae9e87",
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings"
+      },
+      "render_digest": "46051357de471373e024e9162f6b3f087b9e4b5b8674195dbf3083394a4b4b6d",
+      "revision": 0,
+      "source": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/source",
+      "source_digest": "9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb",
+      "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+      "templateer_version": "0.4.1"
+    }
+  },
+  "manifest_digest": "c53b81f662eeb47c13bbd89d999f43a8a0af2914e03d8f5f2aac647f3eae9e87",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "project_id": "18950bf1fe184d98ba7b11444f0040af",
+  "render_digest": "46051357de471373e024e9162f6b3f087b9e4b5b8674195dbf3083394a4b4b6d",
+  "revision": 0,
+  "schema": 2,
+  "source": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/source",
+  "source_digest": "9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1"
+}
+
+-- marker_revision
+0
+-- preview_dir_exists
+True
+-- sidecar_exists
+True
+-- preview_sidecar
+{
+  "active_head": "ebbd07468db96a3d7dceeb9ec2f68a18752c8a13",
+  "active_tree": "fa8cca735e5490784cb17839aab50586643c32971bdff270473256ca63d561d9",
+  "answers": {
+    "description": "Disposable race lab",
+    "module": "race_lab",
+    "project_name": "race-lab",
+    "python_version": "3.13"
+  },
+  "composer_digest": "8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e",
+  "conflicts": [],
+  "layer": "base",
+  "manifest_digest": "c53b81f662eeb47c13bbd89d999f43a8a0af2914e03d8f5f2aac647f3eae9e87",
+  "marker_digest": "e83d6ce8baa84c3956c65558aa6458e2683b9bb3acd5557d87c46ce87430e327",
+  "next_render": "d32bedcb98e0d9d28d44ade0e5369745da20e061",
+  "old_render": "7943c3887e4f28ea3943811474b48e83e1ff6ba1",
+  "owners": {
+    "README.md": "readme",
+    "config/project.yml": "settings"
+  },
+  "path": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/preview",
+  "preview_head": "844cc32f2af439def5bf01ef38e1c8115831308a",
+  "preview_tree": "cb5d0d47d6e746f84478dd77d2216de626fcdad66e78c3a61a60ace0f2cdd103",
+  "project": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/project",
+  "project_id": "18950bf1fe184d98ba7b11444f0040af",
+  "record_metadata": null,
+  "render_digest": "b356a03df98b41d3ef8b02c0023643ed88e410f9df7bf3c5cdbea2443025e00c",
+  "revision": 1,
+  "schema": 1,
+  "source": "/tmp/cr-race-2587806/runs/T4-e_unowned-r1/source",
+  "source_digest": "3c0d043cc0a2d01b0e079fb054505449e4a20dc0245295f9e5ed085394ad94a0",
+  "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b",
+  "templateer_version": "0.4.1",
+  "workspace": "copyroom-c79602b484de"
+}
+-- files
+{
+  ".copyroom-local.json": {
+    "content": "{\n  \"answers\": {\n    \"description\": \"Disposable race lab\",\n    \"module\": \"race_lab\",\n    \"project_name\": \"race-lab\",\n    \"python_version\": \"3.13\"\n  },\n  \"composer_digest\": \"8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e\",\n  \"layers\": {\n    \"base\": {\n      \"answers\": {\n        \"description\": \"Disposable race lab\",\n        \"module\": \"race_lab\",\n        \"project_name\": \"race-lab\",\n        \"python_version\": \"3.13\"\n      },\n      \"composer_digest\": \"8190eaeb0460f99baeb1ad5464a30c18d726785ea384a4ee98b247ec6020b80e\",\n      \"manifest_digest\": \"c53b81f662eeb47c13bbd89d999f43a8a0af2914e03d8f5f2aac647f3eae9e87\",\n      \"owners\": {\n        \"README.md\": \"readme\",\n        \"config/project.yml\": \"settings\"\n      },\n      \"render_digest\": \"46051357de471373e024e9162f6b3f087b9e4b5b8674195dbf3083394a4b4b6d\",\n      \"revision\": 0,\n      \"source\": \"/tmp/cr-race-2587806/runs/T4-e_unowned-r1/source\",\n      \"source_digest\": \"9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb\",\n      \"templateer_digest\": \"546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b\",\n      \"templateer_version\": \"0.4.1\"\n    }\n  },\n  \"manifest_digest\": \"c53b81f662eeb47c13bbd89d999f43a8a0af2914e03d8f5f2aac647f3eae9e87\",\n  \"owners\": {\n    \"README.md\": \"readme\",\n    \"config/project.yml\": \"settings\"\n  },\n  \"project_id\": \"18950bf1fe184d98ba7b11444f0040af\",\n  \"render_digest\": \"46051357de471373e024e9162f6b3f087b9e4b5b8674195dbf3083394a4b4b6d\",\n  \"revision\": 0,\n  \"schema\": 2,\n  \"source\": \"/tmp/cr-race-2587806/runs/T4-e_unowned-r1/source\",\n  \"source_digest\": \"9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb\",\n  \"templateer_digest\": \"546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b\",\n  \"templateer_version\": \"0.4.1\"\n}\n",
+    "sha256": "e83d6ce8baa8"
+  },
+  ".copyroom-local/previews/copyroom-c79602b484de.json": {
+    "sha256": "96cb9af9cdd3"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/answers.json": {
+    "sha256": "92cd562b4e6a"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/manifest.json": {
+    "sha256": "c53b81f662ee"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/metadata.yml": {
+    "sha256": "96c905c051c8"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/prompt.md": {
+    "sha256": "781c5a39df86"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/schema.py": {
+    "sha256": "d4c8eb6d26ae"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/readme/template.j2": {
+    "sha256": "b80e5deafda1"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/metadata.yml": {
+    "sha256": "b8ae177e6f6d"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/prompt.md": {
+    "sha256": "781c5a39df86"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/schema.py": {
+    "sha256": "d4c8eb6d26ae"
+  },
+  ".copyroom-local/sources/9db53748d17ccc868123d360e9960fb46bb6a2c2097f4f5e16726094716aafbb/templates/settings/template.j2": {
+    "sha256": "522fbfc8c241"
+  },
+  ".copyroom-local/write.lock": {
+    "sha256": "e3b0c44298fc"
+  },
+  "README.md": {
+    "content": "# race-lab\n\nDisposable race lab",
+    "sha256": "29c40404c298"
+  },
+  "config/project.yml": {
+    "content": "project: \"race-lab\"\ndescription: \"Disposable race lab\"",
+    "sha256": "6e77f5b95ae5"
+  },
+  "notes.txt": {
+    "content": "user notes\n",
+    "sha256": "69a52910daef"
+  }
+}
+-- render_head
+['7943c3887e4f28ea3943811474b48e83e1ff6ba1']
