@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -64,6 +66,46 @@ class LocalTemplateerJJTests(unittest.TestCase):
     def change_template(self, name: str, content: str) -> None:
         path = self.source / "templates" / name / "template.j2"
         path.write_text(content, encoding="utf-8")
+
+    def make_overlay(self, name: str = "overlay-source") -> Path:
+        overlay = self.root / name
+        shutil.copytree(self.source, overlay)
+        manifest_path = overlay / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["templates"] = ["settings"]
+        manifest["executable"] = []
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        metadata = overlay / "templates/settings/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace(
+                "config/project.yml", "docs/guide.md",
+            ),
+            encoding="utf-8",
+        )
+        return overlay
+
+    def interrupt_layer_add(self, overlay: Path) -> dict[str, object]:
+        original = JJ.run
+
+        class SimulatedCrash(BaseException):
+            pass
+
+        def stop_before_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            if (
+                jj.cwd == self.project
+                and args[:1] == ("new",)
+                and "copyroom:layer add docs" in args
+            ):
+                raise SimulatedCrash
+            return original(jj, *args, **kwargs)
+
+        with patch.object(JJ, "run", stop_before_publish):
+            with self.assertRaises(SimulatedCrash):
+                add_layer(self.project, overlay, overlay / "answers.json", "docs")
+
+        journals = list((self.project / ".copyroom-local/journal").glob("*.json"))
+        self.assertEqual(1, len(journals))
+        return json.loads(journals[0].read_text(encoding="utf-8"))
 
     def test_new_saves_source_snapshot_modes_and_answers(self) -> None:
         self.create()
@@ -758,11 +800,187 @@ class LocalTemplateerJJTests(unittest.TestCase):
 
         report = recover(self.project)
 
-        self.assertFalse(report["ok"])
+        self.assertTrue(report["ok"])
         self.assertEqual("prepared", report["transactions"][0]["journal_state"])
         self.assertIn("retry update --apply", report["transactions"][0]["action"])
+        self.assertEqual(
+            [report["transactions"][0]],
+            report["pending_review"],
+        )
+        self.assertEqual([], report["pending_recovery"])
         self.assertTrue(out.is_dir())
         self.assertEqual(1, len(list_previews(self.project)))
+        self.assertFalse(status(self.project)["has_pending_publication"])
+
+    def test_recover_prune_backfills_a_journal_less_preview(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "journal-less-preview"
+        state = preview(self.project, out)
+        journal = workflow_module._journal_path(self.project, state["workspace"])
+        journal.unlink()
+
+        report = recover(self.project, prune=True)
+
+        self.assertTrue(report["ok"])
+        self.assertTrue(journal.is_file())
+        self.assertTrue(out.is_dir())
+        self.assertEqual([state["workspace"]], [row["workspace"] for row in report["pending_review"]])
+
+    def test_recover_prune_keeps_a_workshop_workspace(self) -> None:
+        self.create()
+        workspace = self.root / "workshop-workspace"
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-walkthrough", "-r", "root()",
+            str(workspace),
+        )
+
+        report = recover(self.project, prune=True)
+
+        self.assertTrue(report["ok"])
+        self.assertTrue(workspace.is_dir())
+        self.assertIn(
+            "copyroom-walkthrough", {row["name"] for row in JJ(self.project).workspaces()},
+        )
+
+    def test_recover_clears_a_dead_layer_journal_after_retry(self) -> None:
+        self.create()
+        overlay = self.make_overlay()
+        journal = self.interrupt_layer_add(overlay)
+        (self.project / "writer.txt").write_text("writer commit\n", encoding="utf-8")
+        JJ(self.project).run("commit", "-m", "test: move project head")
+
+        interrupted = recover(self.project)
+        self.assertIn("retry layer add", interrupted["pending_recovery"][0]["action"])
+        self.assertTrue(status(self.project)["has_pending_publication"])
+
+        add_layer(self.project, overlay, overlay / "answers.json", "docs")
+        dead_temporary = Path(str(journal["temporary_path"]))
+        dead_workspace = str(journal["workspace"])
+        self.assertTrue(dead_temporary.exists())
+        self.assertIn(dead_workspace, {row["name"] for row in JJ(self.project).workspaces()})
+
+        pruned = recover(self.project, prune=True)
+
+        self.assertTrue(pruned["ok"])
+        self.assertFalse(dead_temporary.exists())
+        self.assertNotIn(dead_workspace, {row["name"] for row in JJ(self.project).workspaces()})
+        self.assertTrue(status(self.project)["ok"])
+        self.assertFalse(status(self.project)["has_pending_publication"])
+
+    def test_recover_unlinks_a_missing_preview_workspace(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "missing-preview"
+        state = preview(self.project, out)
+        shutil.rmtree(out)
+
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertIn("discard this transaction", report["pending_recovery"][0]["action"])
+        self.assertEqual([state["workspace"]], [row["workspace"] for row in list_previews(self.project)])
+
+        pruned = recover(self.project, prune=True)
+
+        self.assertTrue(pruned["ok"])
+        self.assertEqual([], list_previews(self.project))
+        self.assertNotIn(state["workspace"], {row["name"] for row in JJ(self.project).workspaces()})
+
+    def test_discard_clears_a_missing_preview_workspace(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "discard-missing-preview"
+        state = preview(self.project, out)
+        shutil.rmtree(out)
+
+        result = discard(out)
+
+        self.assertEqual("discarded", result["result"])
+        self.assertEqual([], list_previews(self.project))
+        self.assertNotIn(state["workspace"], {row["name"] for row in JJ(self.project).workspaces()})
+
+    def test_recover_reports_one_damaged_journal_and_continues(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        good = preview(self.project, self.root / "good-preview")
+        bad = preview(self.project, self.root / "bad-preview")
+        bad_path = workflow_module._journal_path(self.project, bad["workspace"])
+        broken = json.loads(bad_path.read_text(encoding="utf-8"))
+        broken["prepared_head"] = "f" * 40
+        bad_path.write_text(json.dumps(broken), encoding="utf-8")
+        orphan = self.root / "orphan-preview"
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-000000000003", "-r", "root()",
+            str(orphan),
+        )
+
+        report = recover(self.project)
+
+        self.assertFalse(report["ok"])
+        self.assertEqual(good["workspace"], report["pending_review"][0]["workspace"])
+        self.assertEqual(str(bad_path), report["damaged"][0]["path"])
+        self.assertEqual(str(orphan), report["orphans"]["workspaces"][0]["path"])
+        self.assertTrue(bad_path.exists())
+        self.assertTrue((self.root / "good-preview").is_dir())
+
+        pruned = recover(self.project, prune=True)
+
+        self.assertFalse(pruned["ok"])
+        self.assertTrue(bad_path.exists())
+        self.assertTrue((self.root / "bad-preview").is_dir())
+        self.assertIn(
+            bad["workspace"], {row["name"] for row in JJ(self.project).workspaces()},
+        )
+
+    def test_recover_does_not_prune_a_shared_preview_temporary(self) -> None:
+        self.create()
+        shared = self.root / "shared-previews"
+        shared.mkdir()
+        temporary = shared / ".copyroom-tmp-active-writer"
+        temporary.write_text("writer has not renamed this file\n", encoding="utf-8")
+
+        report = recover(self.project, prune=True)
+
+        self.assertTrue(report["ok"])
+        self.assertTrue(temporary.exists())
+        self.assertNotIn(
+            str(temporary),
+            [row["path"] for row in report["orphans"]["write_temporaries"]],
+        )
+
+    def test_recover_uses_the_layer_journal_after_tmpdir_changes(self) -> None:
+        self.create()
+        overlay = self.make_overlay()
+        journal = self.interrupt_layer_add(overlay)
+        temporary_path = Path(str(journal["temporary_path"]))
+        new_tmpdir = self.root / "new-tmpdir"
+        new_tmpdir.mkdir()
+        old_tempdir = tempfile.tempdir
+        with patch.dict(os.environ, {"TMPDIR": str(new_tmpdir)}):
+            tempfile.tempdir = None
+            try:
+                report = recover(self.project)
+            finally:
+                tempfile.tempdir = old_tempdir
+
+        self.assertTrue(report["ok"])
+        self.assertFalse(temporary_path.exists())
 
     def test_status_reports_interrupted_publication_after_prepared_head_lands(self) -> None:
         self.create()
@@ -800,30 +1018,30 @@ class LocalTemplateerJJTests(unittest.TestCase):
 
     def test_recover_prunes_orphan_workspace_and_layer_directory(self) -> None:
         self.create()
-        layer_root = Path(tempfile.gettempdir()) / f"copyroom-layer-orphan-{self.root.name}"
+        layer_root = Path(tempfile.gettempdir()) / f"copyroom-layer-{uuid.uuid4().hex}"
         workspace = layer_root / "workspace"
         workspace.mkdir(parents=True)
         JJ(self.project).run(
-            "workspace", "add", "--name", "copyroom-orphan", "-r", "root()", str(workspace),
+            "workspace", "add", "--name", "copyroom-000000000001", "-r", "root()", str(workspace),
         )
 
         report = recover(self.project)
         self.assertFalse(report["ok"])
-        self.assertEqual("copyroom-orphan", report["orphans"]["workspaces"][0]["name"])
+        self.assertEqual("copyroom-000000000001", report["orphans"]["workspaces"][0]["name"])
         self.assertEqual(str(layer_root), report["orphans"]["layer_directories"][0]["path"])
 
         pruned = recover(self.project, prune=True)
         self.assertTrue(pruned["ok"])
         self.assertFalse(layer_root.exists())
         self.assertNotIn(
-            "copyroom-orphan", {row["name"] for row in JJ(self.project).workspaces()},
+            "copyroom-000000000001", {row["name"] for row in JJ(self.project).workspaces()},
         )
 
     def test_recover_prunes_orphan_preview_workspace(self) -> None:
         self.create()
         orphan = self.root / "orphan-preview"
         JJ(self.project).run(
-            "workspace", "add", "--name", "copyroom-orphan-preview", "-r", "root()",
+            "workspace", "add", "--name", "copyroom-000000000002", "-r", "root()",
             str(orphan),
         )
 
@@ -845,11 +1063,27 @@ class LocalTemplateerJJTests(unittest.TestCase):
         report = recover(self.project)
         self.assertFalse(report["ok"])
         self.assertEqual(str(temporary), report["orphans"]["write_temporaries"][0]["path"])
+        self.assertEqual("true", report["orphans"]["write_temporaries"][0]["ignored"])
         self.assertNotIn(".copyroom-tmp-interrupted-write", JJ(self.project).tracked_paths("@"))
 
         pruned = recover(self.project, prune=True)
         self.assertTrue(pruned["ok"])
         self.assertFalse(temporary.exists())
+
+    def test_recover_reports_a_negated_write_temporary_as_not_ignored(self) -> None:
+        self.create()
+        temporary = self.project / ".copyroom-tmp-not-ignored"
+        exclude = self.project / ".git" / "info" / "exclude"
+        with exclude.open("a", encoding="utf-8") as stream:
+            stream.write("!/.copyroom-tmp-not-ignored\n")
+        temporary.write_bytes(b"partial JSON")
+
+        report = recover(self.project)
+
+        self.assertIn(".copyroom-tmp-not-ignored", report["tracked_local_state"])
+        self.assertEqual(
+            "false", report["orphans"]["write_temporaries"][0]["ignored"],
+        )
 
     def test_layer_add_refuses_ignored_render_path_that_does_not_exist(self) -> None:
         self.create()

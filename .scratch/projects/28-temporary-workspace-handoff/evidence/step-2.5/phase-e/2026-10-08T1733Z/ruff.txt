@@ -1,0 +1,12 @@
+F821 Undefined name `os`
+   --> tests/integration/test_local_templateer_jj.py:963:25
+    |
+961 |         new_tmpdir.mkdir()
+962 |         old_tempdir = tempfile.tempdir
+963 |         with patch.dict(os.environ, {"TMPDIR": str(new_tmpdir)}):
+    |                         ^^
+964 |             tempfile.tempdir = None
+965 |             try:
+    |
+
+Found 1 error.

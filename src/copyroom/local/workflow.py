@@ -40,6 +40,7 @@ from .source import (
     resolve_source,
     snapshot_path,
     snapshot_source,
+    temp_exclude_active,
     write_json,
 )
 
@@ -513,13 +514,22 @@ def _cleanup_transaction(project: Path, journal: dict[str, Any]) -> None:
     temporary_path: Path | None = None
     if kind == "layer_add":
         temporary_path = normalize_path(Path(str(journal.get("temporary_path", ""))))
+        project_root = project.resolve()
+        temporary_root = temporary_path.resolve()
         if (
-            temporary_path.parent != Path(tempfile.gettempdir()).resolve()
-            or not temporary_path.name.startswith("copyroom-layer-")
+            not re.fullmatch(r"copyroom-layer-[0-9a-f]{32}", temporary_path.name)
+            or temporary_path.is_symlink()
+            or temporary_root == project_root
+            or temporary_root in project_root.parents
+            or project_root in temporary_root.parents
             or workspace_path != temporary_path / "workspace"
             or workspace_path.is_symlink()
         ):
             raise LocalError("transaction journal has an unsafe layer path")
+        if workspace_path.is_dir() and _workspace_repo(workspace_path) != (
+            project / ".jj" / "repo"
+        ).resolve():
+            raise LocalError("transaction journal layer workspace belongs to another repository")
     elif kind == "update":
         if (
             project in workspace_path.parents
@@ -1006,13 +1016,9 @@ def preview(
     return state
 
 
-def _load_preview(out: Path) -> dict[str, Any]:
-    """Load and validate a preview sidecar."""
+def _validate_preview_state(out: Path, state: dict[str, Any]) -> dict[str, Any]:
+    """Validate saved preview identity and required fields."""
 
-    out = normalize_path(out)
-    if not out.is_dir() or not (out / ".jj").exists():
-        raise LocalError(f"preview workspace is missing: {out}")
-    state = read_json(_preview_sidecar(out))
     required = {
         "schema", "project", "project_id", "layer", "workspace", "path", "active_head", "active_tree",
         "marker_digest", "prepared_marker_digest", "old_render", "next_render", "preview_head",
@@ -1023,11 +1029,20 @@ def _load_preview(out: Path) -> dict[str, Any]:
     }
     if (
         state.get("schema") != 2 or not required <= state.keys()
-        or not str(state["workspace"]).startswith(WORKSPACE_PREFIX)
+        or not re.fullmatch(r"copyroom-[0-9a-f]{12}", str(state["workspace"]))
         or normalize_path(Path(str(state["path"]))) != out
     ):
         raise LocalError("unsupported preview state")
     return state
+
+
+def _load_preview(out: Path, require_workspace: bool = True) -> dict[str, Any]:
+    """Load and validate a preview sidecar."""
+
+    out = normalize_path(out)
+    if require_workspace and (not out.is_dir() or not (out / ".jj").exists()):
+        raise LocalError(f"preview workspace is missing: {out}")
+    return _validate_preview_state(out, read_json(_preview_sidecar(out)))
 
 
 def _discard(project: Path, out: Path, state: dict[str, Any]) -> None:
@@ -1037,7 +1052,9 @@ def _discard(project: Path, out: Path, state: dict[str, Any]) -> None:
     if journal_file.is_file():
         _cleanup_transaction(project, read_json(journal_file))
         return
-    JJ(project).run("workspace", "forget", str(state["workspace"]))
+    jj = JJ(project)
+    if str(state["workspace"]) in {row["name"] for row in jj.workspaces()}:
+        jj.run("workspace", "forget", str(state["workspace"]))
     if out.is_dir():
         shutil.rmtree(out)
     _remove_preview_state(project, out, str(state["workspace"]))
@@ -1066,6 +1083,39 @@ def _journal_from_preview_state(project: Path, state: dict[str, Any]) -> dict[st
         "prepared_marker_digest": state["prepared_marker_digest"],
         "preview_state": state,
     }
+
+
+def _preview_state_for_workspace(
+    project: Path,
+    workspace: str,
+    workspace_path: Path,
+    project_id: str,
+) -> dict[str, Any] | None:
+    """Load matching state copies for one registered preview workspace."""
+
+    if workspace_path.is_symlink():
+        raise LocalError(f"preview workspace is a symlink: {workspace_path}")
+    state_paths = [
+        _state_path(project, workspace),
+        _preview_sidecar(workspace_path),
+    ]
+    states: list[dict[str, Any]] = []
+    for path in state_paths:
+        if not path.is_file():
+            continue
+        state = _validate_preview_state(workspace_path, read_json(path))
+        if (
+            normalize_path(Path(str(state["project"]))) != project
+            or state["project_id"] != project_id
+            or state["workspace"] != workspace
+        ):
+            raise LocalError(f"preview state does not match workspace {workspace}: {path}")
+        states.append(state)
+    if not states:
+        return None
+    if any(state != states[0] for state in states[1:]):
+        raise LocalError(f"preview state copies do not match for workspace {workspace}")
+    return states[0]
 
 
 def _ensure_preview_journal(project: Path, state: dict[str, Any]) -> dict[str, Any]:
@@ -1124,7 +1174,16 @@ def _publish_layer_transaction(
         or tracked_tree_digest(project, jj) != journal.get("active_tree")
         or digest_bytes((project / MARKER).read_bytes()) != journal.get("marker_digest")
     ):
-        return _journal_row(journal, "project-moved; retry layer add")
+        row = _journal_row(journal, "project moved; keep prepared result; retry layer add")
+        try:
+            data = marker(project)
+            records = data.get("layers", {"base": data})
+            if str(journal["layer"]) in records:
+                row["action"] = "layer already exists; discard stale prepared result"
+                row["_cleanup"] = True
+        except (LocalError, KeyError, TypeError):
+            pass
+        return row
     prepared_head = str(journal["prepared_head"])
     state = _journal_state(project, journal)
     workspace_path = Path(str(journal["workspace_path"]))
@@ -1228,6 +1287,7 @@ def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[s
 
     prepared_head = journal.get("prepared_head")
     if prepared_head:
+        jj.commit_id(str(prepared_head))
         current_head = jj.commit_id("@")
         published = _is_ancestor(jj, str(prepared_head), current_head)
         if published and journal.get("next_render"):
@@ -1259,6 +1319,15 @@ def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[s
             _cleanup_transaction(project, journal)
             return _journal_row(journal, "published and cleaned")
 
+    if (
+        journal.get("kind") == "update"
+        and journal.get("prepared_head")
+        and not Path(str(journal["workspace_path"])).is_dir()
+    ):
+        row = _journal_row(journal, "prepared workspace missing; discard this transaction")
+        row["_cleanup"] = True
+        return row
+
     if phase == "publishing":
         _set_journal_phase(project, journal, "prepared", state)
 
@@ -1270,11 +1339,11 @@ def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[s
         return row
 
     current_head = jj.commit_id("@")
-    if current_head != journal.get("active_head"):
-        return _journal_row(journal, "project moved; keep prepared result")
-
     if journal.get("kind") == "layer_add":
         return _publish_layer_transaction(project, jj, journal)
+
+    if current_head != journal.get("active_head"):
+        return _journal_row(journal, "project moved; keep prepared result")
 
     if state is not None:
         state["journal_state"] = "prepared"
@@ -1301,9 +1370,10 @@ def _workspace_repo(path: Path) -> Path | None:
 
 def _orphan_temporaries(
     roots: list[Path],
-    direct_roots: list[Path] | None = None,
+    tracked_paths: dict[Path, set[str]],
+    ignore_rule_active: bool,
 ) -> list[dict[str, str]]:
-    """Find ignored JSON write temporaries below the supplied roots."""
+    """Find write temporaries inside this repository's workspaces."""
 
     excluded = STATE_EXCLUDES | {".git", ".jj"}
     found: dict[str, dict[str, str]] = {}
@@ -1316,14 +1386,32 @@ def _orphan_temporaries(
             for name in files:
                 if name.startswith(TEMP_PREFIX):
                     path = current_path / name
-                    found[str(path)] = {"path": str(path), "ignored": "true"}
-    for root in direct_roots or []:
-        if not root.is_dir():
-            continue
-        for path in root.iterdir():
-            if path.name.startswith(TEMP_PREFIX) and path.is_file():
-                found[str(path)] = {"path": str(path), "ignored": "true"}
+                    relative_path = path.relative_to(root).as_posix()
+                    ignored = (
+                        ignore_rule_active
+                        and relative_path not in tracked_paths.get(root, set())
+                    )
+                    found[str(path)] = {
+                        "path": str(path),
+                        "ignored": str(ignored).lower(),
+                    }
     return [found[name] for name in sorted(found)]
+
+
+def _cleanup_path_problem(project: Path, path: Path) -> str | None:
+    """Return why a cleanup path must not be removed."""
+
+    if path.is_symlink():
+        return f"cleanup path is a symlink: {path}"
+    resolved = path.resolve()
+    project_root = project.resolve()
+    if (
+        resolved == project_root
+        or resolved in project_root.parents
+        or project_root in resolved.parents
+    ):
+        return f"cleanup path overlaps the project: {path}"
+    return None
 
 
 def recover(project: Path, prune: bool = False) -> dict[str, Any]:
@@ -1333,97 +1421,200 @@ def recover(project: Path, prune: bool = False) -> dict[str, Any]:
     jj = JJ(project)
     with project_lock(project):
         exclude_local_state(project)
-        tracked_local_state = _tracked_local_state(jj.tracked_paths("@"))
+        active_paths = jj.tracked_paths("@")
+        tracked_local_state = _tracked_local_state(active_paths)
         repaired: list[dict[str, str]] = []
         if prune:
             for name in tracked_local_state:
                 jj.run("file", "untrack", name)
                 repaired.append({"kind": "tracked_local_state", "path": name})
-        transactions: list[dict[str, Any]] = []
+
+        data = marker(project)
+        project_id = str(data["project_id"])
         directory = project / JOURNAL_DIR
         journal_files = sorted(directory.glob("*.json")) if directory.is_dir() else []
-        preview_sidecar_roots: list[Path] = []
-        for path in journal_files:
-            journal = read_json(path)
-            if journal.get("kind") == "update":
-                preview_sidecar_roots.append(
-                    Path(str(journal.get("workspace_path", ""))).parent,
-                )
-            transactions.append(_reconcile_journal(project, jj, journal))
+        journal_names = {path.stem for path in journal_files}
+        protected_workspace_names = set(journal_names)
+        parsed: list[tuple[Path, dict[str, Any]]] = []
+        damaged: list[dict[str, str]] = []
+        protected_layer_dirs: set[Path] = set()
 
-        journals = {
-            str(row.get("workspace")): row
-            for row in (
-                read_json(path) for path in sorted(directory.glob("*.json"))
-            )
-        } if directory.is_dir() else {}
+        for path in journal_files:
+            try:
+                journal = read_json(path)
+            except Exception as exc:
+                damaged.append({"path": str(path), "message": str(exc)})
+                continue
+            workspace = journal.get("workspace")
+            if isinstance(workspace, str):
+                protected_workspace_names.add(workspace)
+            temporary_path = journal.get("temporary_path")
+            if journal.get("kind") == "layer_add" and isinstance(temporary_path, str):
+                protected_layer_dirs.add(Path(temporary_path).resolve())
+            parsed.append((path, journal))
+
         workspace_rows = jj.workspaces()
-        journal_names = set(journals)
+        for row in workspace_rows:
+            name = row["name"]
+            if not re.fullmatch(r"copyroom-[0-9a-f]{12}", name) or name in journal_names:
+                continue
+            workspace_path = Path(row["path"])
+            try:
+                state = _preview_state_for_workspace(
+                    project, name, workspace_path, project_id,
+                )
+                if state is not None:
+                    journal = _journal_from_preview_state(project, state)
+                    path = _write_journal(project, journal)
+                    journal_names.add(name)
+                    protected_workspace_names.add(name)
+                    parsed.append((path, journal))
+            except Exception as exc:
+                damaged.append({
+                    "path": str(_state_path(project, name)),
+                    "message": str(exc),
+                })
+                protected_workspace_names.add(name)
+
+        transactions: list[dict[str, Any]] = []
+        remaining_journals: dict[str, dict[str, Any]] = {}
+        resolved_workspace_names: set[str] = set()
+        for path, journal in parsed:
+            workspace = str(journal.get("workspace", path.stem))
+            try:
+                row = _reconcile_journal(project, jj, journal)
+                should_cleanup = bool(row.pop("_cleanup", False))
+                if prune and should_cleanup:
+                    _cleanup_transaction(project, journal)
+                    row["action"] = "discarded stale prepared result"
+                    row["journal_state"] = "discarded"
+                    resolved_workspace_names.add(workspace)
+                elif not path.exists():
+                    resolved_workspace_names.add(workspace)
+                elif path.exists():
+                    remaining_journals[path.stem] = journal
+                transactions.append(row)
+            except Exception as exc:
+                damaged.append({"path": str(path), "message": str(exc)})
+                protected_workspace_names.add(workspace)
+                temporary_path = journal.get("temporary_path")
+                if journal.get("kind") == "layer_add" and isinstance(temporary_path, str):
+                    protected_layer_dirs.add(Path(temporary_path).resolve())
+
         orphan_workspaces = [
             row for row in workspace_rows
-            if row["name"].startswith(WORKSPACE_PREFIX) and row["name"] not in journal_names
+            if (
+                re.fullmatch(r"copyroom-[0-9a-f]{12}", row["name"])
+                and row["name"] not in remaining_journals
+                and row["name"] not in protected_workspace_names
+                and row["name"] not in resolved_workspace_names
+            )
         ]
-        referenced_layer_dirs = {
-            str(Path(str(journal.get("temporary_path"))).resolve())
-            for journal in journals.values()
-            if journal.get("kind") == "layer_add" and journal.get("temporary_path")
-        }
         repo_path = (project / ".jj" / "repo").resolve()
         orphan_layer_dirs: list[dict[str, str]] = []
         temporary_root = Path(tempfile.gettempdir())
         for path in sorted(temporary_root.glob("copyroom-layer-*")):
-            if str(path.resolve()) in referenced_layer_dirs:
+            if not re.fullmatch(r"copyroom-layer-[0-9a-f]{32}", path.name):
+                continue
+            if path.resolve() in protected_layer_dirs:
                 continue
             workspace_repo = _workspace_repo(path / "workspace")
             if workspace_repo == repo_path:
+                problem = _cleanup_path_problem(project, path)
+                if problem:
+                    damaged.append({"path": str(path), "message": problem})
+                    continue
                 orphan_layer_dirs.append({"path": str(path), "repository": str(repo_path)})
 
-        scan_roots = [project]
-        for row in workspace_rows:
-            workspace_path = Path(row["path"])
-            scan_roots.append(workspace_path)
-        scan_roots.extend(Path(row["path"]) for row in orphan_layer_dirs)
-        scan_roots = list(dict.fromkeys(scan_roots))
-        direct_roots = [
-            root for root in dict.fromkeys(
-                [*preview_sidecar_roots, *(Path(row["path"]).parent for row in orphan_workspaces)],
-            )
-            if root != project and project not in root.parents
-        ]
-        write_temporaries = _orphan_temporaries(scan_roots, direct_roots)
+        scan_roots = [project, *(Path(row["path"]) / "workspace" for row in orphan_layer_dirs)]
+        tracked_by_root = {project: active_paths}
+        for root in scan_roots[1:]:
+            try:
+                tracked_by_root[root] = set(JJ(root).tracked_paths("@"))
+            except LocalError:
+                tracked_by_root[root] = set()
+        write_temporaries = _orphan_temporaries(
+            list(dict.fromkeys(scan_roots)),
+            tracked_by_root,
+            temp_exclude_active(project),
+        )
 
         pruned: list[dict[str, str]] = []
         if prune:
             for row in orphan_workspaces:
                 path = Path(row["path"])
-                jj.run("workspace", "forget", row["name"])
-                if path.is_dir():
-                    shutil.rmtree(path)
-                _state_path(project, row["name"]).unlink(missing_ok=True)
-                _preview_sidecar(path).unlink(missing_ok=True)
-                pruned.append({"kind": "workspace", "path": row["path"]})
+                try:
+                    problem = _cleanup_path_problem(project, path)
+                    if problem:
+                        raise LocalError(problem)
+                    jj.run("workspace", "forget", row["name"])
+                    layer_workspace_paths = {
+                        Path(layer_row["path"]) / "workspace"
+                        for layer_row in orphan_layer_dirs
+                    }
+                    if path.is_dir() and path not in layer_workspace_paths:
+                        shutil.rmtree(path)
+                    _state_path(project, row["name"]).unlink(missing_ok=True)
+                    _preview_sidecar(path).unlink(missing_ok=True)
+                    pruned.append({"kind": "workspace", "path": row["path"]})
+                except Exception as exc:
+                    damaged.append({"path": row["path"], "message": str(exc)})
             for row in orphan_layer_dirs:
-                shutil.rmtree(row["path"])
-                pruned.append({"kind": "layer_directory", "path": row["path"]})
+                path = Path(row["path"])
+                try:
+                    if damaged:
+                        continue
+                    problem = _cleanup_path_problem(project, path)
+                    if problem or _workspace_repo(path / "workspace") != repo_path:
+                        raise LocalError(problem or "layer workspace belongs to another repository")
+                    shutil.rmtree(path)
+                    pruned.append({"kind": "layer_directory", "path": row["path"]})
+                except Exception as exc:
+                    damaged.append({"path": row["path"], "message": str(exc)})
             for row in write_temporaries:
                 path = Path(row["path"])
-                path.unlink(missing_ok=True)
-                pruned.append({"kind": "write_temporary", "path": str(path)})
+                try:
+                    path.unlink(missing_ok=True)
+                    pruned.append({"kind": "write_temporary", "path": str(path)})
+                except OSError as exc:
+                    damaged.append({"path": str(path), "message": str(exc)})
 
-        pending = any(
-            row["journal_state"] != "published"
-            or "published" not in str(row["action"])
-            for row in transactions
-        )
+        pending_review: list[dict[str, Any]] = []
+        pending_recovery: list[dict[str, Any]] = []
+        for row in transactions:
+            action = str(row["action"])
+            if (
+                row.get("kind") == "update"
+                and row.get("journal_state") == "prepared"
+                and "discarded" not in action
+                and "incomplete preparation removed" not in action
+                and "published" not in action
+                and "missing" not in action
+            ):
+                pending_review.append(row)
+            elif (
+                row.get("journal_state") == "publishing"
+                or row.get("kind") == "layer_add"
+                and row.get("journal_state") == "prepared"
+                and row.get("prepared_head")
+                or "missing" in action
+                or "unverified" in action
+                or "uncertain" in action
+            ):
+                pending_recovery.append(row)
         has_orphans = bool(orphan_workspaces or orphan_layer_dirs or write_temporaries)
         return {
             "project": str(project),
             "ok": (
-                not pending
+                not pending_recovery
+                and not damaged
                 and (prune or not has_orphans)
                 and (prune or not tracked_local_state)
             ),
             "transactions": transactions,
+            "pending_review": pending_review,
+            "pending_recovery": pending_recovery,
+            "damaged": damaged,
             "tracked_local_state": tracked_local_state,
             "orphans": {
                 "workspaces": orphan_workspaces,
@@ -1575,7 +1766,7 @@ def discard(out: Path) -> dict[str, str]:
     """Discard a preview workspace without changing the project."""
 
     out = normalize_path(out)
-    state = _load_preview(out)
+    state = _load_preview(out, require_workspace=False)
     project = normalize_path(Path(str(state["project"])))
     with project_lock(project):
         current = marker(project)
@@ -1744,8 +1935,10 @@ def status(project: Path) -> dict[str, Any]:
 
     report = inspect(project)
     report["has_pending_publication"] = any(
-        transaction["kind"] == "layer_add"
-        or transaction["journal_state"] in {"publishing", "published"}
+        transaction["journal_state"] == "publishing"
+        or transaction["kind"] == "layer_add"
+        and transaction["journal_state"] == "prepared"
+        and bool(transaction["prepared_head"])
         for transaction in report["pending_transactions"]
     )
     report["ok"] = all(

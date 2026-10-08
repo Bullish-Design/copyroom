@@ -201,6 +201,19 @@ def exclude_local_state(project: Path) -> None:
             stream.write("\n".join(missing) + "\n")
 
 
+def temp_exclude_active(project: Path) -> bool:
+    """Return whether jj's backing Git directory has the temp rule."""
+
+    git_directory = _jj_git_directory(project) or _git_directory(project)
+    if git_directory is None:
+        return False
+    exclude = git_directory / "info" / "exclude"
+    try:
+        return TEMP_EXCLUDE in exclude.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return False
+
+
 def is_colocated(project: Path) -> bool:
     """Return whether jj uses the Git directory attached to this workspace."""
 
@@ -281,5 +294,6 @@ __all__ = [
     "JOURNAL_DIR", "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION", "SOURCE_DIR", "STATE_DIR",
     "TEMP_EXCLUDE", "TEMP_PREFIX",
     "exclude_local_state", "marker", "marker_with_plan", "read_json", "resolve_source",
+    "temp_exclude_active",
     "snapshot_path", "snapshot_source", "write_json",
 ]

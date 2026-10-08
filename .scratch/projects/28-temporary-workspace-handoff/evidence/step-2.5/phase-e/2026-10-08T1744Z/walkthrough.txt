@@ -1,0 +1,78 @@
+
+== Create a project from a local Templateer source
+{
+  "jj": "/nix/store/w10748j1nsa40j6yjxvissjm8ljq4wlf-jujutsu-0.43.0/bin/jj",
+  "ok": true,
+  "templateer": "0.4.1"
+}
+{"project": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/project", "project_id": "3205fc6d918244e2b3bab1e90a20a714", "render": "9b35ff8423f8ae014abaa550affa0cd5fff9928b"}
+
+== Preview a source update while preserving a project-owned file
+{"active_head": "9895edfe4f16f3a22702a4875178b96214dff3f7", "active_tree": "0157cec448660879f2de3f3c7940054df5eb7aae20cc8362a67828a995407ac0", "answers": {"description": "Local example with \"quotes\" and YAML: true", "module": "cedar_lab", "project_name": "cedar-lab", "python_version": "3.13"}, "composer_digest": "c9164ced7639eac14671b62db4fa838c3f3fff726a07655a83d3bd002da9d28a", "conflicts": [], "journal_state": "prepared", "layer": "base", "manifest_digest": "ec7131977437fc7bb5b7bece0f73eee45e8ac37450afa8ef597007543fea04e2", "marker_digest": "c183ef0fbc7964fe6f07edd6d5ada743dc20e0b11d42d154e3aafca198fbb655", "next_render": "710c0a42f32d16d2717909724a183eb294fae89a", "old_render": "9b35ff8423f8ae014abaa550affa0cd5fff9928b", "owners": {"README.md": "readme", "config/project.yml": "settings", "pyproject.toml": "pyproject", "scripts/about.py": "about", "src/cedar_lab/__init__.py": "module"}, "path": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/update-preview", "prepared_head": "ca170ea6587bd027de450acd50033dc575bd7abd", "prepared_marker_digest": "d0430362a86a81c923f5ef84f56e8edc20e19f4345550bda6e4bc6de1a2755d9", "preview_head": "ca170ea6587bd027de450acd50033dc575bd7abd", "preview_tree": "2e20e6a8bc3a7430e689add7c333f77c71e7c842561cc5b6a5257d1825eb04f8", "project": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/project", "project_id": "3205fc6d918244e2b3bab1e90a20a714", "record_metadata": null, "render_digest": "288cd6c2d5da8f255c6213300d3faa14e2ac76223a8734f0da9a0bba56ac62c5", "revision": 1, "schema": 2, "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source", "source_digest": "2e7411c764aee1d7940aa0db8db3a2d3b6b18757f8d06ec204e14a69d519be2c", "templateer_digest": "546da3193a23fb05ce7f5f53999788c6c3c9c204e7ade0ba58f1820836500b8b", "templateer_version": "0.4.1", "workspace": "copyroom-a012191cec37"}
+[{"conflicts": [], "journal_state": "prepared", "path": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/update-preview", "source_digest": "2e7411c764aee1d7940aa0db8db3a2d3b6b18757f8d06ec204e14a69d519be2c", "workspace": "copyroom-a012191cec37"}]
+{"project": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/project", "render": "710c0a42f32d16d2717909724a183eb294fae89a"}
+
+== Render and compare a full workshop golden tree
+{"id": "walkthrough", "registry": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/workshop/registry/walkthrough.yml", "scenario": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/workshop/scenarios/walkthrough/default.yml"}
+{"entries": [{"description": null, "id": "walkthrough", "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source"}], "ok": true, "problems": {}}
+{"files": ["README.md", "config/project.yml", "pyproject.toml", "scripts/about.py", "src/cedar_lab/__init__.py"], "output": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/workshop/generated/walkthrough/default", "render_digest": "288cd6c2d5da8f255c6213300d3faa14e2ac76223a8734f0da9a0bba56ac62c5", "result": "rendered", "scenario": "default", "template": "walkthrough"}
+{"audit": "passed", "golden": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/workshop/goldens/walkthrough/default", "render_digest": "288cd6c2d5da8f255c6213300d3faa14e2ac76223a8734f0da9a0bba56ac62c5", "result": "golden-refreshed", "scenario": "default", "template": "walkthrough"}
+{"added": [], "changed": [], "removed": [], "render_digest": "288cd6c2d5da8f255c6213300d3faa14e2ac76223a8734f0da9a0bba56ac62c5", "result": "match", "scenario": "default", "template": "walkthrough"}
+
+== Inspect, templatize, and adopt a local source
+{
+  "answers": {
+    "description": "Local example with \"quotes\" and YAML: true",
+    "module": "cedar_lab",
+    "project_name": "cedar-lab",
+    "python_version": "3.13"
+  },
+  "conflicts": [],
+  "has_marker_render_mismatch": false,
+  "layers": {
+    "base": {
+      "marker_render_mismatch": false,
+      "owners": {
+        "README.md": "readme",
+        "config/project.yml": "settings",
+        "pyproject.toml": "pyproject",
+        "scripts/about.py": "about",
+        "src/cedar_lab/__init__.py": "module"
+      },
+      "render_head": "710c0a42f32d16d2717909724a183eb294fae89a",
+      "revision": 1,
+      "snapshot_reachable": true,
+      "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source",
+      "source_digest": "2e7411c764aee1d7940aa0db8db3a2d3b6b18757f8d06ec204e14a69d519be2c",
+      "source_reachable": true
+    }
+  },
+  "marker_render_mismatches": [],
+  "owners": {
+    "README.md": "base",
+    "config/project.yml": "base",
+    "pyproject.toml": "base",
+    "scripts/about.py": "base",
+    "src/cedar_lab/__init__.py": "base"
+  },
+  "pending_previews": [],
+  "pending_transactions": [],
+  "project": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/project",
+  "project_id": "3205fc6d918244e2b3bab1e90a20a714",
+  "render_head": "710c0a42f32d16d2717909724a183eb294fae89a",
+  "revision": 1,
+  "snapshot_reachable": true,
+  "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source",
+  "source_digest": "2e7411c764aee1d7940aa0db8db3a2d3b6b18757f8d06ec204e14a69d519be2c",
+  "source_reachable": true,
+  "working_tree_digest": "2a299e207ae48dce721d277bd11829d7d2b5c0efa45f1b25537c9a7c489eed1e"
+}
+{"files": 6, "golden_exact": true, "parameterized": [], "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/extracted-source", "static": 0, "symlinks": 0, "templates": 6}
+{"changed": [], "changed_detail": {}, "exact": false, "prefix_collisions": [], "project": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/adopted", "project_only": ["notes.md"], "project_tree_preserved": true, "render": "fa90b1cb2f7acf9e5a5eceb42271b0315e880cf1", "result": "adopted", "source_digest": "2e7411c764aee1d7940aa0db8db3a2d3b6b18757f8d06ec204e14a69d519be2c", "template_only": []}
+
+== Create an isolated candidate template workspace
+{"base_head": "ced34c4b2f3614defb726007fb1c645730b8644d", "candidate": "/tmp/copyroom-walkthrough-avpg8z1q", "result": "candidate-ready", "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source", "template": "walkthrough"}
+{"result": "candidate-passed", "scenarios": [{"added": [], "changed": [], "removed": [], "render_digest": "288cd6c2d5da8f255c6213300d3faa14e2ac76223a8734f0da9a0bba56ac62c5", "result": "match", "scenario": "default", "template": "walkthrough"}], "template": "walkthrough"}
+{"result": "candidate-discarded", "source": "/tmp/copyroom-templateer-walkthrough-zzJ8ii/source", "template": "walkthrough"}
+
+Walkthrough complete. The project and source used local files, Templateer, and jj.

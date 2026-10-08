@@ -377,9 +377,9 @@ Changes:
    the journal, the workspace and the temporary directory.
 2. When the layer does **not** exist in the marker, keep the prepared result and
    say so, with a retry instruction.
-3. Narrow `has_pending_publication` so it is true only for a transaction that
-   needs action: `journal_state in {"publishing"}`, or a `prepared` transaction
-   that still has a `prepared_head`.
+3. Narrow `has_pending_publication` to a `publishing` transaction or a prepared
+   `layer_add` transaction that has a `prepared_head`. A prepared update is
+   pending review, not pending publication.
 
 ### E3. Separate pending review from pending recovery (F7)
 
@@ -415,10 +415,11 @@ The loop at `workflow.py:1164-1170` has no per-journal guard. A missing
 or copied project trips the project-path check (`workflow.py:1056`). Either way
 `recover` exits 2 and reports no other journal and no orphans.
 
-Wrap each journal in `try/except LocalError`, collect the failures into a
+Wrap each journal in a per-journal exception handler, collect failures into a
 `damaged` list with the file path and the message, and carry on. Report
-`damaged` in the output and count it in `ok`. Let `--prune` remove a journal the
-user has named, and nothing else.
+`damaged` in the output and count it in `ok`. The CLI has no journal selector,
+so `--prune` must keep damaged journals and their workspaces. Do not infer which
+damaged data the user meant to remove.
 
 Make the temporary-directory checks `TMPDIR`-independent.
 `_cleanup_transaction` requires the layer directory's parent to equal the live
@@ -433,9 +434,9 @@ project, and `workspace_path == temporary_path / "workspace"`.
 `_orphan_temporaries` scans the shared preview parent directories through
 `direct_roots` (`workflow.py:1126-1150`). A second project writing a sidecar
 into the same default `.copyroom-previews/` can lose its `.copyroom-tmp-*` file
-before its `os.replace`. Restrict the `direct_roots` scan to temporaries whose
-sibling target belongs to this project, or skip shared parents unless the user
-names them.
+before its `os.replace`. The CLI has no path selector. Skip external preview
+parents. Scan only the project and verified temporary workspaces for this jj
+repository.
 
 Also verify the `ignored` field instead of hardcoding `"ignored": "true"`
 (`workflow.py:1143`, `:1149`).
@@ -449,8 +450,9 @@ Also verify the `ignored` field instead of hardcoding `"ignored": "true"`
 | `test_recover_clears_a_dead_layer_journal` | The E2 reproduction. After `--prune`, `status.ok` is true and the temporary directory is gone. |
 | `test_recover_reports_pending_review_and_exits_zero` | A normal prepared preview gives exit 0 and `pending_review`. |
 | `test_recover_handles_a_missing_preview_directory` | After `rmtree(out)`, `--prune` clears the transaction and `list_previews` is empty. |
-| `test_recover_reports_a_damaged_journal_and_continues` | Two journals, one with a `prepared_head` that does not exist. Assert the good one is reconciled, the bad one is in `damaged`, and the orphan report is present. |
+| `test_recover_reports_a_damaged_journal_and_continues` | Two journals, one with a `prepared_head` that does not exist. Assert the good one is reconciled, the bad one is in `damaged`, and the orphan report is present. `--prune` keeps the damaged journal because it cannot name one journal. |
 | `test_recover_works_under_a_changed_tmpdir` | Prepare a layer transaction, change `TMPDIR`, then recover. |
+| `test_recover_does_not_prune_a_shared_preview_temporary` | A temporary in a shared preview parent remains while another project runs `recover --prune`. |
 
 ## Phase F — Turn the crash matrix into an asserting test (finding F5)
 

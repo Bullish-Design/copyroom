@@ -1,0 +1,115 @@
+.F......F.F..F                                                           [100%]
+=================================== FAILURES ===================================
+_ LocalTemplateerJJTests.test_recover_clears_a_dead_layer_journal_after_retry __
+
+self = <integration.test_local_templateer_jj.LocalTemplateerJJTests testMethod=test_recover_clears_a_dead_layer_journal_after_retry>
+
+    def test_recover_clears_a_dead_layer_journal_after_retry(self) -> None:
+        self.create()
+        overlay = self.make_overlay()
+        journal = self.interrupt_layer_add(overlay)
+        (self.project / "writer.txt").write_text("writer commit\n", encoding="utf-8")
+        JJ(self.project).run("commit", "-m", "test: move project head")
+    
+        interrupted = recover(self.project)
+>       self.assertIn("retry layer add", interrupted["pending_recovery"][0]["action"])
+E       AssertionError: 'retry layer add' not found in 'project moved; keep prepared result'
+
+tests/integration/test_local_templateer_jj.py:856: AssertionError
+_ LocalTemplateerJJTests.test_recover_prunes_orphan_workspace_and_layer_directory _
+
+self = <integration.test_local_templateer_jj.LocalTemplateerJJTests testMethod=test_recover_prunes_orphan_workspace_and_layer_directory>
+
+    def test_recover_prunes_orphan_workspace_and_layer_directory(self) -> None:
+        self.create()
+        layer_root = Path(tempfile.gettempdir()) / f"copyroom-layer-orphan-{self.root.name}"
+        workspace = layer_root / "workspace"
+        workspace.mkdir(parents=True)
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-000000000001", "-r", "root()", str(workspace),
+        )
+    
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertEqual("copyroom-000000000001", report["orphans"]["workspaces"][0]["name"])
+        self.assertEqual(str(layer_root), report["orphans"]["layer_directories"][0]["path"])
+    
+        pruned = recover(self.project, prune=True)
+>       self.assertTrue(pruned["ok"])
+E       AssertionError: False is not true
+
+tests/integration/test_local_templateer_jj.py:1022: AssertionError
+_ LocalTemplateerJJTests.test_recover_reports_one_damaged_journal_and_continues _
+
+self = <integration.test_local_templateer_jj.LocalTemplateerJJTests testMethod=test_recover_reports_one_damaged_journal_and_continues>
+
+    def test_recover_reports_one_damaged_journal_and_continues(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        good = preview(self.project, self.root / "good-preview")
+        bad = preview(self.project, self.root / "bad-preview")
+        bad_path = workflow_module._journal_path(self.project, bad["workspace"])
+        broken = json.loads(bad_path.read_text(encoding="utf-8"))
+        broken["prepared_head"] = "0" * 40
+        bad_path.write_text(json.dumps(broken), encoding="utf-8")
+        orphan = self.root / "orphan-preview"
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-000000000003", "-r", "root()",
+            str(orphan),
+        )
+    
+        report = recover(self.project)
+    
+        self.assertFalse(report["ok"])
+        self.assertEqual(good["workspace"], report["pending_review"][0]["workspace"])
+>       self.assertEqual(str(bad_path), report["damaged"][0]["path"])
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/integration/test_local_templateer_jj.py:934: IndexError
+_ LocalTemplateerJJTests.test_recover_uses_the_layer_journal_after_tmpdir_changes _
+
+self = <integration.test_local_templateer_jj.LocalTemplateerJJTests testMethod=test_recover_uses_the_layer_journal_after_tmpdir_changes>
+
+    def test_recover_uses_the_layer_journal_after_tmpdir_changes(self) -> None:
+        self.create()
+        overlay = self.make_overlay()
+        journal = self.interrupt_layer_add(overlay)
+        temporary_path = Path(str(journal["temporary_path"]))
+        new_tmpdir = self.root / "new-tmpdir"
+        new_tmpdir.mkdir()
+        old_tempdir = tempfile.tempdir
+>       with patch.dict(os.environ, {"TMPDIR": str(new_tmpdir)}):
+                        ^^
+E       NameError: name 'os' is not defined. Did you forget to import 'os'?
+
+tests/integration/test_local_templateer_jj.py:963: NameError
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.14-final-0 _______________
+
+Name                               Stmts   Miss  Cover   Missing
+----------------------------------------------------------------
+src/copyroom/__init__.py               6      2    67%   9-10
+src/copyroom/__main__.py               3      3     0%   3-7
+src/copyroom/cli.py                  222    222     0%   3-517
+src/copyroom/local/__init__.py         2      0   100%
+src/copyroom/local/composer.py       270    103    62%   68, 72, 80, 84, 117, 124, 135, 143-155, 161-169, 184, 191-192, 194, 201, 204-219, 226, 229-235, 256-269, 282, 284, 286, 290-291, 299-300, 302, 305, 310-311, 317-318, 320, 329-331, 333, 336, 344-357, 360, 364
+src/copyroom/local/edits.py          142    142     0%   24-345
+src/copyroom/local/errors.py           4      0   100%
+src/copyroom/local/generation.py      65     49    25%   39-103, 117-120, 135-149
+src/copyroom/local/jj.py              74      8    89%   26, 33-34, 42, 62-66, 82, 130
+src/copyroom/local/manage.py         209    184    12%   46, 55, 64-81, 101-225, 231, 237-239, 245, 251-252, 266-371
+src/copyroom/local/source.py         188     63    66%   31-32, 34, 44-45, 48-49, 78-79, 82, 95, 97, 99, 114, 117, 120-122, 132, 139-142, 144-145, 158-161, 166-169, 184-187, 200, 209, 213-214, 220-222, 231-245, 256-257, 259, 266-267
+src/copyroom/local/workflow.py      1042    322    69%   63, 71, 94, 119, 124-128, 153, 164-166, 168-173, 175, 205-207, 216-218, 226, 230, 233, 249, 252, 254, 269, 281, 290, 307-317, 335, 338-340, 350-360, 381, 406-407, 413, 420, 432-433, 436, 443, 469-470, 507, 511, 516-532, 540-542, 549-550, 553, 565-567, 597-598, 601, 615, 632-642, 657, 671, 673, 678, 720, 759-797, 799-806, 825-831, 858, 864, 866, 868, 871, 873, 891, 903, 933-934, 947, 949, 966, 1007-1015, 1035, 1044, 1055-1060, 1097, 1112, 1117, 1127-1129, 1146-1149, 1171-1263, 1276, 1281-1282, 1285, 1295-1296, 1316-1318, 1334-1337, 1344, 1358, 1360, 1364-1365, 1379, 1397, 1405, 1436-1438, 1463-1468, 1484, 1488-1493, 1514-1515, 1530, 1537-1538, 1543, 1547-1548, 1556-1557, 1613, 1621-1624, 1627, 1634, 1636, 1638, 1640, 1645, 1651-1657, 1663, 1669, 1694-1733, 1739, 1751, 1764, 1768, 1816, 1826, 1842, 1863, 1873-1874, 1933-1943
+src/copyroom/local/workshop.py       312    268    14%   29-31, 37-52, 56-62, 68-87, 93-106, 112-125, 131, 137-145, 156-181, 185-188, 192-194, 198-200, 206, 210-218, 229-231, 244-253, 265-295, 315-332, 350-365, 369, 378-404, 408-417, 423-433, 443-498, 517-521, 527-534
+----------------------------------------------------------------
+TOTAL                               2539   1366    46%
+=========================== short test summary info ============================
+FAILED tests/integration/test_local_templateer_jj.py::LocalTemplateerJJTests::test_recover_clears_a_dead_layer_journal_after_retry
+FAILED tests/integration/test_local_templateer_jj.py::LocalTemplateerJJTests::test_recover_prunes_orphan_workspace_and_layer_directory
+FAILED tests/integration/test_local_templateer_jj.py::LocalTemplateerJJTests::test_recover_reports_one_damaged_journal_and_continues
+FAILED tests/integration/test_local_templateer_jj.py::LocalTemplateerJJTests::test_recover_uses_the_layer_journal_after_tmpdir_changes

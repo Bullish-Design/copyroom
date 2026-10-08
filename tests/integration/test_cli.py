@@ -64,6 +64,27 @@ def test_inspect_and_status_emit_local_json(tmp_path: Path) -> None:
         assert report["source_digest"]
 
 
+def test_recover_pending_preview_exits_zero(tmp_path: Path) -> None:
+    source, answers = _source(tmp_path)
+    project = tmp_path / "project"
+    created = _run("new", str(source), str(project), "--answers", str(answers), cwd=tmp_path)
+    assert created.returncode == 0, created.stderr
+    settings = source / "templates" / "settings" / "template.j2"
+    settings.write_text(settings.read_text(encoding="utf-8") + '\nrevision: "v2"\n')
+    prepared = _run(
+        "update", "--source", str(source), "--out", str(tmp_path / "preview"), cwd=project,
+    )
+    assert prepared.returncode == 0, prepared.stderr
+
+    recovered = _run("recover", "--json", cwd=project)
+
+    assert recovered.returncode == 0, recovered.stderr
+    report = json.loads(recovered.stdout)
+    assert report["ok"] is True
+    assert len(report["pending_review"]) == 1
+    assert report["pending_recovery"] == []
+
+
 def test_workshop_registry_and_golden_use_local_source(tmp_path: Path) -> None:
     source, _ = _source(tmp_path)
     workshop = tmp_path / "workshop"
