@@ -41,9 +41,9 @@ copyroom status
 copyroom update
 ```
 
-`copyroom update` prints the preview path. With no `--out` it creates a unique
-path beside the project, in `.copyroom-previews/`. Name the path yourself with
-`--out`:
+`copyroom update` prints a JSON preview state. Its `path` field names the
+preview workspace. With no `--out`, CopyRoom creates a unique path beside the
+project, in `.copyroom-previews/`. Set the path with `--out`:
 
 ```bash
 copyroom update --out ../app-update-1
@@ -68,6 +68,9 @@ The preview contains the next marker and the full prepared project tree. Its
 state records the active head, source digest, render head, and tracked-tree
 digest. CopyRoom publishes that prepared tree. It does not rerender during apply.
 
+If the source and answers produce no change, `copyroom update` returns
+`no-change` and exits `0`. It does not create a preview workspace.
+
 If CopyRoom stops during an apply or layer add, inspect and reconcile the saved
 state with:
 
@@ -75,13 +78,47 @@ state with:
 copyroom recover
 ```
 
-Recovery keeps a prepared update preview when the active project has moved. It
-finishes cleanup when the prepared result is already published. For layer add,
-recovery publishes a complete prepared layer when the active head still matches.
-It also lists orphan preview workspaces, layer directories, and JSON write
-temporaries. Use `copyroom recover --prune` to remove the listed orphans and
-temporaries. `copyroom status` reports pending publication and any mismatch
-between the marker and render head.
+Transaction journals live in `.copyroom-local/journal/`. Each journal has one
+of three states:
+
+- `prepared`: CopyRoom built a result. Publication has not started.
+- `publishing`: CopyRoom started publication. Recovery must check the result.
+- `published`: publication passed its checks. Cleanup may still be pending.
+
+`recover` keeps a prepared update preview for review. Apply it or discard it.
+For layer add, recovery publishes a complete prepared layer when the active
+head still matches. If another writer moved the head, keep the result and
+retry the layer add or prune the dead result.
+
+`recover` exits `0` when it has no pending recovery, damaged journal, or
+unpruned finding. A prepared update is pending review. It does not make
+`recover` exit `1`. The report separates `pending_review` from
+`pending_recovery`. Exit `1` reports a finding. Exit `2` reports an error.
+
+`recover` reports orphan workspaces, layer directories, and JSON write
+temporaries. An orphan is a workspace or temporary that no journal protects.
+Use `copyroom recover --prune` to remove safe orphans and temporaries. This
+command also untracks CopyRoom local state when needed.
+
+`layer add` stages its render under the system temporary directory. Its path
+starts with `copyroom-layer-`. Recovery tracks this path through the journal.
+
+`status` exits `1` when it finds a marker/render mismatch, a pending
+publication, a conflict, or another unhealthy project state. It prints a
+line for each finding to stderr. `inspect` reports the same mismatch data, but a
+mismatch does not change its exit code. Both commands can emit JSON with
+`--json`.
+
+The inspection report includes `marker_render_mismatches`,
+`pending_transactions`, and `pending_previews`. The status report adds
+`has_pending_publication`. The recovery report includes `pending_review`,
+`pending_recovery`, `damaged`, and `repaired`.
+
+Tree checks use paths that jj tracks. jj can refuse new files above its
+`snapshot.max-new-file-size` limit, which defaults to 1 MiB. The setting
+`snapshot.auto-track = none()` can also hide new files. CopyRoom prints jj's
+"Refused to snapshot some files" warning to stderr. A tree check cannot include
+a new file that jj did not track.
 
 Recovery also reports tracked preview, journal, lock, and write-temporary paths.
 Use `copyroom recover --prune` to untrack those paths. It keeps their files on
@@ -89,9 +126,9 @@ disk.
 
 ## Layers
 
-Each layer owns a separate set of paths and a separate jj render line. The base
-layer is created by `new`. Add an overlay with a local Templateer source and
-answers file:
+Each layer owns a separate set of paths and a separate jj render head. The
+base layer is created by `new`. Add an overlay with a local Templateer source
+and answers file:
 
 ```bash
 copyroom layer add --source ../docs-template --as docs \
@@ -128,8 +165,8 @@ project differs from the source. Use `--template-only keep` to save explicit
 omissions for paths that should remain outside template ownership.
 
 `adopt --write` requires an existing jj repository to be colocated with its
-Git directory. If the repository is not colocated, CopyRoom exits with code
-`2`. Run `jj git init --colocate`, then retry adoption.
+Git directory. A non-colocated repository makes CopyRoom exit with code `2`.
+Run `jj git init --colocate`, then retry adoption.
 
 Run these commands from the directory that holds the project and the source.
 Name the project with `--project`.
@@ -203,4 +240,4 @@ from that project's directory.
 
 `copyroom update-test` exits `0` and reports `no-change` when the candidate
 renders the same tree as the project. That result means the update path was not
-exercised.
+exercised. It exits `1` when the update preview has conflicts.
