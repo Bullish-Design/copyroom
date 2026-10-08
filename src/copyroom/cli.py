@@ -55,6 +55,10 @@ def _call(function: Any, *args: Any, json_output: bool = False, **kwargs: Any) -
     except LocalError as exc:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(code=exc.code) from exc
+    except Exception as exc:
+        detail = " ".join(str(exc).split()) or type(exc).__name__
+        typer.echo(f"Error: {detail}", err=True)
+        raise typer.Exit(code=2) from exc
     return _emit(result, json_output)
 
 
@@ -247,6 +251,22 @@ def status_command(
     if isinstance(report, dict) and (
         not report["ok"] or report["has_conflicts"] or report["has_marker_render_mismatch"]
     ):
+        reasons: list[str] = []
+        for mismatch in report["marker_render_mismatches"]:
+            layer = mismatch["layer"]
+            marker_subject = mismatch.get("marker_render") or "missing"
+            head_subjects = ",".join(
+                head["subject"] for head in mismatch.get("render_heads", [])
+            ) or "missing"
+            reasons.append(f"mismatch: {layer} marker={marker_subject} head={head_subjects}")
+        if report["has_pending_publication"]:
+            reasons.append("pending publication: run copyroom recover")
+        if report["has_conflicts"]:
+            reasons.append("conflicts: " + ", ".join(report["conflicts"]))
+        if not report["ok"] and not reasons:
+            reasons.append("project status is not ok")
+        for reason in reasons:
+            typer.echo(reason, err=True)
         raise typer.Exit(code=1)
 
 

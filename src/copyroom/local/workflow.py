@@ -794,7 +794,13 @@ def _attach_layer(
                     1,
                 )
             _set_journal_phase(project, journal, "published")
-            _cleanup_transaction(project, journal)
+            try:
+                _cleanup_transaction(project, journal)
+            except Exception as exc:
+                detail = " ".join(str(exc).split()) or type(exc).__name__
+                raise LocalError(
+                    f"published; cleanup pending: {detail}; run copyroom recover", 1,
+                ) from exc
         except Exception:
             if publication_returned or publication_error_handled:
                 raise
@@ -1730,7 +1736,7 @@ def apply(project: Path, out: Path) -> dict[str, str]:
                 ) from exc
             raise LocalError(
                 f"apply failed; publication did not complete; preview kept for review: {detail}",
-                1,
+                2,
             ) from exc
         problems = _verify_published(
             project,
@@ -1752,7 +1758,13 @@ def apply(project: Path, out: Path) -> dict[str, str]:
                 1,
             )
         _set_journal_phase(project, journal, "published", state)
-        _cleanup_transaction(project, journal)
+        try:
+            _cleanup_transaction(project, journal)
+        except Exception as exc:
+            detail = " ".join(str(exc).split()) or type(exc).__name__
+            raise LocalError(
+                f"published; cleanup pending: {detail}; run copyroom recover", 1,
+            ) from exc
     return {"project": str(project), "render": str(state["next_render"])}
 
 
@@ -1909,6 +1921,21 @@ def inspect(project: Path) -> dict[str, Any]:
             ),
             "owners": record["owners"],
         }
+    for mismatch in marker_render_mismatches:
+        name = str(mismatch["layer"])
+        if name in layers:
+            continue
+        heads = mismatch["render_heads"]
+        layers[name] = {
+            "source": None,
+            "source_digest": None,
+            "source_reachable": False,
+            "snapshot_reachable": False,
+            "revision": None,
+            "render_head": heads[0]["commit"] if len(heads) == 1 else None,
+            "marker_render_mismatch": True,
+            "owners": {},
+        }
     return {
         "project": str(project),
         "project_id": data["project_id"],
@@ -1946,7 +1973,7 @@ def status(project: Path) -> dict[str, Any]:
         for item in report["layers"].values()
     ) and not report["has_marker_render_mismatch"] and not report["has_pending_publication"]
     report["has_conflicts"] = bool(report["conflicts"])
-    report["has_marker_render_mismatch"] = bool(report["marker_render_mismatches"])
+    report["ok"] = report["ok"] and not report["has_conflicts"]
     return report
 
 

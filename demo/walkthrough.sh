@@ -77,6 +77,7 @@ EOF
 
 step "Inspect, templatize, and adopt a local source"
 copyroom inspect --project "$PROJECT" --json
+copyroom status --project "$PROJECT"
 copyroom templatize --project "$PROJECT" --target "$ROOT/extracted-source" --name sample
 cp -R "$PROJECT" "$ROOT/adopted"
 rm -rf "$ROOT/adopted/.jj" "$ROOT/adopted/.copyroom-local" "$ROOT/adopted/.copyroom-local.json"

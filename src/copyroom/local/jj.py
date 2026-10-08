@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import shutil
 import subprocess
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -32,6 +33,9 @@ class JJ:
         if result.returncode:
             detail = result.stderr.strip() or result.stdout.strip()
             raise LocalError(f"jj {' '.join(args)} failed ({result.returncode}): {detail}")
+        if "Refused to snapshot some files" in result.stderr:
+            warning = " ".join(result.stderr.split())
+            sys.stderr.write(warning + "\n")
         return result.stdout
 
     def commit_id(self, rev: str) -> str:
@@ -45,8 +49,8 @@ class JJ:
     def tracked_paths(self, rev: str = "@") -> set[str]:
         """Return paths in one revision's tracked tree."""
 
-        output = self.run("file", "list", "-r", rev)
-        return {line for line in output.splitlines() if line}
+        output = self.run("file", "list", "-r", rev, "-T", 'path ++ "\\0"')
+        return {path for path in output.split("\0") if path}
 
     def operation_id(self) -> str:
         """Return the current operation ID."""

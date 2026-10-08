@@ -583,9 +583,10 @@ state unlink; A6 is the sidecar unlink).
 
 ### G1. Count the active mutation honestly (F10)
 
-`apply` adds **two** operations to the shared repository: `jj new`
-(`workflow.py:1328`) and `jj workspace forget` from the project cwd
-(`workflow.py:431`). `test_apply_performs_one_active_working_copy_mutation`
+`apply` adds one active-head mutation and one cleanup forget to the shared
+repository: `jj new` (`workflow.py:1328`) and `jj workspace forget` from the
+project cwd (`workflow.py:431`).
+`test_apply_performs_one_active_head_mutation_plus_cleanup_forget`
 (`tests/integration/test_local_templateer_jj.py:118`) passes only because its
 filter is the allow-list `{new, commit, restore}` (`:129`).
 
@@ -595,10 +596,8 @@ the recorded mutating calls are exactly `[("new", …), ("workspace", "forget", 
 and rename the test and the claim to "one active-head mutation plus a cleanup
 forget". Also patch `subprocess.run` to catch any call that bypasses `JJ.run`.
 
-Add `test_apply_does_not_write_the_marker_before_publication`: wrap `JJ.run`
-and, on the `("new", prepared_head, …)` call with the project cwd, assert the
-marker bytes still equal the old marker and `tracked_tree_digest(project)`
-still equals `state["active_tree"]`. Nothing asserts this today.
+`test_apply_does_not_write_the_marker_before_publication` wraps `JJ.run`. At the
+project-cwd `new` call, it checks the old marker bytes and the saved active tree.
 
 ### G2. Report a cleanup failure as a cleanup failure (F12)
 

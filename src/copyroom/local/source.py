@@ -57,14 +57,21 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     The temporary file lives next to the target, so the rename stays atomic.
     Its name starts with ``TEMP_PREFIX``. One ignore rule matches that prefix,
     so a crash cannot leave a file that jj snapshots into history.
-    The steps are: write, fsync the file, chmod, rename, fsync the directory.
-    The output bytes are part of recorded digests. Do not change them.
+    Flush each new parent entry, then write, fsync, chmod, rename, and fsync
+    the target directory. Do not change the output bytes.
     """
 
     payload = json.dumps(data, indent=2, sort_keys=True) + "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
     temporary: Path | None = None
     try:
+        missing_directories: list[Path] = []
+        directory = path.parent
+        while not directory.exists():
+            missing_directories.append(directory)
+            directory = directory.parent
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for created_directory in reversed(missing_directories):
+            _fsync_directory(created_directory.parent)
         descriptor, name = tempfile.mkstemp(dir=path.parent, prefix=TEMP_PREFIX)
         temporary = Path(name)
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:

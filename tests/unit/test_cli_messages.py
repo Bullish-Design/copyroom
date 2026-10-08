@@ -112,3 +112,16 @@ def test_mode_option_still_works_with_subcommand() -> None:
 
     assert result.exit_code == 3
     assert "--mode must be" in result.output
+
+
+def test_unexpected_command_error_is_one_line_and_exits_two(tmp_path: Path, monkeypatch) -> None:
+    from copyroom.local import workflow
+
+    def fail_status(project: Path):
+        raise OSError("first line\nsecond line")
+
+    monkeypatch.setattr(workflow, "status", fail_status)
+    result = runner.invoke(app, ["status", "--project", str(tmp_path)])
+
+    assert result.exit_code == 2
+    assert result.stderr == "Error: first line second line\n"

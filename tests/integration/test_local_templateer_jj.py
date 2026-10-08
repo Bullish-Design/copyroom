@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -59,6 +60,18 @@ class LocalTemplateerJJTests(unittest.TestCase):
         shutil.copytree(SLICE / "example", self.source)
         self.answers = self.source / "answers.json"
         self.project = self.root / "project"
+        self.layer_temporary_baseline = set(
+            Path(tempfile.gettempdir()).glob("copyroom-layer-*")
+        )
+
+    def tearDown(self) -> None:
+        project_repo = (self.project / ".jj" / "repo").resolve()
+        leaked = []
+        for path in set(Path(tempfile.gettempdir()).glob("copyroom-layer-*")) - self.layer_temporary_baseline:
+            repo_pointer = path / "workspace" / ".jj" / "repo"
+            if repo_pointer.exists() and repo_pointer.resolve() == project_repo:
+                leaked.append(path)
+        self.assertEqual([], leaked, "test left a copyroom-layer-* directory")
 
     def create(self) -> None:
         new(self.source, self.project, self.answers)
@@ -203,7 +216,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(prepared_marker, (self.project / ".copyroom-local.json").read_bytes())
         self.assertEqual(state["prepared_head"], state["preview_head"])
 
-    def test_apply_performs_one_active_working_copy_mutation(self) -> None:
+    def test_apply_performs_one_active_head_mutation_plus_cleanup_forget(self) -> None:
         self.create()
         self.change_template(
             "settings",
@@ -211,20 +224,129 @@ class LocalTemplateerJJTests(unittest.TestCase):
             + '\nrevision: "v2"\n',
         )
         out = self.root / "single-mutation"
-        preview(self.project, out)
+        state = preview(self.project, out)
         original = JJ.run
         active_mutations: list[tuple[str, ...]] = []
+        mediated_calls: list[tuple[tuple[str, ...], Path]] = []
+        subprocess_calls: list[tuple[tuple[str, ...], Path]] = []
+        original_subprocess_run = subprocess.run
+        old_marker = (self.project / MARKER).read_bytes()
+
+        def read_only(args: tuple[str, ...]) -> bool:
+            return (
+                args[0] in {"log", "status", "show", "diff"}
+                or args[:2] in {
+                    ("file", "list"), ("op", "log"), ("workspace", "list"),
+                    ("resolve", "--list"),
+                }
+            )
 
         def record(jj: JJ, *args: str, **kwargs: object) -> str:
-            if jj.cwd == self.project and args[:1] in {("new",), ("commit",), ("restore",)}:
+            if jj.cwd == self.project and args and not read_only(args):
                 active_mutations.append(args)
-            return original(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                self.assertEqual(old_marker, (self.project / MARKER).read_bytes())
+                self.assertEqual(state["active_tree"], tracked_tree_digest(self.project))
+            result = original(jj, *args, **kwargs)
+            mediated_calls.append((args, jj.cwd))
+            return result
 
-        with patch.object(JJ, "run", record):
+        def record_subprocess(command: object, *args: object, **kwargs: object):
+            command_cwd = Path(str(kwargs.get("cwd", self.project)))
+            if isinstance(command, (list, tuple)) and command:
+                if Path(str(command[0])).name == "jj":
+                    subprocess_calls.append((tuple(str(item) for item in command[1:]), command_cwd))
+                elif str(command[0]) in {"bash", "sh", "zsh"}:
+                    script = command[-1] if len(command) > 1 else ""
+                    if "jj" in shlex.split(str(script)):
+                        subprocess_calls.append((("shell", str(script)), command_cwd))
+            elif isinstance(command, str):
+                tokens = shlex.split(command)
+                if tokens and Path(tokens[0]).name == "jj":
+                    subprocess_calls.append((tuple(tokens[1:]), command_cwd))
+                elif "jj" in tokens:
+                    subprocess_calls.append((("shell", command), command_cwd))
+            return original_subprocess_run(command, *args, **kwargs)
+
+        with (
+            patch.object(JJ, "run", record),
+            patch.object(subprocess, "run", record_subprocess),
+        ):
             apply(self.project, out)
 
-        self.assertEqual(1, len(active_mutations))
-        self.assertEqual("new", active_mutations[0][0])
+        self.assertEqual(["new", "workspace"], [args[0] for args in active_mutations])
+        self.assertEqual("forget", active_mutations[1][1])
+        self.assertEqual(mediated_calls, subprocess_calls)
+
+    def test_apply_does_not_write_the_marker_before_publication(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "publication-boundary-preview"
+        state = preview(self.project, out)
+        old_marker = (self.project / MARKER).read_bytes()
+        original = JJ.run
+
+        def check_before_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                self.assertEqual(old_marker, (self.project / MARKER).read_bytes())
+                self.assertEqual(state["active_tree"], tracked_tree_digest(self.project))
+            return original(jj, *args, **kwargs)
+
+        with patch.object(JJ, "run", check_before_publish):
+            apply(self.project, out)
+
+    def test_apply_reports_a_cleanup_failure_after_publication(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "cleanup-failure-preview"
+        preview(self.project, out)
+
+        with (
+            patch.object(
+                workflow_module, "_cleanup_transaction", side_effect=OSError("cleanup failed"),
+            ),
+            self.assertRaises(LocalError) as raised,
+        ):
+            apply(self.project, out)
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertIn("published; cleanup pending: cleanup failed", str(raised.exception))
+        journal = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        self.assertEqual("published", json.loads(journal.read_text())["journal_state"])
+        self.assertTrue(out.is_dir())
+        recover(self.project)
+        self.assertFalse(out.exists())
+
+    def test_layer_add_reports_a_cleanup_failure_after_publication(self) -> None:
+        self.create()
+        overlay = self.make_overlay()
+
+        with (
+            patch.object(
+                workflow_module, "_cleanup_transaction", side_effect=OSError("cleanup failed"),
+            ),
+            self.assertRaises(LocalError) as raised,
+        ):
+            add_layer(self.project, overlay, overlay / "answers.json", "docs")
+
+        self.assertEqual(1, raised.exception.code)
+        self.assertIn("published; cleanup pending: cleanup failed", str(raised.exception))
+        journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        temporary_path = Path(str(journal["temporary_path"]))
+        self.addCleanup(lambda: shutil.rmtree(temporary_path, ignore_errors=True))
+        self.assertEqual("published", journal["journal_state"])
+        self.assertTrue(temporary_path.exists())
+        recover(self.project)
+        self.assertFalse(temporary_path.exists())
 
     def test_apply_reports_a_published_tree_mismatch(self) -> None:
         self.create()
@@ -392,9 +514,86 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn("published result does not match the prepared layer", str(raised.exception))
         journal_path = next((self.project / ".copyroom-local/journal").glob("*.json"))
         journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        temporary_path = Path(str(journal["temporary_path"]))
+        self.addCleanup(lambda: shutil.rmtree(temporary_path, ignore_errors=True))
         self.assertEqual("publishing", journal["journal_state"])
         self.assertTrue(journal["verification"])
         self.assertFalse(status(self.project)["ok"])
+        shutil.rmtree(temporary_path)
+
+    def test_apply_wraps_unexpected_publication_failure_as_code_two(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "publication-error-preview"
+        preview(self.project, out)
+        original = JJ.run
+
+        def fail_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                raise OSError("jj could not start")
+            return original(jj, *args, **kwargs)
+
+        with (
+            patch.object(JJ, "run", fail_publish),
+            self.assertRaises(LocalError) as raised,
+        ):
+            apply(self.project, out)
+
+        self.assertEqual(2, raised.exception.code)
+        self.assertIn("jj could not start", str(raised.exception))
+
+    def test_status_includes_conflicts_in_ok(self) -> None:
+        self.create()
+        with patch.object(JJ, "conflicts", return_value=["README.md"]):
+            report = status(self.project)
+        self.assertTrue(report["has_conflicts"])
+        self.assertFalse(report["ok"])
+
+    def test_inspect_reports_orphan_render_layer(self) -> None:
+        self.create()
+        data = marker(self.project)
+        base_subject = workflow_module._render_subject(
+            data["project_id"], "base", data["revision"], data["source_digest"],
+        )
+        base_head = JJ(self.project).render_head(data["project_id"], "base")
+        orphan_subject = workflow_module._render_subject(
+            data["project_id"], "orphan", 0, data["source_digest"],
+        )
+        with patch.object(
+            JJ,
+            "render_heads",
+            return_value=[(base_head, base_subject), ("f" * 40, orphan_subject)],
+        ):
+            report = inspect(self.project)
+        self.assertTrue(report["layers"]["orphan"]["marker_render_mismatch"])
+        self.assertIsNone(report["layers"]["orphan"]["source"])
+
+    def test_inspect_reports_two_render_heads_for_one_layer(self) -> None:
+        self.create()
+        data = marker(self.project)
+        base_subject = workflow_module._render_subject(
+            data["project_id"], "base", data["revision"], data["source_digest"],
+        )
+        base_head = JJ(self.project).render_head(data["project_id"], "base")
+        with patch.object(
+            JJ,
+            "render_heads",
+            return_value=[(base_head, base_subject), ("f" * 40, base_subject)],
+        ):
+            report = inspect(self.project)
+        self.assertTrue(report["layers"]["base"]["marker_render_mismatch"])
+        self.assertEqual(2, len(report["marker_render_mismatches"][0]["render_heads"]))
+
+    def test_tracked_paths_preserves_newline_filenames(self) -> None:
+        self.create()
+        name = "line\nbreak.txt"
+        (self.project / name).write_text("tracked path\n", encoding="utf-8")
+        JJ(self.project).run("commit", "-m", "test: track newline path")
+        self.assertIn(name, JJ(self.project).tracked_paths())
 
     def test_recover_does_not_publish_an_unverified_result(self) -> None:
         self.create()

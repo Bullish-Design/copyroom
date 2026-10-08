@@ -64,6 +64,55 @@ def test_inspect_and_status_emit_local_json(tmp_path: Path) -> None:
         assert report["source_digest"]
 
 
+def test_status_exits_one_on_render_mismatch_and_inspect_reports_it(tmp_path: Path) -> None:
+    source, answers = _source(tmp_path)
+    project = tmp_path / "project"
+    created = _run("new", str(source), str(project), "--answers", str(answers), cwd=tmp_path)
+    assert created.returncode == 0, created.stderr
+    marker_path = project / ".copyroom-local.json"
+    marker_data = json.loads(marker_path.read_text(encoding="utf-8"))
+    marker_data["layers"]["base"]["revision"] += 1
+    marker_path.write_text(json.dumps(marker_data), encoding="utf-8")
+
+    reported = _run("status", "--json", cwd=project)
+    assert reported.returncode == 1
+    assert "mismatch: base marker=copyroom:render" in reported.stderr
+    assert json.loads(reported.stdout)["marker_render_mismatches"]
+
+    inspected = _run("inspect", "--json", cwd=project)
+    assert inspected.returncode == 0
+    assert json.loads(inspected.stdout)["marker_render_mismatches"]
+
+
+def test_jj_warning_stays_off_json_stdout(tmp_path: Path, monkeypatch) -> None:
+    from copyroom.local import workflow
+    from copyroom.local.jj import JJ
+
+    def report_with_warning(
+        project: Path, out: Path, source: Path | None, answers: Path | None, layer: str,
+    ) -> dict[str, str]:
+        return {"result": "warning-test", "path": JJ(project).run("new", "preview")}
+
+    monkeypatch.setattr(workflow, "preview", report_with_warning)
+    completed = subprocess.CompletedProcess(
+        ["jj", "new"], 0, "preview output\n", "Warning: Refused to snapshot some files: large.bin\n",
+    )
+    with (
+        patch("copyroom.local.jj.shutil.which", return_value="/usr/bin/jj"),
+        patch("copyroom.local.jj.subprocess.run", return_value=completed),
+    ):
+        result = CliRunner().invoke(
+            app,
+            [
+                "preview", "create", "--project", str(tmp_path), "--out",
+                str(tmp_path / "out"), "--json",
+            ],
+        )
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["result"] == "warning-test"
+    assert result.stderr == "Warning: Refused to snapshot some files: large.bin\n"
+
+
 def test_recover_pending_preview_exits_zero(tmp_path: Path) -> None:
     source, answers = _source(tmp_path)
     project = tmp_path / "project"

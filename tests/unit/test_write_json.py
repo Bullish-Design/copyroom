@@ -108,6 +108,40 @@ def test_directory_is_fsynced_after_rename(tmp_path: Path) -> None:
     assert order == ["fsync", "replace", "fsync"]
 
 
+def test_new_directory_entries_are_fsynced(tmp_path: Path) -> None:
+    import copyroom.local.source as source_module
+
+    directories: list[Path] = []
+    real_fsync_directory = source_module._fsync_directory
+
+    def record(directory: Path) -> None:
+        directories.append(directory)
+        real_fsync_directory(directory)
+
+    with mock.patch("copyroom.local.source._fsync_directory", record):
+        write_json(tmp_path / "one" / "two" / "out.json", SAMPLE)
+
+    assert directories == [tmp_path, tmp_path / "one", tmp_path / "one" / "two"]
+
+
+def test_parent_creation_error_is_a_local_error(tmp_path: Path) -> None:
+    target = tmp_path / "missing" / "out.json"
+    original_mkdir = Path.mkdir
+
+    def refuse(path: Path, *args: object, **kwargs: object) -> None:
+        if path == target.parent:
+            raise PermissionError("permission denied")
+        original_mkdir(path, *args, **kwargs)
+
+    with (
+        mock.patch.object(Path, "mkdir", refuse),
+        pytest.raises(LocalError, match="cannot write") as raised,
+    ):
+        write_json(target, SAMPLE)
+
+    assert raised.value.code == 2
+
+
 def test_exclude_local_state_is_idempotent(tmp_path: Path) -> None:
     (tmp_path / ".git").mkdir()
     exclude_local_state(tmp_path)
