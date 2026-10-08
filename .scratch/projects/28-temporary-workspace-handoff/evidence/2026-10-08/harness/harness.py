@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path("/tmp/cr-crash-2578910")
 EV = ROOT / "evidence"
+DRIVER = Path(__file__).with_name("driver.py")
 PY = sys.executable
 OPLOG_T = 'id ++ " " ++ description.first_line() ++ "\\n"'
 LOG_T = 'commit_id ++ " " ++ description.first_line() ++ if(empty, " [empty]", "") ++ "\\n"'
@@ -19,7 +20,7 @@ RUNS = {
     "A3w": ("A", "A3", "exit", True),
     "L1w": ("L", "L1", "exit", True), "L2w": ("L", "L2", "exit", True),
     "L3w": ("L", "L3", "exit", True),
-    "A2pre": ("A", "A2pre", "exit", False), "L0": ("L", "L0", "exit", False),
+    "L0": ("L", "L0", "exit", False),
     "A1k": ("A", "A1", "hang", False), "A3k": ("A", "A3", "hang", False),
     "L1k": ("L", "L1", "hang", False),
 }
@@ -94,7 +95,7 @@ class Run:
         log = EV / f"{self.name}.crashlog"
         log.unlink(missing_ok=True)
         ready = Path(str(log) + ".ready"); ready.unlink(missing_ok=True)
-        cmd = [PY, str(ROOT / "driver.py"), self.point, self.mode, str(log), "--", *cli]
+        cmd = [PY, str(DRIVER), self.point, self.mode, str(log), "--", *cli]
         self.w("$ " + " ".join(cmd))
         proc = subprocess.Popen(cmd, cwd=self.project, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env)
         if self.mode == "hang":
@@ -189,73 +190,16 @@ class Run:
 
     # ---------- recovery ----------
     def recover(self):
-        if self.kind == "A":
-            self.h("RECOVERY 1: copyroom update --apply (retry)")
-            self.cli(["update", "--apply", str(self.preview)], key="retry-apply")
-            self.h("RECOVERY 2: copyroom discard --preview")
-            self.cli(["discard", "--preview", str(self.preview)], key="discard")
-            self.capture("after-recovery-1-2")
-            self.h("RECOVERY 3: fresh copyroom update (new preview)")
-            p = self.cli(["update", "--out", str(self.dir / "preview2")], key="fresh-update")
-            if p.returncode == 0 and "no-change" not in p.stdout:
-                self.h("RECOVERY 4: apply fresh preview")
-                self.cli(["update", "--apply", str(self.dir / "preview2")], key="fresh-apply")
-            self.capture("after-recovery-3-4")
-        else:
-            self.h("RECOVERY 1: copyroom layer add (retry, same args)")
-            self.cli(["layer", "add", "--source", str(self.overlay), "--answers", str(self.overlay / "answers.json"), "--as", "docs"], key="retry-layer-add")
-            self.h("RECOVERY 2: copyroom discard --preview <leftover temp workspace>")
-            for d in self.workspace_dirs():
-                self.cli(["discard", "--preview", str(d)], key="discard-tmp")
-            self.h("RECOVERY 3: layer add with a different name")
-            self.cli(["layer", "add", "--source", str(self.overlay), "--answers", str(self.overlay / "answers.json"), "--as", "docs2"], key="layer-add-other-name")
-            self.capture("after-recovery")
-
-
-def jjq(r, args, cwd=None):
-    return subprocess.run(["jj", *args], cwd=cwd or r.project, text=True, capture_output=True, env=r.env).stdout
-
-
-def manual(r):
-    """Manual recovery experiments, run on the finished run dir."""
-    r.h("MANUAL RECOVERY EXPERIMENT")
-    P = r.project
-    if r.name == "L1w":
-        wid = jjq(r, ["--ignore-working-copy", "workspace", "list"]).splitlines()
-        ws = [l.split(":")[0] for l in wid if l.startswith("copyroom-")][0]
-        w = jjq(r, ["log", "-r", 'description(substring:"writer:")', "--no-graph", "-T", "commit_id"]).strip()
-        parent = jjq(r, ["log", "-r", w + "-", "--no-graph", "-T", "commit_id"]).strip()
-        ah = jjq(r, ["log", "-r", f"parents(parents({parent})) ~ subject(glob:'copyroom:render*')", "--no-graph", "-T", "commit_id"]).strip()
-        r.w("writer commit " + w + "; merge head " + parent + "; active head to rebase onto: " + ah)
-        r.jj(["rebase", "-s", w, "-d", ah], key="manual-rebase")
-        r.jj(["abandon", f"{parent} | parents({parent})"], key="manual-abandon-merge")
-        r.jj(["workspace", "forget", ws], key="manual-forget-ws")
-        shutil.rmtree(r.dir / "tmp", ignore_errors=True); (r.dir / "tmp").mkdir()
-        r.jj(["log", "-r", "all()"])
-        r.jj(["status"])
-        r.cli(["layer", "add", "--source", str(r.overlay), "--answers", str(r.overlay / "answers.json"), "--as", "docs"], key="manual-layer-add")
-        r.cli(["layer", "list"], key="manual-layer-list")
-        r.cli(["status"], key="manual-status")
-        r.writer_check("after-manual")
-        r.jj(["log", "-r", "all()"])
-    elif r.name == "A5":
-        for f in list((P / ".copyroom-local/previews").glob("*.json")) + list(r.dir.glob("*.copyroom-preview.json")):
-            r.w("rm " + str(f)); f.unlink()
-        r.cli(["preview", "list", "--project", str(P)], key="manual-list")
-        r.cli(["status"], key="manual-status")
-    elif r.name == "A6":
-        for f in list(r.dir.glob("*.copyroom-preview.json")):
-            r.w("rm " + str(f)); f.unlink()
-        r.cli(["status"], key="manual-status")
-    elif r.name in ("L2", "L3", "L4"):
-        ws = [l.split(":")[0] for l in jjq(r, ["--ignore-working-copy", "workspace", "list"]).splitlines() if l.startswith("copyroom-")]
-        for x in ws: r.jj(["workspace", "forget", x], key="manual-forget-ws")
-        shutil.rmtree(r.dir / "tmp", ignore_errors=True); (r.dir / "tmp").mkdir()
-        r.cli(["layer", "list"], key="manual-layer-list")
-        r.jj(["workspace", "list"], key="manual-ws-list")
-
-
-MANUAL = {"L1w", "A5", "A6", "L2", "L3", "L4"}
+        self.h("RECOVERY: copyroom recover")
+        self.cli(["recover", "--project", str(self.project)], key="recover")
+        if self.point == "L0":
+            # L0 dies before it has a prepared head. Recovery removes that staging state.
+            self.h("RECOVERY: retry the layer add after incomplete preparation")
+            self.cli([
+                "layer", "add", "--source", str(self.overlay), "--answers",
+                str(self.overlay / "answers.json"), "--as", "docs",
+            ], key="retry-layer-add")
+        self.capture("after-recovery")
 
 
 def sha(p):
@@ -300,7 +244,6 @@ def main():
                 r.second_writer(); r.writer_check("before-recovery")
             r.recover()
             if r.writer: r.writer_check("after-recovery")
-            if n in MANUAL: manual(r)
         except Exception as e:
             r.w(f"HARNESS ERROR: {e!r}"); r.rcs["harness-error"] = repr(e)
         summary[n] = r.rcs

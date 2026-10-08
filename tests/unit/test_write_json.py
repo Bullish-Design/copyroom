@@ -126,6 +126,7 @@ def test_exclude_local_state_backfills_older_projects(tmp_path: Path) -> None:
     assert lines == [
         "/.copyroom-local/previews/",
         "/.copyroom-local/write.lock",
+        "/.copyroom-local/journal/",
         TEMP_EXCLUDE,
     ]
 

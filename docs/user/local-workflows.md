@@ -64,8 +64,24 @@ preview, CopyRoom refuses the apply. A jj conflict remains in the preview
 workspace. Resolve the file there, inspect the result, then apply it. Discard a
 preview with `copyroom discard --preview PATH`.
 
-The preview state records its active head, source digest, render head, and tree
-digest. CopyRoom applies that exact tree. It does not rerender during apply.
+The preview contains the next marker and the full prepared project tree. Its
+state records the active head, source digest, render head, and tracked-tree
+digest. CopyRoom publishes that prepared tree. It does not rerender during apply.
+
+If CopyRoom stops during an apply or layer add, inspect and reconcile the saved
+state with:
+
+```bash
+copyroom recover
+```
+
+Recovery keeps a prepared update preview when the active project has moved. It
+finishes cleanup when the prepared result is already published. For layer add,
+recovery publishes a complete prepared layer when the active head still matches.
+It also lists orphan preview workspaces, layer directories, and JSON write
+temporaries. Use `copyroom recover --prune` to remove the listed orphans and
+temporaries. `copyroom status` reports pending publication and any mismatch
+between the marker and render head.
 
 ## Layers
 

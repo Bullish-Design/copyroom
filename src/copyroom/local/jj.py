@@ -82,6 +82,34 @@ class JJ:
             raise LocalError(f"expected one render head, found {len(lines)}")
         return lines[0]
 
+    def render_heads(self, project_id: str) -> list[tuple[str, str]]:
+        """Return every visible render head and its subject for one project."""
+
+        expression = f'heads(::@ & subject(glob:"copyroom:render {project_id} *"))'
+        output = self.run(
+            "log", "--no-graph", "-r", expression, "-T",
+            'commit_id ++ "\\t" ++ description.first_line() ++ "\\n"',
+        )
+        rows: list[tuple[str, str]] = []
+        for line in output.splitlines():
+            commit_id, separator, description = line.partition("\t")
+            if separator:
+                rows.append((commit_id, description))
+        return rows
+
+    def workspaces(self) -> list[dict[str, str]]:
+        """Return workspace names and paths for the repository."""
+
+        output = self.run(
+            "workspace", "list", "-T", 'name ++ "\\t" ++ root ++ "\\n"',
+        )
+        workspaces: list[dict[str, str]] = []
+        for line in output.splitlines():
+            name, separator, path = line.partition("\t")
+            if separator:
+                workspaces.append({"name": name, "path": path})
+        return workspaces
+
     def merge_base(self, first: str, second: str) -> str:
         """Return the commit at the merge base for two revisions."""
 

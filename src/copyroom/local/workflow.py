@@ -26,10 +26,12 @@ from .composer import (
 from .errors import LocalError
 from .jj import JJ, project_lock
 from .source import (
+    JOURNAL_DIR,
     LOCK_FILE,
     MARKER,
     PREVIEW_DIR,
     SOURCE_DIR,
+    TEMP_PREFIX,
     exclude_local_state,
     marker,
     marker_with_plan,
@@ -82,6 +84,8 @@ def working_files(root: Path) -> dict[str, tuple[str, bytes, int]]:
         if any(part in STATE_EXCLUDES for part in relative.parts):
             continue
         if relative.as_posix() == LOCK_FILE or relative.parts[:2] == (".copyroom-local", "previews"):
+            continue
+        if relative.parts[:2] == (".copyroom-local", "journal"):
             continue
         name = relative.as_posix()
         if path.is_symlink():
@@ -233,7 +237,7 @@ def _preflight_paths(
     if tracked_paths is not None:
         for name in new_owners:
             path = project / name
-            if (path.is_file() or path.is_symlink()) and name not in tracked_paths:
+            if (path.exists() or path.is_symlink()) and name not in tracked_paths:
                 raise LocalError(f"render-owned path is not tracked by jj: {name}", 1)
     for new_path in new_owners:
         collisions = other_paths | project_only
@@ -360,6 +364,84 @@ def _remove_preview_state(project: Path, out: Path, workspace: str) -> None:
     _preview_sidecar(out).unlink(missing_ok=True)
 
 
+def _journal_path(project: Path, workspace: str) -> Path:
+    return project / JOURNAL_DIR / f"{workspace}.json"
+
+
+def _write_journal(project: Path, journal: dict[str, Any]) -> Path:
+    path = _journal_path(project, str(journal["workspace"]))
+    write_json(path, journal)
+    return path
+
+
+def _set_journal_phase(
+    project: Path,
+    journal: dict[str, Any],
+    phase: str,
+    state: dict[str, Any] | None = None,
+    **changes: Any,
+) -> dict[str, Any]:
+    """Persist a transaction phase before syncing its preview state."""
+
+    journal.update(changes)
+    journal["journal_state"] = phase
+    if state is not None:
+        state["journal_state"] = phase
+        journal["preview_state"] = state
+    _write_journal(project, journal)
+    if state is not None:
+        _store_preview_state(project, Path(str(state["path"])), state)
+    return journal
+
+
+def _cleanup_transaction(project: Path, journal: dict[str, Any]) -> None:
+    """Finish cleanup for one published or discarded transaction."""
+
+    if normalize_path(Path(str(journal.get("project", "")))) != project:
+        raise LocalError("transaction journal names another project")
+    jj = JJ(project)
+    workspace = str(journal["workspace"])
+    if not workspace.startswith(WORKSPACE_PREFIX):
+        raise LocalError("transaction journal has an invalid workspace name")
+    workspace_path = normalize_path(Path(str(journal["workspace_path"])))
+    kind = journal.get("kind")
+    temporary_path: Path | None = None
+    if kind == "layer_add":
+        temporary_path = normalize_path(Path(str(journal.get("temporary_path", ""))))
+        if (
+            temporary_path.parent != Path(tempfile.gettempdir()).resolve()
+            or not temporary_path.name.startswith("copyroom-layer-")
+            or workspace_path != temporary_path / "workspace"
+            or workspace_path.is_symlink()
+        ):
+            raise LocalError("transaction journal has an unsafe layer path")
+    elif kind == "update":
+        if (
+            project in workspace_path.parents
+            or workspace_path == project
+            or workspace_path in project.parents
+            or workspace_path.is_symlink()
+        ):
+            raise LocalError("transaction journal has an unsafe preview path")
+    else:
+        raise LocalError("transaction journal has an unknown kind")
+
+    registered = {row["name"] for row in jj.workspaces()}
+    if workspace in registered:
+        jj.run("workspace", "forget", workspace)
+
+    if temporary_path is not None:
+        if temporary_path.is_dir():
+            shutil.rmtree(temporary_path)
+    else:
+        if workspace_path.is_dir():
+            shutil.rmtree(workspace_path)
+        _state_path(project, workspace).unlink(missing_ok=True)
+        _preview_sidecar(workspace_path).unlink(missing_ok=True)
+
+    _journal_path(project, workspace).unlink(missing_ok=True)
+
+
 def _snapshot_for_plan(source: Path, project: Path, out: Path, plan: RenderPlan) -> bool:
     """Put the source snapshot in the reviewed workspace when it is new."""
 
@@ -461,30 +543,49 @@ def _attach_layer(
     source = _refuse_symlink(source)
     _validate_disjoint(source, project)
     jj = JJ(project)
-    temporary_root = Path(tempfile.mkdtemp(prefix="copyroom-layer-"))
+    temporary_root = Path(tempfile.gettempdir()) / f"copyroom-layer-{uuid.uuid4().hex}"
     workspace_path = temporary_root / "workspace"
     workspace_name = WORKSPACE_PREFIX + uuid.uuid4().hex[:12]
-    workspace_added = False
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
         data = marker(project)
         records = data.get("layers", {"base": data})
         if not isinstance(records, dict):
-            shutil.rmtree(temporary_root, ignore_errors=True)
             raise LocalError("invalid layer records in project marker")
         if layer in records:
-            shutil.rmtree(temporary_root, ignore_errors=True)
             raise LocalError(f"layer already exists: {layer}", 3)
         _preflight_paths(
             project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
         )
         if digest_source(source) != plan.source_digest:
-            shutil.rmtree(temporary_root, ignore_errors=True)
             raise LocalError("source changed after render", 1)
-        operation = jj.operation_id()
-        last_operation = operation
+        active_head = jj.commit_id("@")
+        active_tree = tracked_tree_digest(project, jj)
+        journal = {
+            "schema": 1,
+            "kind": "layer_add",
+            "journal_state": "prepared",
+            "project": str(project),
+            "project_id": data["project_id"],
+            "layer": layer,
+            "workspace": workspace_name,
+            "workspace_path": str(workspace_path),
+            "temporary_path": str(temporary_root),
+            "active_head": active_head,
+            "active_tree": active_tree,
+            "marker_digest": digest_bytes((project / MARKER).read_bytes()),
+            "old_render": None,
+            "next_render": None,
+            "prepared_head": None,
+            "prepared_tree": None,
+            "prepared_marker_digest": None,
+        }
+        _write_journal(project, journal)
+        workspace_added = False
+        publish_started = False
         try:
+            temporary_root.mkdir()
             root = jj.commit_id("root()")
             jj.run("workspace", "add", "--name", workspace_name, "-r", root, str(workspace_path))
             workspace_added = True
@@ -494,9 +595,7 @@ def _attach_layer(
                 "commit", "-m", _render_subject(str(data["project_id"]), layer, 0, plan.source_digest),
             )
             render = JJ(workspace_path).commit_id("@-")
-            last_operation = jj.operation_id()
-            active_head = jj.commit_id("@")
-            active_tree = tracked_tree_digest(project, jj)
+            journal["old_render"] = jj.render_head(str(data["project_id"]), layer) if layer in records else None
             JJ(workspace_path).run("new", active_head, render, "-m", f"copyroom:layer {layer}")
             conflicts = JJ(workspace_path).conflicts()
             if conflicts:
@@ -505,53 +604,70 @@ def _attach_layer(
             snapshot_source(source, workspace_path, plan.source_digest)
             if not has_snapshot:
                 JJ(workspace_path).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
-            last_operation = jj.operation_id()
-            reviewed_tree = tracked_tree_digest(workspace_path, JJ(workspace_path))
-            merge_head = JJ(workspace_path).commit_id("@")
+
+            next_data = _next_marker(
+                data, {}, layer, source, plan, 0, record_metadata,
+            )
+            next_records = next_data["layers"]
+            if not record_metadata:
+                next_records[layer]["kind"] = "template"
+            write_json(workspace_path / MARKER, next_data)
+            preview_jj = JJ(workspace_path)
+            preview_jj.run("commit", "-m", "copyroom:project inputs")
+            prepared_head = preview_jj.commit_id("@")
+            prepared_tree = tracked_tree_digest(workspace_path, preview_jj)
+            prepared_marker_digest = digest_bytes((workspace_path / MARKER).read_bytes())
+
             active_operation = jj.operation_id()
             _check_active_state(
                 jj, project, active_head, active_tree, active_operation, "layer add",
             )
-            jj.run("new", merge_head, "-m", f"copyroom:layer add {layer}")
+            _set_journal_phase(
+                project,
+                journal,
+                "prepared",
+                next_render=render,
+                prepared_head=prepared_head,
+                prepared_tree=prepared_tree,
+                prepared_marker_digest=prepared_marker_digest,
+            )
+            _set_journal_phase(project, journal, "publishing")
+            publish_started = True
+            jj.run("new", prepared_head, "-m", f"copyroom:layer add {layer}")
             applied_head = jj.commit_id("@")
-            last_operation = _check_operation_parent(jj, active_operation, "layer add")
-            if jj.commit_id(f"{applied_head}-") != merge_head:
+            if jj.commit_id(f"{applied_head}-") != prepared_head:
                 raise LocalError("layer add did not apply its reviewed merge head", 1)
-            if jj.conflicts() or tracked_tree_digest(project, jj) != reviewed_tree:
-                raise LocalError("layer tree differs from its reviewed merge", 1)
-            record = {
-                **_plan_record(plan, source),
-                "kind": "generated" if record_metadata else "template",
-            }
-            if record_metadata:
-                record["generation"] = record_metadata
-            next_data = {**data, "layers": {**records, layer: record}}
-            write_json(project / MARKER, next_data)
-            jj.run("commit", "-m", f"copyroom:layer marker {layer}")
-            last_operation = jj.operation_id()
+            if jj.conflicts() or tracked_tree_digest(project, jj) != prepared_tree:
+                raise LocalError("layer tree differs from its prepared result", 1)
+            if digest_bytes((project / MARKER).read_bytes()) != prepared_marker_digest:
+                raise LocalError("applied marker differs from the prepared layer", 1)
             if jj.render_head(str(data["project_id"]), layer) != render:
                 raise LocalError("added layer render head is wrong", 1)
+            _set_journal_phase(project, journal, "published")
+            _cleanup_transaction(project, journal)
         except Exception as exc:
-            current_operation = jj.operation_id()
-            if current_operation == last_operation:
-                jj.run("op", "restore", operation)
-                if workspace_added:
-                    jj.run("workspace", "forget", workspace_name)
-                shutil.rmtree(temporary_root, ignore_errors=True)
-            elif isinstance(exc, LocalError):
+            if publish_started:
+                try:
+                    row = _reconcile_journal(project, jj, journal)
+                except Exception as recovery_error:
+                    raise LocalError(
+                        f"layer add outcome is uncertain; run copyroom recover: {recovery_error}", 1,
+                    ) from exc
+                if row.get("journal_state") == "published":
+                    return {"project": str(project), "layer": layer, "render": render}
+                if isinstance(exc, LocalError):
+                    raise LocalError(
+                        f"{exc}; {row['action']}; run copyroom recover",
+                        exc.code,
+                    ) from exc
                 raise LocalError(
-                    f"{exc}; repository advanced during layer add (saved operation {operation}, "
-                    f"current operation {current_operation}); workspace kept at {workspace_path}",
-                    exc.code,
+                    f"layer add failed; {row['action']}; run copyroom recover",
                 ) from exc
-            else:
-                raise LocalError(
-                    f"layer add failed; repository advanced (saved operation {operation}, "
-                    f"current operation {current_operation}); workspace kept at {workspace_path}",
-                ) from exc
+            if workspace_added and workspace_name in {row["name"] for row in jj.workspaces()}:
+                jj.run("workspace", "forget", workspace_name)
+            shutil.rmtree(temporary_root, ignore_errors=True)
+            _journal_path(project, workspace_name).unlink(missing_ok=True)
             raise
-        jj.run("workspace", "forget", workspace_name)
-        shutil.rmtree(temporary_root, ignore_errors=True)
     return {"project": str(project), "layer": layer, "render": render}
 
 
@@ -653,6 +769,26 @@ def preview(
         active_head = jj.commit_id("@")
         active_tree = tracked_tree_digest(project, jj)
         workspace_name = WORKSPACE_PREFIX + uuid.uuid4().hex[:12]
+        journal = {
+            "schema": 1,
+            "kind": "update",
+            "journal_state": "prepared",
+            "project": str(project),
+            "project_id": data["project_id"],
+            "layer": layer,
+            "workspace": workspace_name,
+            "workspace_path": str(out),
+            "temporary_path": None,
+            "active_head": active_head,
+            "active_tree": active_tree,
+            "marker_digest": digest_bytes((project / MARKER).read_bytes()),
+            "old_render": old_render,
+            "next_render": None,
+            "prepared_head": None,
+            "prepared_tree": None,
+            "prepared_marker_digest": None,
+        }
+        journal_file = _write_journal(project, journal)
         added = False
         try:
             # A new workspace needs an existing parent directory.
@@ -719,8 +855,18 @@ def preview(
                 "render_digest": plan.render_digest,
                 "conflicts": conflict_paths,
                 "record_metadata": record_metadata,
+                "journal_state": "prepared",
             }
-            _store_preview_state(project, out, state)
+            _set_journal_phase(
+                project,
+                journal,
+                "prepared",
+                state,
+                next_render=next_render,
+                prepared_head=preview_head,
+                prepared_tree=preview_tree,
+                prepared_marker_digest=prepared_marker_digest,
+            )
         except Exception:
             if added:
                 jj.run("workspace", "forget", workspace_name)
@@ -728,6 +874,7 @@ def preview(
                 shutil.rmtree(out)
             _preview_sidecar(out).unlink(missing_ok=True)
             _state_path(project, workspace_name).unlink(missing_ok=True)
+            journal_file.unlink(missing_ok=True)
             raise
     return state
 
@@ -759,9 +906,345 @@ def _load_preview(out: Path) -> dict[str, Any]:
 def _discard(project: Path, out: Path, state: dict[str, Any]) -> None:
     """Forget and remove a preview workspace."""
 
+    journal_file = _journal_path(project, str(state["workspace"]))
+    if journal_file.is_file():
+        _cleanup_transaction(project, read_json(journal_file))
+        return
     JJ(project).run("workspace", "forget", str(state["workspace"]))
-    shutil.rmtree(out)
+    if out.is_dir():
+        shutil.rmtree(out)
     _remove_preview_state(project, out, str(state["workspace"]))
+
+
+def _journal_from_preview_state(project: Path, state: dict[str, Any]) -> dict[str, Any]:
+    """Build a prepared journal for a preview made by an earlier CopyRoom version."""
+
+    return {
+        "schema": 1,
+        "kind": "update",
+        "journal_state": "prepared",
+        "project": str(project),
+        "project_id": state["project_id"],
+        "layer": state["layer"],
+        "workspace": state["workspace"],
+        "workspace_path": state["path"],
+        "temporary_path": None,
+        "active_head": state["active_head"],
+        "active_tree": state["active_tree"],
+        "marker_digest": state["marker_digest"],
+        "old_render": state["old_render"],
+        "next_render": state["next_render"],
+        "prepared_head": state["prepared_head"],
+        "prepared_tree": state["preview_tree"],
+        "prepared_marker_digest": state["prepared_marker_digest"],
+        "preview_state": state,
+    }
+
+
+def _ensure_preview_journal(project: Path, state: dict[str, Any]) -> dict[str, Any]:
+    """Load a preview journal or add one to a saved preview from Step 1."""
+
+    path = _journal_path(project, str(state["workspace"]))
+    if path.is_file():
+        return read_json(path)
+    journal = _journal_from_preview_state(project, state)
+    _write_journal(project, journal)
+    return journal
+
+
+def _is_ancestor(jj: JJ, ancestor: str, descendant: str) -> bool:
+    return jj.merge_base(descendant, ancestor) == ancestor
+
+
+def _journal_state(project: Path, journal: dict[str, Any]) -> dict[str, Any] | None:
+    embedded = journal.get("preview_state")
+    if isinstance(embedded, dict):
+        return dict(embedded)
+    workspace = str(journal["workspace"])
+    for path in (
+        _state_path(project, workspace),
+        _preview_sidecar(Path(str(journal["workspace_path"]))),
+    ):
+        if path.is_file():
+            try:
+                return read_json(path)
+            except LocalError:
+                continue
+    return None
+
+
+def _journal_row(journal: dict[str, Any], action: str) -> dict[str, Any]:
+    return {
+        "workspace": journal.get("workspace"),
+        "kind": journal.get("kind"),
+        "layer": journal.get("layer"),
+        "journal_state": journal.get("journal_state"),
+        "prepared_head": journal.get("prepared_head"),
+        "action": action,
+    }
+
+
+def _publish_layer_transaction(
+    project: Path,
+    jj: JJ,
+    journal: dict[str, Any],
+) -> dict[str, Any]:
+    """Publish a prepared layer when its active head is still current."""
+
+    active_head = jj.commit_id("@")
+    if (
+        active_head != journal.get("active_head")
+        or tracked_tree_digest(project, jj) != journal.get("active_tree")
+        or digest_bytes((project / MARKER).read_bytes()) != journal.get("marker_digest")
+    ):
+        return _journal_row(journal, "project-moved; retry layer add")
+    prepared_head = str(journal["prepared_head"])
+    state = _journal_state(project, journal)
+    workspace_path = Path(str(journal["workspace_path"]))
+    if not workspace_path.is_dir():
+        return _journal_row(journal, "prepared workspace missing; retry layer add")
+    prepared_jj = JJ(workspace_path)
+    if (
+        prepared_jj.commit_id("@") != prepared_head
+        or tracked_tree_digest(workspace_path, prepared_jj) != journal.get("prepared_tree")
+        or digest_bytes((workspace_path / MARKER).read_bytes())
+        != journal.get("prepared_marker_digest")
+    ):
+        return _journal_row(journal, "prepared layer changed; retry layer add")
+    _set_journal_phase(project, journal, "publishing", state)
+    try:
+        jj.run("new", prepared_head, "-m", f"copyroom:layer add {journal['layer']}")
+    except Exception:
+        try:
+            current_head = jj.commit_id("@")
+            published = _is_ancestor(jj, prepared_head, current_head)
+            if published and journal.get("next_render"):
+                current_render = jj.render_head(str(journal["project_id"]), str(journal["layer"]))
+                published = _is_ancestor(jj, str(journal["next_render"]), current_render)
+        except LocalError:
+            return _journal_row(journal, "publication-uncertain; run recover again")
+        if published:
+            _set_journal_phase(project, journal, "published", state)
+            _cleanup_transaction(project, journal)
+            return _journal_row(journal, "published and cleaned after command error")
+        _set_journal_phase(project, journal, "prepared", state)
+        return _journal_row(journal, "publication did not complete; retry layer add")
+
+    applied_head = jj.commit_id("@")
+    if jj.commit_id(f"{applied_head}-") != prepared_head:
+        return _journal_row(journal, "publication-uncertain; run recover again")
+    if (
+        jj.conflicts()
+        or tracked_tree_digest(project, jj) != journal.get("prepared_tree")
+        or digest_bytes((project / MARKER).read_bytes())
+        != journal.get("prepared_marker_digest")
+        or jj.render_head(str(journal["project_id"]), str(journal["layer"]))
+        != journal.get("next_render")
+    ):
+        return _journal_row(journal, "publication-uncertain; run recover again")
+    _set_journal_phase(project, journal, "published", state)
+    _cleanup_transaction(project, journal)
+    return _journal_row(journal, "published and cleaned")
+
+
+def _reconcile_journal(project: Path, jj: JJ, journal: dict[str, Any]) -> dict[str, Any]:
+    """Reconcile one journal with the active jj history."""
+
+    journal_file = _journal_path(project, str(journal.get("workspace", "")))
+    if (
+        journal.get("schema") != 1
+        or normalize_path(Path(str(journal.get("project", "")))) != project
+        or not str(journal.get("workspace", "")).startswith(WORKSPACE_PREFIX)
+        or journal_file.name != f"{journal.get('workspace')}.json"
+    ):
+        raise LocalError(f"invalid transaction journal: {journal_file}")
+
+    phase = str(journal.get("journal_state"))
+    state = _journal_state(project, journal)
+    if phase == "published":
+        _cleanup_transaction(project, journal)
+        return _journal_row(journal, "published cleanup completed")
+
+    if phase not in {"prepared", "publishing"}:
+        raise LocalError(f"invalid journal state in {journal_file}: {phase}")
+
+    prepared_head = journal.get("prepared_head")
+    if prepared_head:
+        current_head = jj.commit_id("@")
+        published = _is_ancestor(jj, str(prepared_head), current_head)
+        if published and journal.get("next_render"):
+            try:
+                current_render = jj.render_head(str(journal["project_id"]), str(journal["layer"]))
+                published = _is_ancestor(jj, str(journal["next_render"]), current_render)
+            except LocalError:
+                published = False
+        if published:
+            _set_journal_phase(project, journal, "published", state)
+            _cleanup_transaction(project, journal)
+            return _journal_row(journal, "published and cleaned")
+
+    if phase == "publishing":
+        _set_journal_phase(project, journal, "prepared", state)
+
+    if not journal.get("prepared_head"):
+        # Preparation did not produce a complete result. Remove only its staging workspace.
+        _cleanup_transaction(project, journal)
+        row = _journal_row(journal, "incomplete preparation removed; retry command")
+        row["journal_state"] = "prepared"
+        return row
+
+    current_head = jj.commit_id("@")
+    if current_head != journal.get("active_head"):
+        return _journal_row(journal, "project moved; keep prepared result")
+
+    if journal.get("kind") == "layer_add":
+        return _publish_layer_transaction(project, jj, journal)
+
+    if state is not None:
+        state["journal_state"] = "prepared"
+        _store_preview_state(project, Path(str(journal["workspace_path"])), state)
+    return _journal_row(journal, "prepared; retry update --apply or discard")
+
+
+def _workspace_repo(path: Path) -> Path | None:
+    """Resolve the shared repository path recorded by one jj workspace."""
+
+    pointer = path / ".jj" / "repo"
+    try:
+        if pointer.is_symlink():
+            return pointer.resolve()
+        if pointer.is_dir():
+            return pointer.resolve()
+        if pointer.is_file():
+            target = pointer.read_text(encoding="utf-8").strip()
+            return (pointer.parent / target).resolve()
+    except OSError:
+        return None
+    return None
+
+
+def _orphan_temporaries(
+    roots: list[Path],
+    direct_roots: list[Path] | None = None,
+) -> list[dict[str, str]]:
+    """Find ignored JSON write temporaries below the supplied roots."""
+
+    excluded = STATE_EXCLUDES | {".git", ".jj"}
+    found: dict[str, dict[str, str]] = {}
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for current, directories, files in os.walk(root):
+            current_path = Path(current)
+            directories[:] = sorted(name for name in directories if name not in excluded)
+            for name in files:
+                if name.startswith(TEMP_PREFIX):
+                    path = current_path / name
+                    found[str(path)] = {"path": str(path), "ignored": "true"}
+    for root in direct_roots or []:
+        if not root.is_dir():
+            continue
+        for path in root.iterdir():
+            if path.name.startswith(TEMP_PREFIX) and path.is_file():
+                found[str(path)] = {"path": str(path), "ignored": "true"}
+    return [found[name] for name in sorted(found)]
+
+
+def recover(project: Path, prune: bool = False) -> dict[str, Any]:
+    """Report and reconcile interrupted local transactions."""
+
+    project = normalize_path(project)
+    jj = JJ(project)
+    with project_lock(project):
+        exclude_local_state(project)
+        transactions: list[dict[str, Any]] = []
+        directory = project / JOURNAL_DIR
+        journal_files = sorted(directory.glob("*.json")) if directory.is_dir() else []
+        preview_sidecar_roots: list[Path] = []
+        for path in journal_files:
+            journal = read_json(path)
+            if journal.get("kind") == "update":
+                preview_sidecar_roots.append(
+                    Path(str(journal.get("workspace_path", ""))).parent,
+                )
+            transactions.append(_reconcile_journal(project, jj, journal))
+
+        journals = {
+            str(row.get("workspace")): row
+            for row in (
+                read_json(path) for path in sorted(directory.glob("*.json"))
+            )
+        } if directory.is_dir() else {}
+        workspace_rows = jj.workspaces()
+        journal_names = set(journals)
+        orphan_workspaces = [
+            row for row in workspace_rows
+            if row["name"].startswith(WORKSPACE_PREFIX) and row["name"] not in journal_names
+        ]
+        referenced_layer_dirs = {
+            str(Path(str(journal.get("temporary_path"))).resolve())
+            for journal in journals.values()
+            if journal.get("kind") == "layer_add" and journal.get("temporary_path")
+        }
+        repo_path = (project / ".jj" / "repo").resolve()
+        orphan_layer_dirs: list[dict[str, str]] = []
+        temporary_root = Path(tempfile.gettempdir())
+        for path in sorted(temporary_root.glob("copyroom-layer-*")):
+            if str(path.resolve()) in referenced_layer_dirs:
+                continue
+            workspace_repo = _workspace_repo(path / "workspace")
+            if workspace_repo == repo_path:
+                orphan_layer_dirs.append({"path": str(path), "repository": str(repo_path)})
+
+        scan_roots = [project]
+        for row in workspace_rows:
+            workspace_path = Path(row["path"])
+            scan_roots.append(workspace_path)
+        scan_roots.extend(Path(row["path"]) for row in orphan_layer_dirs)
+        scan_roots = list(dict.fromkeys(scan_roots))
+        direct_roots = [
+            root for root in dict.fromkeys(
+                [*preview_sidecar_roots, *(Path(row["path"]).parent for row in orphan_workspaces)],
+            )
+            if root != project and project not in root.parents
+        ]
+        write_temporaries = _orphan_temporaries(scan_roots, direct_roots)
+
+        pruned: list[dict[str, str]] = []
+        if prune:
+            for row in orphan_workspaces:
+                path = Path(row["path"])
+                jj.run("workspace", "forget", row["name"])
+                if path.is_dir():
+                    shutil.rmtree(path)
+                _state_path(project, row["name"]).unlink(missing_ok=True)
+                _preview_sidecar(path).unlink(missing_ok=True)
+                pruned.append({"kind": "workspace", "path": row["path"]})
+            for row in orphan_layer_dirs:
+                shutil.rmtree(row["path"])
+                pruned.append({"kind": "layer_directory", "path": row["path"]})
+            for row in write_temporaries:
+                path = Path(row["path"])
+                path.unlink(missing_ok=True)
+                pruned.append({"kind": "write_temporary", "path": str(path)})
+
+        pending = any(
+            row["journal_state"] != "published"
+            or "published" not in str(row["action"])
+            for row in transactions
+        )
+        has_orphans = bool(orphan_workspaces or orphan_layer_dirs or write_temporaries)
+        return {
+            "project": str(project),
+            "ok": not pending and (prune or not has_orphans),
+            "transactions": transactions,
+            "orphans": {
+                "workspaces": orphan_workspaces,
+                "layer_directories": orphan_layer_dirs,
+                "write_temporaries": write_temporaries,
+            },
+            "pruned": pruned,
+        }
 
 
 def apply(project: Path, out: Path) -> dict[str, str]:
@@ -776,6 +1259,12 @@ def apply(project: Path, out: Path) -> dict[str, str]:
     with project_lock(project):
         # Backfill the ignore rules before any JSON write. An older project lacks them.
         exclude_local_state(project)
+        journal = _ensure_preview_journal(project, state)
+        if journal.get("journal_state") in {"publishing", "published"}:
+            row = _reconcile_journal(project, jj, journal)
+            if row.get("journal_state") == "published":
+                return {"project": str(project), "render": str(state["next_render"])}
+            journal = read_json(_journal_path(project, str(state["workspace"])))
         data = marker(project)
         if state["project_id"] != data["project_id"]:
             raise LocalError("preview belongs to another project", 1)
@@ -810,9 +1299,9 @@ def apply(project: Path, out: Path) -> dict[str, str]:
             ):
                 raise LocalError("resolved preview no longer has the reviewed parents", 1)
         elif (
-            preview_head != state["prepared_head"]
+            preview_head != journal.get("prepared_head")
             or preview_head != state["preview_head"]
-            or preview_tree != state["preview_tree"]
+            or preview_tree != journal.get("prepared_tree")
         ):
             raise LocalError("preview workspace changed after preview", 1)
         preview_marker = out / MARKER
@@ -827,13 +1316,18 @@ def apply(project: Path, out: Path) -> dict[str, str]:
             jj, project, str(state["active_head"]), str(state["active_tree"]), operation,
             "apply",
         )
-        last_operation = operation
+        state["prepared_head"] = preview_head
+        state["preview_head"] = preview_head
+        state["preview_tree"] = preview_tree
+        journal["prepared_head"] = preview_head
+        journal["prepared_tree"] = preview_tree
+        journal["prepared_marker_digest"] = state["prepared_marker_digest"]
+        _set_journal_phase(project, journal, "prepared", state)
+        _set_journal_phase(project, journal, "publishing", state)
         try:
-            publication_head = preview_head if state["conflicts"] else str(state["prepared_head"])
-            jj.run("new", publication_head, "-m", "copyroom:update")
+            jj.run("new", preview_head, "-m", "copyroom:update")
             applied_head = jj.commit_id("@")
-            last_operation = _check_operation_parent(jj, operation, "apply")
-            if jj.commit_id(f"{applied_head}-") != publication_head:
+            if jj.commit_id(f"{applied_head}-") != preview_head:
                 raise LocalError("apply did not use its reviewed preview head", 1)
             applied_tree = tracked_tree_digest(project, jj)
             if jj.conflicts() or applied_tree != preview_tree:
@@ -847,22 +1341,26 @@ def apply(project: Path, out: Path) -> dict[str, str]:
             if jj.render_head(str(data["project_id"]), layer) != state["next_render"]:
                 raise LocalError("applied render head is wrong", 1)
         except Exception as exc:
-            current_operation = jj.operation_id()
-            if current_operation == last_operation:
-                jj.run("op", "restore", operation)
-            elif isinstance(exc, LocalError):
+            try:
+                row = _reconcile_journal(project, jj, journal)
+            except Exception as recovery_error:
                 raise LocalError(
-                    f"{exc}; repository advanced during apply (saved operation {operation}, "
-                    f"current operation {current_operation}); preview kept for review",
+                    f"apply outcome is uncertain; run copyroom recover: {recovery_error}", 1,
+                ) from exc
+            if row.get("journal_state") == "published":
+                return {"project": str(project), "render": str(state["next_render"])}
+            detail = str(exc)
+            if isinstance(exc, LocalError):
+                raise LocalError(
+                    f"{detail}; publication did not complete; preview kept for review",
                     exc.code,
                 ) from exc
-            else:
-                raise LocalError(
-                    f"apply failed; repository advanced (saved operation {operation}, "
-                    f"current operation {current_operation}); preview kept for review",
-                ) from exc
-            raise
-        _discard(project, out, state)
+            raise LocalError(
+                f"apply failed; publication did not complete; preview kept for review: {detail}",
+                1,
+            ) from exc
+        _set_journal_phase(project, journal, "published", state)
+        _cleanup_transaction(project, journal)
     return {"project": str(project), "render": str(state["next_render"])}
 
 
@@ -899,13 +1397,91 @@ def list_previews(project: Path) -> list[dict[str, Any]]:
         state = read_json(path)
         if state.get("project_id") != marker_data["project_id"]:
             continue
+        journal_path = _journal_path(project, str(state.get("workspace", "")))
+        journal_state = (
+            read_json(journal_path).get("journal_state")
+            if journal_path.is_file()
+            else state.get("journal_state")
+        )
         states.append({
             "workspace": state.get("workspace"),
             "path": state.get("path"),
             "conflicts": state.get("conflicts", []),
             "source_digest": state.get("source_digest"),
+            "journal_state": journal_state,
         })
     return states
+
+
+def _marker_render_mismatches(
+    data: dict[str, Any],
+    records: dict[str, Any],
+    jj: JJ,
+) -> tuple[list[dict[str, Any]], dict[str, str | None]]:
+    """Compare marker revisions with the render heads visible from active @."""
+
+    project_id = str(data["project_id"])
+    expected = {
+        str(name): _render_subject(
+            project_id,
+            str(name),
+            int(record["revision"]),
+            str(record["source_digest"]),
+        )
+        for name, record in records.items()
+        if isinstance(record, dict)
+    }
+    active_heads = jj.render_heads(project_id)
+    actual: dict[str, list[tuple[str, str]]] = {}
+    for commit_id, subject in active_heads:
+        fields = subject.split(" ", 4)
+        if len(fields) == 5 and fields[0] == "copyroom:render" and fields[1] == project_id:
+            actual.setdefault(fields[2], []).append((commit_id, subject))
+
+    mismatches: list[dict[str, Any]] = []
+    render_ids: dict[str, str | None] = {}
+    for layer, subject in expected.items():
+        heads = actual.get(layer, [])
+        render_ids[layer] = heads[0][0] if len(heads) == 1 else None
+        if len(heads) != 1 or heads[0][1] != subject:
+            mismatches.append({
+                "layer": layer,
+                "marker_render": subject,
+                "render_heads": [
+                    {"commit": commit_id, "subject": head_subject}
+                    for commit_id, head_subject in heads
+                ],
+            })
+    for layer, heads in actual.items():
+        if layer not in expected:
+            mismatches.append({
+                "layer": layer,
+                "marker_render": None,
+                "render_heads": [
+                    {"commit": commit_id, "subject": head_subject}
+                    for commit_id, head_subject in heads
+                ],
+            })
+    return mismatches, render_ids
+
+
+def _transaction_summaries(project: Path) -> list[dict[str, Any]]:
+    """List saved publication phases for the active project."""
+
+    directory = project / JOURNAL_DIR
+    if not directory.is_dir():
+        return []
+    return [
+        {
+            "workspace": journal.get("workspace"),
+            "kind": journal.get("kind"),
+            "layer": journal.get("layer"),
+            "journal_state": journal.get("journal_state"),
+            "prepared_head": journal.get("prepared_head"),
+        }
+        for path in sorted(directory.glob("*.json"))
+        for journal in [read_json(path)]
+    ]
 
 
 def inspect(project: Path) -> dict[str, Any]:
@@ -917,6 +1493,7 @@ def inspect(project: Path) -> dict[str, Any]:
     if not isinstance(records, dict):
         raise LocalError("invalid layer records in project marker")
     jj = JJ(project)
+    marker_render_mismatches, render_ids = _marker_render_mismatches(data, records, jj)
     layers: dict[str, Any] = {}
     for name, record in records.items():
         source = Path(str(record["source"]))
@@ -934,7 +1511,10 @@ def inspect(project: Path) -> dict[str, Any]:
             "source_reachable": source_ok,
             "snapshot_reachable": snapshot_ok,
             "revision": record["revision"],
-            "render_head": jj.render_head(str(data["project_id"]), str(name)),
+            "render_head": render_ids[str(name)],
+            "marker_render_mismatch": any(
+                item["layer"] == str(name) for item in marker_render_mismatches
+            ),
             "owners": record["owners"],
         }
     return {
@@ -947,8 +1527,11 @@ def inspect(project: Path) -> dict[str, Any]:
         "snapshot_reachable": layers["base"]["snapshot_reachable"],
         "render_head": layers["base"]["render_head"],
         "layers": layers,
+        "marker_render_mismatches": marker_render_mismatches,
+        "has_marker_render_mismatch": bool(marker_render_mismatches),
         "working_tree_digest": working_digest(project),
         "pending_previews": list_previews(project),
+        "pending_transactions": _transaction_summaries(project),
         "conflicts": jj.conflicts(),
         "owners": _owner_map(data),
         "answers": data["answers"],
@@ -959,11 +1542,17 @@ def status(project: Path) -> dict[str, Any]:
     """Return a concise project status report."""
 
     report = inspect(project)
+    report["has_pending_publication"] = any(
+        transaction["kind"] == "layer_add"
+        or transaction["journal_state"] in {"publishing", "published"}
+        for transaction in report["pending_transactions"]
+    )
     report["ok"] = all(
         item["source_reachable"] or item["snapshot_reachable"]
         for item in report["layers"].values()
-    )
+    ) and not report["has_marker_render_mismatch"] and not report["has_pending_publication"]
     report["has_conflicts"] = bool(report["conflicts"])
+    report["has_marker_render_mismatch"] = bool(report["marker_render_mismatches"])
     return report
 
 
@@ -988,6 +1577,6 @@ def doctor() -> dict[str, Any]:
 
 
 __all__ = [
-    "add_layer", "apply", "discard", "doctor", "inspect", "list_layers", "list_previews",
+    "add_layer", "apply", "discard", "doctor", "inspect", "list_layers", "list_previews", "recover",
     "new", "preview", "status", "update", "working_digest", "working_files",
 ]

@@ -16,15 +16,17 @@ from copyroom.local.errors import LocalError
 from copyroom.local.generation import generate, refresh
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt, templatize
-from copyroom.local.source import TEMP_EXCLUDE, marker, snapshot_path
+from copyroom.local.source import MARKER, TEMP_EXCLUDE, marker, snapshot_path
 from copyroom.local.workflow import (
     add_layer,
     apply,
     discard,
+    inspect,
     list_layers,
     list_previews,
     new,
     preview,
+    recover,
     status,
     tracked_tree_digest,
     working_digest,
@@ -275,7 +277,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn(TEMP_EXCLUDE, rules())
         self.assertIn("docs", {str(record["layer"]) for record in list_layers(self.project)})
 
-    def test_apply_reports_a_foreign_jj_operation_and_keeps_preview(self) -> None:
+    def test_apply_retains_a_competing_commit_object_during_publication(self) -> None:
         self.create()
         template = self.source / "templates/settings/template.j2"
         template.write_text(
@@ -297,15 +299,16 @@ class LocalTemplateerJJTests(unittest.TestCase):
             return original(jj, *args, **kwargs)
 
         with patch.object(JJ, "run", concurrent_run):
-            with self.assertRaisesRegex(LocalError, "overlapped a jj operation") as raised:
-                apply(self.project, out)
+            apply(self.project, out)
 
-        self.assertIn(foreign["operation"], str(raised.exception))
-        self.assertIn("Inspect jj op log", str(raised.exception))
-        self.assertTrue(out.exists())
         self.assertEqual(foreign["head"], JJ(self.project).commit_id(foreign["head"]))
+        self.assertEqual(
+            "concurrent work\n",
+            JJ(self.project).run("file", "show", "-r", foreign["head"], "concurrent.txt"),
+        )
+        self.assertFalse(out.exists())
 
-    def test_layer_add_reports_a_foreign_jj_operation(self) -> None:
+    def test_layer_add_retains_a_competing_commit_object_during_publication(self) -> None:
         self.create()
         overlay = self.root / "overlay-source"
         shutil.copytree(self.source, overlay)
@@ -332,12 +335,13 @@ class LocalTemplateerJJTests(unittest.TestCase):
             return original(jj, *args, **kwargs)
 
         with patch.object(JJ, "run", concurrent_run):
-            with self.assertRaisesRegex(LocalError, "overlapped a jj operation") as raised:
-                add_layer(self.project, overlay, overlay / "answers.json", "docs")
+            add_layer(self.project, overlay, overlay / "answers.json", "docs")
 
-        self.assertIn(foreign["operation"], str(raised.exception))
-        self.assertIn("Inspect jj op log", str(raised.exception))
         self.assertEqual(foreign["head"], JJ(self.project).commit_id(foreign["head"]))
+        self.assertEqual(
+            "concurrent work\n",
+            JJ(self.project).run("file", "show", "-r", foreign["head"], "concurrent.txt"),
+        )
 
     def test_source_snapshot_replays_after_locator_disappears(self) -> None:
         self.create()
@@ -411,8 +415,134 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertTrue(report["ok"])
         self.assertTrue(report["render_head"])
         self.assertEqual(1, len(report["pending_previews"]))
+        self.assertEqual("prepared", report["pending_previews"][0]["journal_state"])
         discard(out)
         self.assertEqual([], status(self.project)["pending_previews"])
+
+    def test_status_and_inspect_report_marker_render_mismatch(self) -> None:
+        self.create()
+        old_marker = (self.project / MARKER).read_bytes()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "mismatch-preview"
+        preview(self.project, out)
+        apply(self.project, out)
+        (self.project / MARKER).write_bytes(old_marker)
+
+        inspected = inspect(self.project)
+        reported = status(self.project)
+        self.assertTrue(inspected["has_marker_render_mismatch"])
+        self.assertTrue(inspected["marker_render_mismatches"])
+        self.assertTrue(reported["has_marker_render_mismatch"])
+        self.assertFalse(reported["ok"])
+
+    def test_recover_reports_prepared_update_and_keeps_preview(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "recover-preview"
+        preview(self.project, out)
+
+        report = recover(self.project)
+
+        self.assertFalse(report["ok"])
+        self.assertEqual("prepared", report["transactions"][0]["journal_state"])
+        self.assertIn("retry update --apply", report["transactions"][0]["action"])
+        self.assertTrue(out.is_dir())
+        self.assertEqual(1, len(list_previews(self.project)))
+
+    def test_status_reports_interrupted_publication_after_prepared_head_lands(self) -> None:
+        self.create()
+        self.change_template(
+            "settings",
+            (self.source / "templates/settings/template.j2").read_text(encoding="utf-8")
+            + '\nrevision: "v2"\n',
+        )
+        out = self.root / "crashed-apply-preview"
+        preview(self.project, out)
+        original = JJ.run
+
+        class SimulatedCrash(BaseException):
+            pass
+
+        def crash_after_publish(jj: JJ, *args: str, **kwargs: object) -> str:
+            result = original(jj, *args, **kwargs)
+            if jj.cwd == self.project and args[:1] == ("new",) and "copyroom:update" in args:
+                raise SimulatedCrash
+            return result
+
+        with patch.object(JJ, "run", crash_after_publish):
+            with self.assertRaises(SimulatedCrash):
+                apply(self.project, out)
+
+        inspected = inspect(self.project)
+        reported = status(self.project)
+        self.assertEqual("publishing", inspected["pending_transactions"][0]["journal_state"])
+        self.assertFalse(reported["has_marker_render_mismatch"])
+        self.assertTrue(reported["has_pending_publication"])
+        self.assertFalse(reported["ok"])
+
+        recovered = recover(self.project)
+        self.assertEqual("published", recovered["transactions"][0]["journal_state"])
+
+    def test_recover_prunes_orphan_workspace_and_layer_directory(self) -> None:
+        self.create()
+        layer_root = Path(tempfile.gettempdir()) / f"copyroom-layer-orphan-{self.root.name}"
+        workspace = layer_root / "workspace"
+        workspace.mkdir(parents=True)
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-orphan", "-r", "root()", str(workspace),
+        )
+
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertEqual("copyroom-orphan", report["orphans"]["workspaces"][0]["name"])
+        self.assertEqual(str(layer_root), report["orphans"]["layer_directories"][0]["path"])
+
+        pruned = recover(self.project, prune=True)
+        self.assertTrue(pruned["ok"])
+        self.assertFalse(layer_root.exists())
+        self.assertNotIn(
+            "copyroom-orphan", {row["name"] for row in JJ(self.project).workspaces()},
+        )
+
+    def test_recover_prunes_orphan_preview_workspace(self) -> None:
+        self.create()
+        orphan = self.root / "orphan-preview"
+        JJ(self.project).run(
+            "workspace", "add", "--name", "copyroom-orphan-preview", "-r", "root()",
+            str(orphan),
+        )
+
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertEqual(
+            str(orphan), report["orphans"]["workspaces"][0]["path"],
+        )
+
+        pruned = recover(self.project, prune=True)
+        self.assertTrue(pruned["ok"])
+        self.assertFalse(orphan.exists())
+
+    def test_recover_lists_and_prunes_ignored_json_temporaries(self) -> None:
+        self.create()
+        temporary = self.project / ".copyroom-tmp-interrupted-write"
+        temporary.write_bytes(b"partial JSON")
+
+        report = recover(self.project)
+        self.assertFalse(report["ok"])
+        self.assertEqual(str(temporary), report["orphans"]["write_temporaries"][0]["path"])
+        self.assertNotIn(".copyroom-tmp-interrupted-write", JJ(self.project).tracked_paths("@"))
+
+        pruned = recover(self.project, prune=True)
+        self.assertTrue(pruned["ok"])
+        self.assertFalse(temporary.exists())
 
     def test_layer_add_and_update_keep_render_heads_independent(self) -> None:
         self.create()

@@ -16,6 +16,7 @@ MARKER = ".copyroom-local.json"
 STATE_DIR = ".copyroom-local"
 SOURCE_DIR = f"{STATE_DIR}/sources"
 PREVIEW_DIR = f"{STATE_DIR}/previews"
+JOURNAL_DIR = f"{STATE_DIR}/journal"
 LOCK_FILE = f"{STATE_DIR}/write.lock"
 SCHEMA_VERSION = 2
 TEMP_PREFIX = ".copyroom-tmp-"
@@ -172,12 +173,15 @@ def resolve_source(
 
 
 def exclude_local_state(project: Path) -> None:
-    """Exclude lock, preview state, and write temporaries from the project tree."""
+    """Exclude local state and write temporaries from the project tree."""
 
     exclude = project / ".git" / "info" / "exclude"
     exclude.parent.mkdir(parents=True, exist_ok=True)
     existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
-    entries = ["/.copyroom-local/previews/", "/.copyroom-local/write.lock", TEMP_EXCLUDE]
+    entries = [
+        "/.copyroom-local/previews/", "/.copyroom-local/journal/",
+        "/.copyroom-local/write.lock", TEMP_EXCLUDE,
+    ]
     missing = [entry for entry in entries if entry not in existing.splitlines()]
     if missing:
         with exclude.open("a", encoding="utf-8") as stream:
@@ -210,7 +214,7 @@ def marker_with_plan(plan: Any, source: Path, project_id: str, revision: int = 0
 
 
 __all__ = [
-    "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION", "SOURCE_DIR", "STATE_DIR",
+    "JOURNAL_DIR", "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION", "SOURCE_DIR", "STATE_DIR",
     "TEMP_EXCLUDE", "TEMP_PREFIX",
     "exclude_local_state", "marker", "marker_with_plan", "read_json", "resolve_source",
     "snapshot_path", "snapshot_source", "write_json",

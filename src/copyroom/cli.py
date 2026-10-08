@@ -244,7 +244,23 @@ def status_command(
     from .local.workflow import status
 
     report = _call(status, project or _project_root(), json_output=json_output)
-    if isinstance(report, dict) and (not report["ok"] or report["has_conflicts"]):
+    if isinstance(report, dict) and (
+        not report["ok"] or report["has_conflicts"] or report["has_marker_render_mismatch"]
+    ):
+        raise typer.Exit(code=1)
+
+
+@app.command("recover")
+def recover_command(
+    project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    prune: bool = typer.Option(False, "--prune", help="Remove named orphan workspaces and files"),
+    json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
+) -> None:
+    """Report and reconcile interrupted project transactions."""
+    from .local.workflow import recover
+
+    report = _call(recover, project or _project_root(), prune, json_output=json_output)
+    if isinstance(report, dict) and not report["ok"]:
         raise typer.Exit(code=1)
 
 
