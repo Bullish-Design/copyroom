@@ -229,3 +229,5 @@ __marimo__/
 # Nix build output
 /result
 /result-*
+.scratch/projects/26-templateer-jj-slice/.python-version
+.scratch/projects/26-templateer-jj-slice/devenv.lock
