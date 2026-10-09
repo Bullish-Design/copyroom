@@ -9,13 +9,13 @@ Workshop commands use `copyroom.yml`, `registry/`, and `scenarios/`.
 | --- | --- |
 | `copyroom new SOURCE TARGET --answers FILE` | Create from a local Templateer source. |
 | `copyroom update [--layer NAME] [--source DIR] [--answers FILE] [--out DIR]` | Create a separate update preview. |
-| `copyroom update --apply DIR` | Apply the exact reviewed preview. |
-| `copyroom apply --preview DIR` | Apply the exact reviewed preview. |
+| `copyroom update --apply DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
+| `copyroom apply --preview DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom discard --preview DIR` | Discard a pending preview. |
 | `copyroom preview list --project DIR` | List pending previews. |
 | `copyroom status [--json]` | Report jj, source snapshots, conflicts, and previews. |
 | `copyroom inspect [--json]` | Report source provenance, render heads, and path owners. |
-| `copyroom layer add --source SOURCE --as NAME --answers FILE` | Add an independent layer. |
+| `copyroom layer add --source SOURCE --as NAME --answers FILE [--publish-unguarded]` | Add an independent layer through the pyjutsu guard. |
 | `copyroom layer list [--json]` | List layer render heads and owners. |
 | `copyroom generate --source DIR --template NAME --request TEXT` | Explicitly call a model and freeze the result. |
 | `copyroom refresh --layer NAME --out DIR --request TEXT` | Generate and preview a new frozen result. |

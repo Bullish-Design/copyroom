@@ -1,0 +1,7 @@
+pytest stock (no guard) exit 0
+pytest guarded exit 0
+slow guarded-env exit 0
+ruff exit 0
+walkthrough stock exit 0
+walkthrough guarded exit 0
+done

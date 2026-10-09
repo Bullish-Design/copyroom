@@ -50,11 +50,16 @@ cat >> "$SOURCE/templates/settings/template.j2" <<'EOF'
 
 maintenance: "enabled"
 EOF
+# Publish through the pyjutsu guard when it exists. Stock tooling uses the weaker path.
+GUARD_FLAG=()
+if [[ -z "${COPYROOM_PYJUTSU:-}" ]] && ! command -v pyjutsu >/dev/null 2>&1; then
+  GUARD_FLAG=(--publish-unguarded)
+fi
 (
   cd "$PROJECT"
   copyroom update --source "$SOURCE" --out "$ROOT/update-preview"
   copyroom preview list --project "$PROJECT"
-  copyroom apply --project "$PROJECT" --preview "$ROOT/update-preview"
+  copyroom apply --project "$PROJECT" --preview "$ROOT/update-preview" ${GUARD_FLAG[@]+"${GUARD_FLAG[@]}"}
 )
 grep -q 'Keep this project note.' "$PROJECT/notes.md" || die "project-owned file was lost"
 grep -q 'maintenance: "enabled"' "$PROJECT/config/project.yml" || die "source update was not applied"

@@ -104,12 +104,55 @@ means a foreign writer ran during publication. `apply` and `layer add` then exit
 A journal without `publish_from_operation` gets the same result, because
 CopyRoom cannot prove where its publication started.
 
-This check detects the race. It does not prevent it. The `jj new` command can
-move `@` before CopyRoom sees the foreign operation. The foreign commit stays in
-the repository but leaves the active line. To resolve it, run `jj op log`, move
-the foreign work back onto the active line, and apply or discard the preview.
-Do not run `jj op restore`; it hides the foreign work. A guarded default
-publication path is planned for a later step.
+## Publication guard
+
+`copyroom update --apply` and `copyroom layer add` publish through the pyjutsu
+guard. CopyRoom runs one `pyjutsu publish-if --expect-wc ACTIVE_HEAD --onto
+PREPARED_HEAD` call. The guard rejects the publication before `@` moves when
+another writer committed, edited a tracked file, or moved the jj operation
+heads. CopyRoom then exits `1`, changes nothing, keeps the preview or the
+prepared layer, and names the observed head. Run `update` again to build a new
+preview.
+
+CopyRoom finds `pyjutsu` from `COPYROOM_PYJUTSU` or from `PATH`. It stores the
+absolute path, and it probes the executable before it publishes. The probe calls
+`publish-if` on a repository that does not exist and expects the answer
+`result=error reason=repo-not-found`. A version number alone is not proof.
+`COPYROOM_JJ` names the jj executable in the same way.
+
+If CopyRoom finds no guard, `apply` and `layer add` exit `2` and name the fix.
+Pass `--publish-unguarded`, or set `COPYROOM_PUBLISH_UNGUARDED=1`, to publish
+without the guard. That path runs `jj new`. It cannot reject a foreign writer.
+It checks the result afterward and reports the writer as a finding. The journal
+records `publish_mode` for every publication: `{"guard": false}` without the
+guard, or the guard path and version with it. The prebuilt pyjutsu wheel runs on
+Linux x86-64 with glibc 2.39 or later. Other platforms build it from source with
+Rust 1.89 or later.
+
+Without the guard, CopyRoom saves the current jj operation in the journal as
+`publish_from_operation` before it runs `jj new`. After publication, it checks
+that the first operation after it put the prepared head under `@`. Any other
+operation means a foreign writer ran during publication. `apply` and `layer add`
+then exit `1`, keep the journal and the preview, and name the operation.
+`status` and `recover` keep reporting `published but unverified` until you
+resolve it. A journal without `publish_from_operation` gets the same result,
+because CopyRoom cannot prove where its publication started. The foreign commit
+stays in the repository but leaves the active line. To resolve it, run `jj op
+log`, move the foreign work back onto the active line, and apply or discard the
+preview. Do not run `jj op restore`; it hides the foreign work.
+
+The guard does not remove four limits:
+
+1. A direct file write that lands during the checkout can be lost when the file
+   is one that the checkout rewrites. A new file and a file the checkout does not
+   touch survive.
+2. A writer that loaded the previous jj operation and publishes later forks the
+   operation log. Its content stays visible. Its `@` move does not.
+3. Power loss. jj does not fsync the operation head file or any directory.
+4. A raw `git` write in a colocated repository. `git` does not take jj's lock.
+
+A rejected guard call can leave unreferenced jj operations and Git objects. Run
+`jj util gc` to remove them. They are not damage.
 
 `recover` reports orphan workspaces, layer directories, and JSON write
 temporaries. An orphan is a workspace or temporary that no journal protects.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 import shlex
@@ -10,6 +11,7 @@ import subprocess
 import tempfile
 import unittest
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,6 +20,7 @@ from copyroom.local import workflow as workflow_module
 from copyroom.local.composer import compose
 from copyroom.local.errors import LocalError
 from copyroom.local.generation import generate, refresh
+from copyroom.local.guard import UNGUARDED_ENV
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt, templatize
 from copyroom.local.source import LOCK_FILE, MARKER, TEMP_EXCLUDE, TEMP_PREFIX, marker, snapshot_path
@@ -46,6 +49,19 @@ from copyroom.local.workshop import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def unguarded(test: Callable[..., None]) -> Callable[..., None]:
+    """Run a test on the unguarded path, where it hooks `jj new`."""
+
+    @functools.wraps(test)
+    def wrapper(*args: object, **kwargs: object) -> None:
+        with patch.dict(os.environ, {UNGUARDED_ENV: "1"}):
+            test(*args, **kwargs)
+
+    return wrapper
+
+
 SLICE = ROOT / ".scratch" / "projects" / "26-templateer-jj-slice"
 
 
@@ -233,6 +249,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(prepared_marker, (self.project / ".copyroom-local.json").read_bytes())
         self.assertEqual(state["prepared_head"], state["preview_head"])
 
+    @unguarded
     def test_apply_performs_one_active_head_mutation_plus_cleanup_forget(self) -> None:
         self.create()
         self.change_template(
@@ -365,6 +382,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         recover(self.project)
         self.assertFalse(temporary_path.exists())
 
+    @unguarded
     def test_apply_reports_a_published_tree_mismatch(self) -> None:
         self.create()
         self.change_template(
@@ -407,6 +425,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertTrue(out.is_dir())
         self.assertFalse(status(self.project)["ok"])
 
+    @unguarded
     def test_apply_reports_a_published_conflict(self) -> None:
         self.create()
         self.change_template(
@@ -449,6 +468,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn("active project has conflicts: README.md", journal["verification"])
         self.assertTrue(out.is_dir())
 
+    @unguarded
     def test_apply_reports_a_published_marker_mismatch(self) -> None:
         self.create()
         self.change_template(
@@ -489,6 +509,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertTrue(any("active marker digest" in item for item in journal["verification"]))
         self.assertTrue(out.is_dir())
 
+    @unguarded
     def test_layer_add_reports_a_published_tree_mismatch(self) -> None:
         self.create()
         overlay = self.root / "overlay-source"
@@ -538,6 +559,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertFalse(status(self.project)["ok"])
         shutil.rmtree(temporary_path)
 
+    @unguarded
     def test_apply_wraps_unexpected_publication_failure_as_code_two(self) -> None:
         self.create()
         self.change_template(
@@ -612,6 +634,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         JJ(self.project).run("commit", "-m", "test: track newline path")
         self.assertIn(name, JJ(self.project).tracked_paths())
 
+    @unguarded
     def test_recover_does_not_publish_an_unverified_result(self) -> None:
         self.create()
         self.change_template(
@@ -902,6 +925,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
             self.assertIn("unverified", report["pending_recovery"][0]["action"])
             self.assertTrue(journals[0].is_file())
 
+    @unguarded
     def test_apply_refuses_success_after_a_competing_writer(self) -> None:
         self.create()
         template = self.source / "templates/settings/template.j2"
@@ -919,6 +943,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assert_race_is_a_finding(foreign, raised.exception)
         self.assertTrue(out.is_dir())
 
+    @unguarded
     def test_layer_add_refuses_success_after_a_competing_writer(self) -> None:
         self.create()
         overlay = self.make_docs_overlay()
@@ -946,6 +971,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         preview(self.project, out)
         return out
 
+    @unguarded
     def test_apply_command_error_after_a_competing_writer_stays_a_finding(self) -> None:
         out = self.prepare_update_preview("error-after-race")
         foreign = self.race_before_publication("copyroom:update")
@@ -971,6 +997,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertFalse(recover(self.project)["ok"])
         self.assertTrue(out.is_dir())
 
+    @unguarded
     def test_journal_without_a_pre_publication_operation_is_unverified(self) -> None:
         out = self.prepare_update_preview("old-journal")
         original = JJ.run
@@ -1167,6 +1194,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
             "copyroom-walkthrough", {row["name"] for row in JJ(self.project).workspaces()},
         )
 
+    @unguarded
     def test_recover_clears_a_dead_layer_journal_after_retry(self) -> None:
         self.create()
         overlay = self.make_overlay()
@@ -1284,6 +1312,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
             [row["path"] for row in report["orphans"]["write_temporaries"]],
         )
 
+    @unguarded
     def test_recover_uses_the_layer_journal_after_tmpdir_changes(self) -> None:
         self.create()
         overlay = self.make_overlay()
@@ -1302,6 +1331,7 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertTrue(report["ok"])
         self.assertFalse(temporary_path.exists())
 
+    @unguarded
     def test_status_reports_interrupted_publication_after_prepared_head_lands(self) -> None:
         self.create()
         self.change_template(

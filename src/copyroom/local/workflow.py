@@ -15,6 +15,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
+from . import guard as guard_module
 from .composer import (
     FileEntry,
     RenderPlan,
@@ -25,6 +26,7 @@ from .composer import (
     plan_digest,
 )
 from .errors import LocalError
+from .guard import Guard, resolve_guard, unguarded_requested
 from .jj import JJ, project_lock
 from .source import (
     JOURNAL_DIR,
@@ -389,6 +391,88 @@ def _publication_origin_problem(
     return None
 
 
+NO_GUARD_MESSAGE = (
+    "publication guard not found: install pyjutsu 0.23.0 or later and set "
+    "COPYROOM_PYJUTSU to its absolute path, or pass --publish-unguarded to publish "
+    "with the weaker check that reports a foreign writer after the fact"
+)
+
+
+class GuardRejected(LocalError):
+    """The guard refused to publish and changed nothing."""
+
+
+def _publication_mode(publish_unguarded: bool) -> dict[str, Any]:
+    """Choose guarded or unguarded publication before the command mutates anything."""
+
+    if unguarded_requested(publish_unguarded):
+        return {"guard": False}
+    guard = resolve_guard()
+    if guard is None:
+        raise LocalError(NO_GUARD_MESSAGE, 2)
+    return guard.describe()
+
+
+def _journal_guard(journal: dict[str, Any]) -> tuple[bool, Guard | None]:
+    """Tell whether a journal publishes with the guard, and find the guard if so.
+
+    A journal that predates the guard has no mode. It uses the guard when one exists.
+    """
+
+    mode = journal.get("publish_mode")
+    if isinstance(mode, dict) and mode.get("guard") is False:
+        return False, None
+    return True, resolve_guard()
+
+
+def _publish_prepared(
+    project: Path,
+    jj: JJ,
+    journal: dict[str, Any],
+    prepared_head: str,
+    expected_wc: str,
+    description: str,
+) -> None:
+    """Make the prepared head the parent of a new active head, or raise.
+
+    The guarded path rejects before `@` moves when another writer changed the project.
+    The unguarded path runs `jj new`, which cannot reject.
+    """
+
+    guarded, guard = _journal_guard(journal)
+    if not guarded:
+        jj.run("new", prepared_head, "-m", description)
+        return
+    if guard is None:
+        raise LocalError(NO_GUARD_MESSAGE, 2)
+    result = guard_module.publish_if(guard, project, expected_wc, prepared_head, description)
+    fields = result.fields
+    if result.code == 0 and result.result == "published":
+        return
+    reason = fields.get("reason", "unknown")
+    if result.result == "stale":
+        raise GuardRejected(
+            f"publication guard rejected the publish ({reason}): expected active head "
+            f"{expected_wc}, observed {fields.get('observed_wc_commit', 'unknown')}; "
+            "nothing was published",
+            1,
+        )
+    if result.result == "incomplete":
+        recovered = guard_module.recover(guard, project)
+        raise LocalError(
+            f"publication guard reported an incomplete publish ({reason}, stage "
+            f"{fields.get('stage', 'unknown')}, operation {fields.get('operation', 'unknown')}); "
+            f"ran pyjutsu recover (exit {recovered.code})",
+            1,
+        )
+    detail = fields.get("message") or result.stderr.strip() or f"exit {result.code}"
+    if result.result == "error":
+        raise GuardRejected(
+            f"publication guard refused to run ({reason}): {detail}; nothing was published", 2,
+        )
+    raise LocalError(f"publication guard failed ({reason}): {detail}", 2)
+
+
 def _check_active_state(
     jj: JJ,
     project: Path,
@@ -685,10 +769,12 @@ def _attach_layer(
     plan: RenderPlan,
     layer: str,
     record_metadata: dict[str, Any] | None = None,
+    publish_unguarded: bool = False,
 ) -> dict[str, str]:
     """Attach one prevalidated render as an independent layer."""
 
     project = normalize_path(project)
+    publish_mode = _publication_mode(publish_unguarded)
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", layer) or layer == "base":
         raise LocalError("layer name must start with a letter and use letters, digits, '_' or '-'", 3)
     source = _refuse_symlink(source)
@@ -718,6 +804,7 @@ def _attach_layer(
             "schema": 1,
             "kind": "layer_add",
             "journal_state": "prepared",
+            "publish_mode": publish_mode,
             "project": str(project),
             "project_id": data["project_id"],
             "layer": layer,
@@ -792,7 +879,17 @@ def _attach_layer(
                 project, journal, "publishing", publish_from_operation=jj.operation_id(),
             )
             try:
-                jj.run("new", prepared_head, "-m", f"copyroom:layer add {layer}")
+                _publish_prepared(
+                    project, jj, journal, prepared_head, active_head,
+                    f"copyroom:layer add {layer}",
+                )
+            except GuardRejected as exc:
+                publication_error_handled = True
+                _set_journal_phase(project, journal, "prepared")
+                raise LocalError(
+                    f"{exc}; the prepared layer is kept; run copyroom recover or retry layer add",
+                    exc.code,
+                ) from exc
             except Exception as exc:
                 publication_error_handled = True
                 try:
@@ -856,12 +953,13 @@ def add_layer(
     source: Path,
     answers_file: Path,
     layer: str,
+    publish_unguarded: bool = False,
 ) -> dict[str, str]:
     """Render and attach one independent local Templateer layer."""
 
     source = _refuse_symlink(source)
     plan = compose(source, read_json(answers_file))
-    return _attach_layer(project, source, plan, layer)
+    return _attach_layer(project, source, plan, layer, publish_unguarded=publish_unguarded)
 
 
 def list_layers(project: Path) -> list[dict[str, Any]]:
@@ -1251,11 +1349,21 @@ def _publish_layer_transaction(
         dict(prepared_record["owners"]),
         tracked_paths=jj.tracked_paths("@"),
     )
+    guarded, guard = _journal_guard(journal)
+    if guarded and guard is None:
+        return _journal_row(
+            journal,
+            "publication guard not found; install pyjutsu or retry layer add with "
+            "--publish-unguarded",
+        )
     _set_journal_phase(
         project, journal, "publishing", state, publish_from_operation=jj.operation_id(),
     )
     try:
-        jj.run("new", prepared_head, "-m", f"copyroom:layer add {journal['layer']}")
+        _publish_prepared(
+            project, jj, journal, prepared_head, str(journal["active_head"]),
+            f"copyroom:layer add {journal['layer']}",
+        )
     except Exception:
         try:
             current_head = jj.commit_id("@")
@@ -1676,10 +1784,11 @@ def recover(project: Path, prune: bool = False) -> dict[str, Any]:
         }
 
 
-def apply(project: Path, out: Path) -> dict[str, str]:
+def apply(project: Path, out: Path, publish_unguarded: bool = False) -> dict[str, str]:
     """Apply the reviewed preview tree and record its source state."""
 
     project = normalize_path(project)
+    publish_mode = _publication_mode(publish_unguarded)
     out = normalize_path(out)
     state = _load_preview(out)
     if normalize_path(Path(str(state["project"]))) != project:
@@ -1759,13 +1868,20 @@ def apply(project: Path, out: Path) -> dict[str, str]:
         journal["prepared_head"] = preview_head
         journal["prepared_tree"] = preview_tree
         journal["prepared_marker_digest"] = state["prepared_marker_digest"]
+        journal["publish_mode"] = publish_mode
         _set_journal_phase(project, journal, "prepared", state)
         _set_journal_phase(
             project, journal, "publishing", state,
             publish_from_operation=jj.operation_id(),
         )
         try:
-            jj.run("new", preview_head, "-m", "copyroom:update")
+            _publish_prepared(
+                project, jj, journal, preview_head, str(state["active_head"]),
+                "copyroom:update",
+            )
+        except GuardRejected as exc:
+            _set_journal_phase(project, journal, "prepared", state)
+            raise LocalError(f"{exc}; preview kept for review", exc.code) from exc
         except Exception as exc:
             try:
                 row = _reconcile_journal(project, jj, journal)
@@ -1818,10 +1934,10 @@ def apply(project: Path, out: Path) -> dict[str, str]:
     return {"project": str(project), "render": str(state["next_render"])}
 
 
-def update(project: Path, out: Path) -> dict[str, str]:
+def update(project: Path, out: Path, publish_unguarded: bool = False) -> dict[str, str]:
     """Compatibility name for apply."""
 
-    return apply(project, out)
+    return apply(project, out, publish_unguarded)
 
 
 def discard(out: Path) -> dict[str, str]:

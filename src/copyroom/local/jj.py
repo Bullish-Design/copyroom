@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import fcntl
+import os
 import shutil
 import subprocess
 import sys
@@ -12,6 +13,27 @@ from pathlib import Path
 
 from .errors import LocalError
 from .source import LOCK_FILE
+
+JJ_ENV = "COPYROOM_JJ"
+
+
+def resolve_jj() -> str:
+    """Return the absolute path of the jj executable.
+
+    COPYROOM_JJ names it. Without that, the path found on PATH is used. Spawning the
+    resolved path avoids a second PATH lookup between the check and the spawn.
+    """
+
+    named = os.environ.get(JJ_ENV)
+    if named:
+        path = os.path.abspath(named)
+        if not (os.path.isfile(path) and os.access(path, os.X_OK)):
+            raise LocalError(f"{JJ_ENV} does not name an executable jj: {path}", 2)
+        return path
+    found = shutil.which("jj")
+    if found is None:
+        raise LocalError("jj is required for local project workflows")
+    return os.path.abspath(found)
 
 
 class JJ:
@@ -23,10 +45,8 @@ class JJ:
     def run(self, *args: str, allow_no_conflicts: bool = False) -> str:
         """Run one jj command and return stdout."""
 
-        if shutil.which("jj") is None:
-            raise LocalError("jj is required for local project workflows")
         result = subprocess.run(
-            ["jj", *args], cwd=self.cwd, text=True, capture_output=True, check=False,
+            [resolve_jj(), *args], cwd=self.cwd, text=True, capture_output=True, check=False,
         )
         if allow_no_conflicts and result.returncode == 2 and "No conflicts found" in result.stderr:
             return ""
@@ -145,4 +165,4 @@ def project_lock(project: Path) -> Iterator[None]:
         raise LocalError(f"cannot lock project {project}: {exc}") from exc
 
 
-__all__ = ["JJ", "project_lock"]
+__all__ = ["JJ", "JJ_ENV", "project_lock", "resolve_jj"]

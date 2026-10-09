@@ -163,6 +163,10 @@ def update_command(
     source: Path | None = typer.Option(None, "--source", help="Local source override"),
     answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
     layer: str = typer.Option("base", "--layer", help="Layer to converge"),
+    publish_unguarded: bool = typer.Option(
+        False, "--publish-unguarded",
+        help="Publish without the pyjutsu guard; a foreign writer is found only afterward",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     """Create a project update preview or apply a reviewed preview."""
@@ -172,7 +176,10 @@ def update_command(
     if apply_preview is not None:
         if out is not None or source is not None or answers is not None:
             _error("--apply cannot be combined with preview inputs", 3)
-        result = _call(apply, project, apply_preview, json_output=json_output)
+        result = _call(
+            apply, project, apply_preview, publish_unguarded=publish_unguarded,
+            json_output=json_output,
+        )
     else:
         destination = out or (
             project.parent / ".copyroom-previews"
@@ -213,11 +220,18 @@ def preview_list(
 def apply_command(
     preview: Path = typer.Option(..., "--preview", help="Reviewed preview workspace"),
     project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    publish_unguarded: bool = typer.Option(
+        False, "--publish-unguarded",
+        help="Publish without the pyjutsu guard; a foreign writer is found only afterward",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     from .local.workflow import apply
 
-    _call(apply, project or _project_root(), preview, json_output=json_output)
+    _call(
+        apply, project or _project_root(), preview, publish_unguarded=publish_unguarded,
+        json_output=json_output,
+    )
 
 
 @app.command("discard")
@@ -302,11 +316,18 @@ def layer_add(
     answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
     as_layer: str = typer.Option(..., "--as", help="New layer name"),
     project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
+    publish_unguarded: bool = typer.Option(
+        False, "--publish-unguarded",
+        help="Publish without the pyjutsu guard; a foreign writer is found only afterward",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     from .local.workflow import add_layer
 
-    _call(add_layer, project or _project_root(), _source(source), answers, as_layer, json_output=json_output)
+    _call(
+        add_layer, project or _project_root(), _source(source), answers, as_layer,
+        publish_unguarded=publish_unguarded, json_output=json_output,
+    )
 
 
 @layer_app.command("list")
