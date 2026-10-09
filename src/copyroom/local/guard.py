@@ -62,20 +62,36 @@ def _run(path: str, *args: str) -> GuardResult:
     return GuardResult(completed.returncode, _parse(completed.stdout), completed.stderr)
 
 
-def _version(path: str) -> str | None:
-    """Read the pyjutsu version from the Python that sits beside the script."""
+def _interpreter(path: str) -> str | None:
+    """Find the Python that runs a pyjutsu script: its shebang, else a sibling python."""
 
-    python = Path(path).parent / "python"
-    if not python.exists():
+    try:
+        with open(path, "rb") as stream:
+            first = stream.readline().decode("utf-8", "replace").strip()
+    except OSError:
+        return None
+    if first.startswith("#!"):
+        parts = first[2:].split()
+        if parts and os.path.isabs(parts[0]) and not parts[0].endswith("/env"):
+            return parts[0]
+    sibling = Path(path).parent / "python"
+    return str(sibling) if sibling.exists() else None
+
+
+def _version(path: str) -> str | None:
+    """Read the pyjutsu version with the interpreter that runs the script."""
+
+    python = _interpreter(path)
+    if python is None:
         return None
     try:
         completed = subprocess.run(
-            [str(python), "-c", "import pyjutsu; print(pyjutsu.__version__)"],
+            [python, "-c", "import pyjutsu; print(pyjutsu.__version__)"],
             text=True, capture_output=True, check=False, timeout=PROBE_SECONDS,
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
-    return completed.stdout.strip() or None if completed.returncode == 0 else None
+    return (completed.stdout.strip() or None) if completed.returncode == 0 else None
 
 
 @lru_cache(maxsize=8)

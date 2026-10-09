@@ -69,3 +69,22 @@ def test_unguarded_request_comes_from_the_flag_or_the_environment(
     assert unguarded_requested(True) is True
     monkeypatch.setenv(UNGUARDED_ENV, "1")
     assert unguarded_requested(False) is True
+
+
+def test_version_comes_from_the_interpreter_in_the_shebang(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    python = tmp_path / "py"
+    python.write_text('#!/bin/sh\necho 9.9.9\n', encoding="utf-8")
+    python.chmod(0o755)
+    fake = tmp_path / "pyjutsu-shebang"
+    fake.write_text(
+        f"#!{python}\n"
+        "# the shebang stands in for the real interpreter\n",
+        encoding="utf-8",
+    )
+    fake.chmod(0o755)
+    from copyroom.local.guard import _interpreter, _version
+
+    assert _interpreter(str(fake)) == str(python)
+    assert _version(str(fake)) == "9.9.9"
