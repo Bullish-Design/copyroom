@@ -18,11 +18,23 @@ devenv shell -- bash demo/walkthrough.sh
   sources and disposable jj repositories. It covers rendering, preview,
   apply, conflicts, snapshots, layers, frozen generation, adoption,
   templatize, workshop goldens, and candidate workspaces.
+- `tests/integration/test_guarded_publication.py` checks publication through the
+  pyjutsu guard: rejection before `@` moves, the capability gate, and the
+  `--publish-unguarded` record. Its guard tests skip when no guard is installed.
+- `tests/crash/` holds the slow crash matrix. It forces the unguarded path,
+  because it kills a process around `jj new`.
 - `tests/integration/test_cli.py` checks public commands, exit codes, workshop
   mode, and refusal to rewrite legacy project markers.
 
 The local integration tests use temporary directories. They do not change the
 CopyRoom repository's jj or gitman state.
+
+## Publication modes
+
+The project depends on `pyjutsu`, so `pyjutsu` is on `PATH` in the devenv shell and
+tests run guarded by default. `tests/conftest.py` sets `COPYROOM_PUBLISH_UNGUARDED=1`
+when no guard resolves, so the suite also passes on stock tooling. Tests that hook
+`jj new` use the `unguarded` decorator.
 
 ## Walkthrough
 

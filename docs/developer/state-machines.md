@@ -18,7 +18,11 @@ records both parent IDs and the reviewed tree digest.
 
 `copyroom apply` checks that the project head, project tree, marker, and render
 head still match the preview. It also checks that no conflict remains. It then
-applies the preview head and verifies the exact tree.
+publishes the preview head with one `pyjutsu publish-if` call and verifies the
+exact tree. The guard rejects before `@` moves when another writer changed the
+project, and the journal returns to `prepared`. With `--publish-unguarded`,
+CopyRoom runs `jj new` and detects a foreign writer afterward: it saves the jj
+operation before `jj new` and checks which operation moved `@`.
 
 ## Recovery
 

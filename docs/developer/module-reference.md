@@ -19,7 +19,16 @@ snapshot when its original source locator is unavailable.
 ## `local/jj.py`
 
 `JJ` wraps plain jj commands for local project repositories. `project_lock`
-serializes CopyRoom writes. The root repository still uses gitman.
+serializes CopyRoom writes. `resolve_jj` returns the absolute jj path from
+`COPYROOM_JJ` or `PATH`. The root repository still uses gitman.
+
+## `local/guard.py`
+
+`resolve_guard` finds `pyjutsu` from `COPYROOM_PYJUTSU` or `PATH`. It accepts the
+executable only after a probe: `publish-if` against a repository that does not
+exist must answer `result=error reason=repo-not-found`. `publish_if` and `recover`
+run the commands and parse their `key=value` output. `unguarded_requested` reads
+`--publish-unguarded` and `COPYROOM_PUBLISH_UNGUARDED`.
 
 ## `local/workflow.py`
 
@@ -27,7 +36,9 @@ serializes CopyRoom writes. The root repository still uses gitman.
   writes the project marker.
 - `preview` renders a new layer revision and merges it with the active project
   in a separate jj workspace.
-- `apply` verifies the recorded state and applies the reviewed preview tree.
+- `apply` verifies the recorded state and applies the reviewed preview tree. It
+  publishes through `_publish_prepared`: one guard call, or `jj new` when the
+  caller chose `--publish-unguarded`. `GuardRejected` means nothing was published.
 - `discard`, `list_previews`, `status`, and `inspect` support recovery and
   review.
 - `add_layer` and `list_layers` manage independent output owners.

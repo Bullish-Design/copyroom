@@ -58,7 +58,8 @@ from that tree. Legacy answer files are not rewritten.
 - `--json` emits a structured report where the command supports it.
 - `--mode project` and `--mode workshop` force mode detection.
 - `--version` prints the CopyRoom version.
-- `copyroom doctor` checks Templateer and jj.
+- `copyroom doctor` checks Templateer and jj. It also reports the pyjutsu guard
+  (`guard` and `guard_version`, or `null`). A missing guard does not fail the check.
 
 Exit codes are part of the CLI interface:
 

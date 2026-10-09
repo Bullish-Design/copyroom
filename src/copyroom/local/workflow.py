@@ -2156,10 +2156,14 @@ def doctor() -> dict[str, Any]:
         templateer_version = None
         templateer_ok = False
     jj_path = shutil.which("jj")
+    guard = resolve_guard()
     return {
         "ok": templateer_ok and jj_path is not None,
         "templateer": templateer_version,
         "jj": jj_path,
+        # The guard is optional. Without it, apply and layer add need --publish-unguarded.
+        "guard": guard.path if guard else None,
+        "guard_version": guard.version if guard else None,
     }
 
 

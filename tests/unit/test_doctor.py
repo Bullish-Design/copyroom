@@ -44,3 +44,13 @@ def test_doctor_cli_emits_parseable_json(tmp_path: Path) -> None:
     assert report["ok"] is True
     assert report["templateer"]
     assert report["jj"]
+
+
+def test_doctor_reports_the_guard_without_failing_when_it_is_missing(monkeypatch) -> None:
+    monkeypatch.setenv("COPYROOM_PYJUTSU", "/nonexistent/pyjutsu")
+
+    report = doctor()
+
+    assert report["ok"] is True
+    assert report["guard"] is None
+    assert report["guard_version"] is None

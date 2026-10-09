@@ -33,7 +33,10 @@ validated artifact bytes so later updates replay the saved result.
 - `local/composer.py` validates the source and builds an immutable tree plan.
 - `local/source.py` reads project markers and stores content-addressed source
   snapshots.
-- `local/jj.py` runs jj commands and holds project write locks.
+- `local/jj.py` runs jj commands and holds project write locks. It spawns jj by
+  absolute path (`COPYROOM_JJ`, or `PATH` resolved once).
+- `local/guard.py` finds and probes the pyjutsu executable, and runs
+  `pyjutsu publish-if` and `pyjutsu recover`.
 - `local/workflow.py` implements project creation, preview, apply, recovery,
   status, and layer ownership.
 - `local/generation.py` calls Templateer only after an explicit request and

@@ -1,0 +1,5 @@
+pytest exit 0
+slow exit 0
+ruff exit 0
+walkthrough exit 0
+done

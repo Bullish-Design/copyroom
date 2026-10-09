@@ -19,7 +19,7 @@ uv sync --locked
 copyroom doctor
 ```
 
-`copyroom doctor` checks Templateer and jj. It exits with code `2` if either
+`copyroom doctor` checks Templateer and jj, and reports the pyjutsu guard. It exits with code `2` if either
 dependency is missing.
 
 ## Create a project
