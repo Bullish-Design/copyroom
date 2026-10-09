@@ -1,0 +1,48 @@
+# {{ project_name }} devenv.
+#
+# Testee runs the checks below. Run `testee verify --full` for the full gate.
+# Run `testee verify` for the quick profile and `testee check <id>` for one check.
+{ pkgs, config, ... }:
+
+let
+  # Take the module and the package from the same pinned tag.
+  # Keep this tag equal to the tag in pyproject.toml.
+  testeeFlake = builtins.getFlake "git+https://github.com/Bullish-Design/testee?ref=refs/tags/v0.5.0";
+in
+{
+  imports = [ testeeFlake.devenvModules.default ];
+  testee.package = testeeFlake.packages.${pkgs.stdenv.hostPlatform.system}.testee;
+
+  languages.python = {
+    enable = true;
+    venv.enable = true;
+    uv.enable = true;
+  };
+
+  testee.checks = {
+    ruff = {
+      argv = [ "uv" "run" "--no-sync" "ruff" "check" "src" "tests" "--output-format" "json" ];
+      profiles = [ "quick" "full" ];
+      structured = { parser = "ruff-json"; file = "ruff.stdout.log"; };
+    };
+    ruff-format = {
+      argv = [ "uv" "run" "--no-sync" "ruff" "format" "--check" "src" "tests" ];
+      profiles = [ "quick" "full" ];
+    };
+    ty = {
+      argv = [
+        "uv" "run" "--no-sync" "ty" "check" "src" "tests"
+        "--python" "${config.devenv.state}/venv/bin/python3"
+      ];
+      profiles = [ "full" ];
+    };
+    pytest = {
+      argv = [
+        "${pkgs.bash}/bin/bash" "-c"
+        ''uv run --no-sync pytest -q tests --junitxml="$TESTEE_RUN_DIR/pytest.junit.xml"''
+      ];
+      profiles = [ "full" ];
+      structured = { parser = "junit-xml"; file = "pytest.junit.xml"; };
+    };
+  };
+}
