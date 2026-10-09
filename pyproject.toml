@@ -12,6 +12,7 @@ authors = [
 
 dependencies = [
   "pydantic>=2.12.5",
+  "pyjutsu==0.23.0",
   "pyyaml>=6.0",
   "templateer==0.4.1",
   "tomlkit>=0.13",
@@ -55,6 +56,9 @@ include = [
 [tool.uv.sources]
 # CopyRoom uses the maintained local Templateer checkout in this workspace.
 templateer = { path = "../templateer_v2", editable = true }
+# pyjutsu is not on PyPI. This release wheel needs Linux x86-64 with glibc 2.39 or later.
+# Other platforms build the sdist from the same release with Rust 1.89 or later.
+pyjutsu = { url = "https://github.com/Bullish-Design/Pyjutsu/releases/download/v0.23.0/pyjutsu-0.23.0-cp313-abi3-manylinux_2_39_x86_64.whl" }
 
 [tool.pytest.ini_options]
 addopts = "-q --cov=copyroom --cov-report=term-missing -m 'not slow'"

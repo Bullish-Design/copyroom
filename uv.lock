@@ -181,6 +181,7 @@ version = "0.7.7"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
+    { name = "pyjutsu" },
     { name = "pyyaml" },
     { name = "templateer" },
     { name = "tomlkit" },
@@ -207,6 +208,7 @@ dev = [
 requires-dist = [
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
+    { name = "pyjutsu", url = "https://github.com/Bullish-Design/Pyjutsu/releases/download/v0.23.0/pyjutsu-0.23.0-cp313-abi3-manylinux_2_39_x86_64.whl" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1" },
     { name = "pyyaml", specifier = ">=6.0" },
@@ -700,6 +702,20 @@ sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
 ]
+
+[[package]]
+name = "pyjutsu"
+version = "0.23.0"
+source = { url = "https://github.com/Bullish-Design/Pyjutsu/releases/download/v0.23.0/pyjutsu-0.23.0-cp313-abi3-manylinux_2_39_x86_64.whl" }
+dependencies = [
+    { name = "pydantic" },
+]
+wheels = [
+    { url = "https://github.com/Bullish-Design/Pyjutsu/releases/download/v0.23.0/pyjutsu-0.23.0-cp313-abi3-manylinux_2_39_x86_64.whl", hash = "sha256:505b0157a19c680fe347b6c44a36c6e6c1585c9b55a7961473810b2bb596b4ef" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12" }]
 
 [[package]]
 name = "pytest"
