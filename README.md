@@ -40,6 +40,20 @@ uv run ruff check src/ tests/
 bash demo/walkthrough.sh
 ```
 
+## Nix package
+
+The flake exports the `copyroom` command as `packages.<system>.default`. It builds from a
+pinned nixpkgs with the `pyjutsu` and `templateer` flakes at pinned tags. The package wraps
+`COPYROOM_PYJUTSU` to the pinned `pyjutsu` command. It does not wrap `jj`. Install one `jj` on
+the host `PATH`.
+
+```nix
+inputs.copyroom.url = "git+https://github.com/Bullish-Design/copyroom?ref=refs/tags/v0.8.1";
+```
+
+`overlays.default` adds `pyjutsu`, `minijinja`, `templateer`, and `copyroom` to the Python
+package set. Run `nix build .#copyroom` to build it. The build runs the test suite.
+
 ## Create and update a project
 
 ```bash

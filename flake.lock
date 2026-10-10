@@ -1,0 +1,71 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1791456040,
+        "narHash": "sha256-H83yz/do+hjOO0uujHyH8RgtIQP2v7Mw+cLwcZK/xKc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e7439b6b14ad3cc35d05608ebca9bce01a25f5f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e7439b6b14ad3cc35d05608ebca9bce01a25f5f8",
+        "type": "github"
+      }
+    },
+    "pyjutsu": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791601234,
+        "narHash": "sha256-WdfNws27FBasHnXLR75g3xsL0a2DK18agsVUCc5VxSI=",
+        "ref": "refs/tags/v0.23.1",
+        "rev": "b5373881f606867a084c40ec19c37988fa22c18a",
+        "revCount": 176,
+        "type": "git",
+        "url": "https://github.com/Bullish-Design/Pyjutsu"
+      },
+      "original": {
+        "ref": "refs/tags/v0.23.1",
+        "type": "git",
+        "url": "https://github.com/Bullish-Design/Pyjutsu"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "pyjutsu": "pyjutsu",
+        "templateer": "templateer"
+      }
+    },
+    "templateer": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791600723,
+        "narHash": "sha256-H3B3qMlKnko7GMOLupmGZP0/HH+p7Z0dwA2rMHC3bI4=",
+        "ref": "refs/tags/v0.4.2",
+        "rev": "a342d1e473b406ad141d028c00756bd0bf958d53",
+        "revCount": 56,
+        "type": "git",
+        "url": "https://github.com/Bullish-Design/templateer_v2"
+      },
+      "original": {
+        "ref": "refs/tags/v0.4.2",
+        "type": "git",
+        "url": "https://github.com/Bullish-Design/templateer_v2"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
