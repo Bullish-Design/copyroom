@@ -410,10 +410,8 @@ def apply_preview(ctx: Ctx) -> None:
     if not ctx.preview.exists():
         raise Stop(FINDING, f"no preview at {ctx.preview}; run without --apply first")
     paths = conflicted(ctx)
-    hist = run(ctx, ["jj", "log", "-r", "conflicts() & ::@", "--no-graph", "-T", "change_id.short()"],
-               ctx.preview).stdout.strip()
-    if paths or hist:
-        raise Stop(FINDING, "the preview still has conflicts: " + ", ".join(paths or [hist]))
+    if paths:
+        raise Stop(FINDING, "the preview still has conflicts: " + ", ".join(paths))
     cmd = ["copyroom", "update", "--apply", str(ctx.preview)]
     if ctx.args.unguarded:
         cmd.append("--publish-unguarded")  # only for the child-workspace guard; see the log
