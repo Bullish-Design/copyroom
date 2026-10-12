@@ -4,7 +4,7 @@ Date: 2026-10-12
 
 ## Summary
 
-Four repos now converge with template-py v0.8.0. Eventic remains unchanged because its disposable update has a red Testee gate. Flora passed CopyRoom status checks, but no test gate ran by user direction.
+Five repos now converge with template-py v0.8.0. The user waived Eventic's Testee gate. Flora also has no test result by user direction.
 
 CopyRoom v0.8.5 is the minimum version for this migration. Its tag points to `a267243e`. Template-py v0.8.0 points to `851a7112`.
 
@@ -14,11 +14,11 @@ CopyRoom v0.8.5 is the minimum version for this migration. Its tag points to `a2
 | --- | --- | --- | --- |
 | agentman | migrated and pushed | `d35bb734` | Testee passed; status pins v0.8.0; second update returned no-change |
 | argentic | migrated and pushed | `b45e0555` | Testee passed; status pins v0.8.0; second update returned no-change |
-| eventic | skipped; real tree unchanged | `cb2ca22b` | Disposable migration gate failed; baseline lacks the Testee module |
+| eventic | migrated and pushed | `c1f27c248ff82e2318ba4700ef8bf89fe3e5672c` | Testee waived by user; CopyRoom status pins v0.8.0; second update returned no-change |
 | flora | migrated and pushed | `5d8597a2` | Status pins v0.8.0; second update returned no-change; no tests ran by user direction |
 | flora-core | migrated and pushed | `9bb0668b` | Testee passed 4/4; status pins v0.8.0; second update returned no-change |
 
-The real Eventic local and remote `main` both point to `cb2ca22b`. Its working tree was clean. No migration command ran in that repo.
+Eventic `main` is `c1f27c248ff82e2318ba4700ef8bf89fe3e5672c`, and origin matches. The migration preserved the devman links and the project ignore rules, including `*.db`. CopyRoom status exits 0 with the v0.8.0 pin. A second update returns `no-change`. The user waived Testee on the real tree. No post-migration tests ran there.
 
 Flora's migration commit uses the canonical source path `/home/andrew/Documents/Projects/template-py/source`. The marker pins ref `v0.8.0` at `851a7112`. CopyRoom status exited 0. A second update returned `no-change`. Flora's Testee gate did not run, as directed.
 
@@ -31,11 +31,11 @@ testee: module_missing: this repository does not import the Testee module.
 Add the testee input and `imports: [ testee/nix/testee.nix ]` to devenv.yaml.
 ```
 
-The baseline therefore fails `testee verify`, but it cannot compare the migrated Testee checks. The baseline does not have the Testee module.
+The baseline fails `testee verify` because it does not have the Testee module.
 
 For a project-level comparison, the disposable baseline ran `uv sync --locked --extra test` and `uv run --no-sync pytest -q`. The lock stayed unchanged. Pytest finished in 191.66 seconds with 226 passed, 9 skipped, and 6 failed. The failures were pre-existing setup gaps: `alembic` was absent, two migration-dependent tests then failed, and three wheel tests required `uv build`. This run confirms that the pre-migration project also has a red raw pytest run. It does not provide a same-environment Testee comparison.
 
-The disposable migrated tree was stable at commit `9fbb6b89`, tree `9db07737`. Testee 0.6.1 ran full gate `20261012T220311Z-0a3521566cba`. It exited 1 with one passed check and three failed checks:
+The first disposable migrated tree was stable at commit `9fbb6b89`, tree `9db07737`. Testee 0.6.1 ran full gate `20261012T220311Z-0a3521566cba`. It exited 1 with one passed check and three failed checks:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
@@ -44,7 +44,11 @@ The disposable migrated tree was stable at commit `9fbb6b89`, tree `9db07737`. T
 | ruff-format | failed, exit 1 | `tests/conformance/test_memory_concurrency.py:41` needs formatting; one file would change |
 | ty | failed, exit 1 | 84 errors; examples include invalid `ENCODINGS` typing, a `Store.search` argument type, and unresolved `alembic` imports |
 
-This evidence does not show that the template update caused these findings. The baseline lacks Testee, so its checks did not run under the same environment. Its direct pytest run needed the optional `test` extra. The migrated Testee run did not install that extra. Keep Eventic blocked until its project owner fixes or waives the gate, then repeat the disposable migration.
+This evidence does not show that the template update caused these findings. The baseline lacks Testee, so its checks did not run under the same environment. The migrated Testee run did not install the optional `test` extra.
+
+The reviewed Eventic configuration now follows its existing continuous integration (CI) scope. `testee.prepare` installs the `test`, `postgres`, and `migrate` extras, then builds the wheel. Testee runs ruff, ruff-format, basedpyright, and pytest with `-W error`. `pyproject.toml` keeps `basedpyright` scoped to `src/eventic`. One Ruff-format line was fixed. This changes no check scope.
+
+The user waived the real Eventic Testee gate and directed the migration to proceed without another test run. The exact-scope disposable gate was canceled, so the reviewed configuration has no green Testee result. No post-migration tests ran on real Eventic.
 
 ## Migration driver guard
 

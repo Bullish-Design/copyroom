@@ -2,9 +2,7 @@
 
 Date: 2026-10-12
 
-All six repos migrated to template-py v0.8.0. Each migration passed Testee
-4/4 on its final main tree. CopyRoom reports the v0.8.0 pin, and a second
-update reports `no-change`. Each main bookmark matches its remote.
+Six repos migrated to template-py v0.8.0: flora-qc, inferference, llgym, pyllij, scopeman, and shellij. Each migration passed Testee 4/4 on its final main tree. CopyRoom v0.8.4 reports the v0.8.0 pin, and a second update reports `no-change`. Each local main bookmark matches origin main.
 
 ## Results
 
@@ -13,29 +11,31 @@ update reports `no-change`. Each main bookmark matches its remote.
 | flora-qc | Migrated and pushed | `fa18ad602587c4e2c90f3f6594feb8c109371b5e` | Testee 4/4; CopyRoom pin and no-change verified |
 | inferference | Migrated and pushed | `7b9c340bb54d1faea9b6119e6455195d44095005` | Testee 4/4; CopyRoom pin and no-change verified |
 | llgym | Migrated and pushed | `c46980c5eb93deb3099231228e7816231e11edce` | Testee 4/4 on main; CopyRoom pin and no-change verified |
-| pytuin | Already adopted; verified and pushed | `8398ba3886a30d02a12a619b7c71d938a6dfaa84` | Testee 4/4; CopyRoom pin and no-change verified |
+| pyllij | Migrated and pushed | `4c6ee82c4eb35dd210e9c9927e6cc9818a19156d` | Testee 4/4 on main; CopyRoom v0.8.4 status reports pin `v0.8.0` at `851a7112f21e`, no pending preview; second update reports `no-change` |
 | scopeman | Migrated and pushed | `097b4b1f73889460d0d3e4ae426d858bf163c890` | Testee 4/4 on main; CopyRoom status ok, pin v0.8.0, no-change |
 | shellij | Migrated and pushed | `194228ea931f547cfc71345e0c08f8b7cb24fd83` | Testee 4/4 on main; CopyRoom status ok, pin v0.8.0, no-change |
 
-The resolution deleted only `copyroom.project.yml` beyond the template's
-normal file changes. Each repo kept its project-specific checks, tasks,
-dependencies, and toolchain pins. Shellij's merged `devenv.nix` had two
-`languages.python` assignments. The migration removed the duplicate and then
-passed Testee on the final main tree.
+The resolution deleted only `copyroom.project.yml` beyond the template's normal changes. Each repo kept its project-specific checks, tasks, dependencies, and toolchain pins. Shellij's merged `devenv.nix` had two `languages.python` assignments. The migration removed the duplicate and then passed Testee on the final main tree.
 
-No files changed in linkman or talkee. Vendomat was not touched. An unrelated
-Testee worker for vendomat remained active during this batch.
+## Batch D result: pytuin
 
-## Repos left untouched
+pytuin joined template-py directly at v0.8.0. It has no valid template creation ref. Main is `8398ba3886a30d02a12a619b7c71d938a6dfaa84` and matches origin. Testee passed 4/4; CopyRoom status reports pin v0.8.0, and the next update reports `no-change`.
 
-Both repos were excluded by instruction. Neither repo received a migration.
-Their default workspaces are clean, and their local `main` bookmarks match
-`origin/main`.
+## Repos deferred
 
-| Repo | Main commit | Preflight state |
-|---|---|---|
-| linkman | `ee929fa27ce437d38dabd4cff19b50d07607a087` | The default workspace is clean. The `v6-linkman` workspace exists at `../gitman-workspaces/v6-linkman`; its working-copy commit is empty. Both workspaces remain untouched. |
-| talkee | `9f4013e9f342ec0f45f8a2211ab7c7b51adb2775` | The default workspace is clean. Three active workspaces remain: `17-devman-environment` has a conflicted change; `17-full-pipeline` has an active change and remote bookmark; `l3-structured-extraction` has an active benchmark change. All remain untouched. |
+Linkman was not migrated. Its default workspace is clean. The `v6-linkman` workspace points to `v6-vendomat-description`, which has unlanded changes in 11 files, including one `pyproject.toml` overlap with main. Defer Linkman until a disposable preview shows how to integrate that branch, or until the user chooses a main-only migration.
+
+Talkee was not touched, per user direction.
+
+Vendomat was not touched.
+
+## Eventic gate investigation
+
+Eventic was migrated and pushed in batch A. Main is `c1f27c248ff82e2318ba4700ef8bf89fe3e5672c`. CopyRoom 0.8.5 reports the v0.8.0 pin and a second update returns `no-change`. The user waived Testee on the real tree, so no post-migration tests ran there.
+
+The reviewed project configuration installs the `test`, `postgres`, and `migrate` extras, then builds the wheel. It keeps Eventic's existing basedpyright scope (`src/eventic`) and runs pytest with `-W error`. One Ruff-format line changed. The change does not reduce check scope.
+
+The disposable baseline and first migrated Testee results are in [BATCH-A.md](BATCH-A.md). The exact-scope disposable Testee run was canceled under the user's waiver. Do not report a green Testee result for the final Eventic configuration.
 
 ## Stale template text
 
@@ -50,13 +50,10 @@ copyroom update                 # preview a three-way merge in a separate worksp
 copyroom update --apply PATH    # apply the preview that you reviewed
 ```
 
-This text does not describe the current update flow. CopyRoom v0.8.4 stores the
-source in a private Git ref. A project stays pinned until `update --ref` selects
-a new version.
+This text does not describe the current update flow. CopyRoom v0.8.4 stores the source in a private Git ref. A project stays pinned until `update --ref` selects a new version.
 
 Proposed replacement:
 
 > This project uses template-py pinned at v0.8.0. Check for newer tags with `copyroom status`. Preview a new version with `copyroom update --ref NEW_REF`, then apply the reviewed preview with `copyroom update --apply PATH`.
 
-The migration did not change this text. A documentation-only template release
-can carry the replacement after the fleet migration.
+The migration did not change this text. A documentation-only template release can carry the replacement after the fleet migration.
