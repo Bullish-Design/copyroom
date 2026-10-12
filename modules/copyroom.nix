@@ -5,7 +5,7 @@
 #   # devenv.yaml
 #   inputs:
 #     copyroom:
-#       url: github:Bullish-Design/copyroom?ref=v0.8.3
+#       url: github:Bullish-Design/copyroom?ref=v0.8.4
 #       flake: false
 #   imports:
 #     - copyroom
