@@ -11,7 +11,7 @@
   #   checks.copyroom                        the package build; it runs the suite
   #
   # CopyRoom runs `jj` from the host PATH. Install one `jj` on the host. The package does not
-  # wrap a second one.
+  # wrap a second one. The checks use the pinned jj 0.46.0 from nix/jj.nix.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/e7439b6b14ad3cc35d05608ebca9bce01a25f5f8";
 
@@ -37,7 +37,9 @@
             copyroom = pyFinal.callPackage ./packages/copyroom-cli.nix {
               pyjutsu = pyFinal.pyjutsu;
               runTests = true;
-              inherit (final) jujutsu git patch;
+              # The checks run the suite against the pinned jj 0.46.0, not the nixpkgs jj.
+              jujutsu = import ./nix/jj.nix { pkgs = final; };
+              inherit (final) git patch;
             };
           })
         ];

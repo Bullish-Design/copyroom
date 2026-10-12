@@ -11,8 +11,9 @@
 }:
 
 let
-  # Pinned release jj. nixpkgs lags behind jj 0.46, which gitman needs.
-  jj = import ./jj.nix { inherit pkgs; };
+  # Pinned release jj, shared with the consumer module. nixpkgs lags behind jj 0.46, which
+  # gitman needs.
+  jj = import ../nix/jj.nix { inherit pkgs; };
 
   # One workspace root for every checkout: `<projects>/gitman-workspaces`. In the main
   # checkout, `devenv.root` is `<projects>/copyroom`. In a workspace, it is
