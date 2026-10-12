@@ -13,10 +13,21 @@
 let
   # Pinned release jj. nixpkgs lags behind jj 0.46, which gitman needs.
   jj = import ./jj.nix { inherit pkgs; };
+
+  # One workspace root for every checkout: `<projects>/gitman-workspaces`. In the main
+  # checkout, `devenv.root` is `<projects>/copyroom`. In a workspace, it is
+  # `<projects>/gitman-workspaces/NAME`. Both resolve to the same directory.
+  projectsDir = builtins.dirOf config.devenv.root;
+  workspaceRoot =
+    if builtins.baseNameOf projectsDir == "gitman-workspaces" then
+      projectsDir
+    else
+      "${projectsDir}/gitman-workspaces";
 in
 {
   # https://devenv.sh/basics/
   env.GREET = "copyroom";
+  env.GITMAN_WORKSPACE_ROOT = workspaceRoot;
 
   # https://devenv.sh/packages/
   packages = [
