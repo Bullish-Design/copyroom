@@ -56,6 +56,16 @@ SCHEMA_BY_MINOR = {"v0.5": "schemas/v0_5.py", "v0.7": "schemas/v0_7.py"}
 ALWAYS_DROP = {"repoman_dev_root"}
 
 
+def is_devman_view_path(path: str) -> bool:
+    """Return whether a tracked path belongs to a machine-local devman view."""
+    return (
+        path == ".agents"
+        or path.startswith(".agents/")
+        or path == ".claude/skills"
+        or path.startswith(".claude/skills/")
+    )
+
+
 class Stop(Exception):
     """End the run with an exit code and a message."""
 
@@ -442,7 +452,7 @@ def verify(ctx: Ctx) -> None:
     tracked = run(ctx, ["jj", "file", "list", "-r", "@"], ctx.repo).stdout.splitlines()
     # CopyRoom 0.8.5 tracks no source copy: .copyroom-local/ holds only untracked state.
     bad = [t for t in tracked if t.startswith(".copyroom-local/")]
-    bad += [t for t in tracked if t.startswith((".agents", ".claude/"))]
+    bad += [t for t in tracked if is_devman_view_path(t)]
     if bad:
         problems.append(f"state tracked wrongly: {bad[:5]}")
     # CopyRoom 0.8.5 keeps sources in private Git refs. They must exist, and no jj bookmark may name them.
