@@ -56,6 +56,5 @@ Seven direct cases passed for root, nested, near-match, and project-owned `.clau
 
 - CopyRoom v0.8.5: `a267243e`.
 - Template-py v0.8.0: `851a7112`.
-- Eventic disposable migration files and logs: `/tmp/copyroom-mode-pilot-rFEnww/work-eventic/`.
-- Eventic baseline Testee output: `/tmp/copyroom-mode-pilot-rFEnww/eventic-baseline-testee.log`.
-- Migrated Eventic Testee report: `/home/andrew/.local/state/testee/repos/c53585cb64b48466/slots/eventic-803e575b/runs/20261012T220311Z-0a3521566cba/report.json`.
+- Migrated Eventic Testee run: `20261012T220311Z-0a3521566cba`.
+- The task-owned pilot directories and Testee cache entries were removed after this report recorded their results.
