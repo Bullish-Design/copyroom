@@ -15,6 +15,7 @@ import yaml
 from .composer import AGENT_VIEW, RenderPlan, check_paths, compose, digest_bytes, plan_digest
 from .errors import LocalError
 from .jj import JJ, project_lock
+from .pinned import ResolvedSource, open_source
 from .source import (
     LOCK_FILE,
     MARKER,
@@ -154,7 +155,7 @@ class _AdoptionUndo:
 
 def _write_adoption(
     project: Path,
-    source: Path,
+    source: ResolvedSource,
     plan: RenderPlan,
     omissions: list[str],
     jj: JJ,
@@ -204,8 +205,8 @@ def _write_adoption(
         last_operation = jj.operation_id()
         if working_digest(project) != before_tree:
             raise LocalError("adoption changed project files before marker write", 1)
-        snapshot_source(source, project, plan.source_digest)
-        data = marker_with_plan(plan, source, project_id)
+        snapshot_source(source.path, project, plan.source_digest)
+        data = marker_with_plan(plan, source.locator, project_id, pin=source.pin)
         base_record = {**data["layers"]["base"], "omissions": omissions}
         data["layers"]["base"] = base_record
         data.update(base_record)
@@ -246,15 +247,33 @@ def adopt(
     answers_file: Path,
     write: bool = False,
     template_only_choice: str | None = None,
+    ref: str | None = None,
 ) -> dict[str, Any]:
-    """Report template drift or attach a local source with explicit write."""
+    """Report template drift or attach a local source with explicit write.
+
+    ``ref`` reads the source at a Git ref of the repository that holds it.
+    """
 
     project = normalize_path(project)
     source = normalize_path(source)
     if (project / MARKER).exists():
         raise LocalError("project already has a local marker", 3)
     _validate_disjoint(source, project)
-    plan = compose(source, read_json(answers_file))
+    answers = read_json(answers_file)
+    with open_source(source, ref) as resolved:
+        return _adopt(project, resolved, answers, write, template_only_choice)
+
+
+def _adopt(
+    project: Path,
+    source: ResolvedSource,
+    answers: dict[str, Any],
+    write: bool,
+    template_only_choice: str | None,
+) -> dict[str, Any]:
+    """Compare or attach an opened source."""
+
+    plan = compose(source.path, answers)
     report = compare(project, plan)
     project_paths = set(_project_files(project))
     prefix_collisions: list[str] = []

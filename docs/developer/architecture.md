@@ -33,6 +33,8 @@ validated artifact bytes so later updates replay the saved result.
 - `local/composer.py` validates the source and builds an immutable tree plan.
 - `local/source.py` reads project markers and stores content-addressed source
   snapshots.
+- `local/pinned.py` pins a source to a commit of its local Git repository and
+  reads that commit into a temporary directory.
 - `local/jj.py` runs jj commands and holds project write locks. It spawns jj by
   absolute path (`COPYROOM_JJ`, or `PATH` resolved once).
 - `local/guard.py` finds and probes the pyjutsu executable, and runs

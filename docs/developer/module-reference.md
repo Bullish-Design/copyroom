@@ -16,6 +16,16 @@ Reads `.copyroom-local.json`, writes marker updates atomically, and saves source
 snapshots by digest under `.copyroom-local/sources/`. A project can replay a
 snapshot when its original source locator is unavailable.
 
+## `local/pinned.py`
+
+Pins a source directory to a commit of the local Git repository that holds it.
+`open_source` and `open_layer_source` yield a `ResolvedSource`: the directory to
+compose from, the `source` locator text, and the `pin` record. They remove the
+temporary directory on exit. `materialise` reads blobs from the Git object store
+(`git ls-tree` and `git cat-file`). It never runs `git archive` or `git checkout`,
+so attributes and filters have no effect. `newer_tags` lists newer version tags
+for `status`. All commands read the local repository only.
+
 ## `local/jj.py`
 
 `JJ` wraps plain jj commands for local project repositories. `project_lock`

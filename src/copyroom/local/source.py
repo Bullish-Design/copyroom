@@ -274,10 +274,20 @@ def _jj_git_directory(project: Path) -> Path | None:
     return internal.resolve() if internal.is_dir() else None
 
 
-def marker_with_plan(plan: Any, source: Path, project_id: str, revision: int = 0) -> dict[str, Any]:
-    """Build the versioned base layer marker from a render plan."""
+def marker_with_plan(
+    plan: Any,
+    source: str,
+    project_id: str,
+    revision: int = 0,
+    pin: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Build the base layer marker from a render plan.
 
-    record = {
+    ``source`` is the source locator text. ``pin`` is the version record of a
+    source pinned to a Git commit. A path source has no pin.
+    """
+
+    record: dict[str, Any] = {
         "source": str(source),
         "source_digest": plan.source_digest,
         "manifest_digest": plan.manifest_digest,
@@ -289,6 +299,8 @@ def marker_with_plan(plan: Any, source: Path, project_id: str, revision: int = 0
         "revision": revision,
         "render_digest": plan.render_digest,
     }
+    if pin is not None:
+        record["pin"] = pin
     return {
         "schema": SCHEMA_VERSION,
         "project_id": project_id,

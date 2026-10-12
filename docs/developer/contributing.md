@@ -21,6 +21,7 @@ completed changes through the current gitman lane.
 | --- | --- |
 | Render validation and output paths | `local/composer.py` |
 | Source snapshots and markers | `local/source.py` |
+| Versioned sources (Git refs) | `local/pinned.py` |
 | jj workspaces and locks | `local/jj.py` |
 | Project create, update, and recovery | `local/workflow.py` |
 | Explicit model generation | `local/generation.py` |

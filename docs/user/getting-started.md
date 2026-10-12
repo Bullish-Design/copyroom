@@ -36,6 +36,15 @@ copyroom status
 CopyRoom writes the source snapshot and a `.copyroom-local.json` marker. jj
 records the initial render as the base layer.
 
+To pin the project to a tagged version of a source, add `--ref`:
+
+```bash
+copyroom new ../app-template ./app --answers answers.json --ref v1.0.0
+```
+
+Later updates render that commit until you run `copyroom update --ref NEW`. See
+[Versioned sources](local-workflows.md#versioned-sources).
+
 ## Preview and apply an update
 
 ```bash

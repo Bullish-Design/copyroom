@@ -29,6 +29,15 @@ from .composer import (
 from .errors import LocalError
 from .guard import Guard, is_colocated_child_workspace, resolve_guard, unguarded_requested
 from .jj import JJ, project_lock
+from .pinned import (
+    ResolvedSource,
+    commit_exists,
+    describe,
+    newer_tags,
+    open_layer_source,
+    open_source,
+    read_pin,
+)
 from .source import (
     JOURNAL_DIR,
     LOCK_FILE,
@@ -40,7 +49,6 @@ from .source import (
     marker,
     marker_with_plan,
     read_json,
-    resolve_source,
     snapshot_path,
     snapshot_source,
     temp_exclude_active,
@@ -803,7 +811,7 @@ def _next_marker(
     data: dict[str, Any],
     record: dict[str, Any],
     layer: str,
-    source: Path,
+    source: ResolvedSource,
     plan: RenderPlan,
     revision: int,
     record_metadata: dict[str, Any] | None,
@@ -812,7 +820,7 @@ def _next_marker(
 
     updated_record = {
         **record,
-        "source": str(source),
+        "source": source.locator,
         "source_digest": plan.source_digest,
         "manifest_digest": plan.manifest_digest,
         "templateer_version": plan.templateer_version,
@@ -823,6 +831,10 @@ def _next_marker(
         "revision": revision,
         "render_digest": plan.render_digest,
     }
+    # The new source decides the pin. A path source drops the old pin.
+    updated_record.pop("pin", None)
+    if source.pin is not None:
+        updated_record["pin"] = source.pin
     if record_metadata:
         updated_record["generation"] = record_metadata
         updated_record["kind"] = "generated"
@@ -831,12 +843,15 @@ def _next_marker(
         raise LocalError("invalid layer records in project marker")
     next_data = {**data, "layers": {**records, layer: updated_record}}
     if layer == "base":
+        next_data.pop("pin", None)
         next_data.update(updated_record)
     return next_data
 
 
-def new(source: Path, target: Path, answers_file: Path) -> dict[str, str]:
-    """Create a project from one local Templateer source."""
+def new(
+    source: Path, target: Path, answers_file: Path, ref: str | None = None,
+) -> dict[str, str]:
+    """Create a project from one local Templateer source, optionally pinned to a ref."""
 
     source = _refuse_symlink(source)
     target = normalize_path(target)
@@ -844,38 +859,39 @@ def new(source: Path, target: Path, answers_file: Path) -> dict[str, str]:
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
         raise LocalError(f"target is not empty: {target}")
     answers = read_json(answers_file)
-    plan = compose(source, answers)
-    existed = target.exists()
-    target.mkdir(parents=True, exist_ok=True)
-    jj = JJ(target)
-    try:
-        jj.run("git", "init", "--colocate")
-        exclude_local_state(target)
-        write_tree(target, plan.files)
-        project_id = uuid.uuid4().hex
-        jj.run("commit", "-m", _render_subject(project_id, "base", 0, plan.source_digest))
-        render = jj.commit_id("@-")
-        snapshot_source(source, target, plan.source_digest)
-        data = marker_with_plan(plan, source, project_id)
-        write_json(target / MARKER, data)
-        jj.run("commit", "-m", "copyroom:project inputs")
-    except Exception:
-        clear_workspace(target)
-        for name in (".jj", ".git"):
-            path = target / name
-            if path.is_dir() and not path.is_symlink():
-                shutil.rmtree(path)
-            elif path.exists() or path.is_symlink():
-                path.unlink()
-        if not existed:
-            target.rmdir()
-        raise
+    with open_source(source, ref) as resolved:
+        plan = compose(resolved.path, answers)
+        existed = target.exists()
+        target.mkdir(parents=True, exist_ok=True)
+        jj = JJ(target)
+        try:
+            jj.run("git", "init", "--colocate")
+            exclude_local_state(target)
+            write_tree(target, plan.files)
+            project_id = uuid.uuid4().hex
+            jj.run("commit", "-m", _render_subject(project_id, "base", 0, plan.source_digest))
+            render = jj.commit_id("@-")
+            snapshot_source(resolved.path, target, plan.source_digest)
+            data = marker_with_plan(plan, resolved.locator, project_id, pin=resolved.pin)
+            write_json(target / MARKER, data)
+            jj.run("commit", "-m", "copyroom:project inputs")
+        except Exception:
+            clear_workspace(target)
+            for name in (".jj", ".git"):
+                path = target / name
+                if path.is_dir() and not path.is_symlink():
+                    shutil.rmtree(path)
+                elif path.exists() or path.is_symlink():
+                    path.unlink()
+            if not existed:
+                target.rmdir()
+            raise
     return {"project": str(target), "project_id": project_id, "render": render}
 
 
 def _attach_layer(
     project: Path,
-    source: Path,
+    source: ResolvedSource,
     plan: RenderPlan,
     layer: str,
     record_metadata: dict[str, Any] | None = None,
@@ -887,8 +903,7 @@ def _attach_layer(
     publish_mode = _publication_mode(project, publish_unguarded)
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", layer) or layer == "base":
         raise LocalError("layer name must start with a letter and use letters, digits, '_' or '-'", 3)
-    source = _refuse_symlink(source)
-    _validate_disjoint(source, project)
+    _validate_disjoint(Path(source.locator), project)
     jj = JJ(project)
     temporary_root = Path(tempfile.gettempdir()) / f"copyroom-layer-{uuid.uuid4().hex}"
     workspace_path = temporary_root / "workspace"
@@ -906,7 +921,7 @@ def _attach_layer(
         _preflight_paths(
             project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
         )
-        if digest_source(source) != plan.source_digest:
+        if digest_source(source.path) != plan.source_digest:
             raise LocalError("source changed after render", 1)
         active_head = jj.commit_id("@")
         active_tree = tracked_tree_digest(project, jj)
@@ -952,7 +967,7 @@ def _attach_layer(
             if conflicts:
                 raise LocalError("layer add has conflicts: " + ", ".join(conflicts), 1)
             has_snapshot = snapshot_path(workspace_path, plan.source_digest).exists()
-            snapshot_source(source, workspace_path, plan.source_digest)
+            snapshot_source(source.path, workspace_path, plan.source_digest)
             if not has_snapshot:
                 JJ(workspace_path).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
 
@@ -1064,12 +1079,17 @@ def add_layer(
     answers_file: Path,
     layer: str,
     publish_unguarded: bool = False,
+    ref: str | None = None,
 ) -> dict[str, str]:
     """Render and attach one independent local Templateer layer."""
 
     source = _refuse_symlink(source)
-    plan = compose(source, read_json(answers_file))
-    return _attach_layer(project, source, plan, layer, publish_unguarded=publish_unguarded)
+    answers = read_json(answers_file)
+    with open_source(source, ref) as resolved:
+        plan = compose(resolved.path, answers)
+        return _attach_layer(
+            project, resolved, plan, layer, publish_unguarded=publish_unguarded,
+        )
 
 
 def list_layers(project: Path) -> list[dict[str, Any]]:
@@ -1085,6 +1105,7 @@ def list_layers(project: Path) -> list[dict[str, Any]]:
         {
             "layer": name,
             "source": record["source"],
+            **describe(record),
             "source_digest": record["source_digest"],
             "revision": record["revision"],
             "render_head": jj.render_head(str(data["project_id"]), str(name)),
@@ -1102,8 +1123,14 @@ def preview(
     layer: str = "base",
     plan_override: RenderPlan | None = None,
     record_metadata: dict[str, Any] | None = None,
+    ref: str | None = None,
 ) -> dict[str, Any]:
-    """Render and merge in a separate jj workspace."""
+    """Render and merge in a separate jj workspace.
+
+    Without ``source_override`` and ``ref``, a pinned layer renders its pinned commit.
+    ``ref`` alone moves the layer to a new ref of the same repository.
+    Both together switch to a new source at that ref.
+    """
 
     project = normalize_path(project)
     out = normalize_path(out)
@@ -1111,13 +1138,33 @@ def preview(
         source_override = _refuse_symlink(source_override)
     data = marker(project)
     record = _layer_record(data, layer)
-    source = normalize_path(resolve_source(project, data, source_override, record))
-    _validate_disjoint(source, project, allow_snapshot=source.is_relative_to(project / SOURCE_DIR))
+    with open_layer_source(project, data, record, source_override, ref) as source:
+        return _preview(
+            project, out, source, data, record, answers_file, layer, plan_override,
+            record_metadata,
+        )
+
+
+def _preview(
+    project: Path,
+    out: Path,
+    source: ResolvedSource,
+    data: dict[str, Any],
+    record: dict[str, Any],
+    answers_file: Path | None,
+    layer: str,
+    plan_override: RenderPlan | None,
+    record_metadata: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Render one layer from an opened source and merge it in a separate jj workspace."""
+
+    content = normalize_path(source.path)
+    _validate_disjoint(content, project, allow_snapshot=content.is_relative_to(project / SOURCE_DIR))
     if out.exists() or _preview_sidecar(out).exists():
         raise LocalError(f"preview path already exists: {out}")
     if project == out or project in out.parents or out in project.parents:
         raise LocalError("preview must be outside the project")
-    if source == out or source in out.parents or out in source.parents:
+    if content == out or content in out.parents or out in content.parents:
         raise LocalError("preview must be outside the source")
     answers = read_json(answers_file) if answers_file else record["answers"]
     if plan_override is not None:
@@ -1125,7 +1172,7 @@ def preview(
     elif record.get("kind") == "generated":
         plan = _frozen_plan(record)
     else:
-        plan = compose(source, answers)
+        plan = compose(content, answers)
     plan = _apply_omissions(plan, record)
     jj = JJ(project)
     _preflight_paths(
@@ -1137,10 +1184,14 @@ def preview(
         exclude_local_state(project)
         _require_local_state_untracked(jj)
         # Read all active state after taking the lock.
+        previous = record
         data = marker(project)
         record = _layer_record(data, layer)
-        current_source = normalize_path(resolve_source(project, data, source_override, record))
-        if current_source != source:
+        if (
+            record.get("source"), record.get("pin"), record["source_digest"],
+        ) != (
+            previous.get("source"), previous.get("pin"), previous["source_digest"],
+        ):
             raise LocalError("project source locator changed during render", 1)
         _preflight_paths(
             project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
@@ -1151,6 +1202,8 @@ def preview(
             and plan.answers == record["answers"]
             and plan.templateer_digest == record["templateer_digest"]
             and plan.composer_digest == record["composer_digest"]
+            # A new pin is a change even when the tree is the same. A moved path is not.
+            and source.pin == read_pin(record)
             and (record_metadata is None or record_metadata == record.get("generation"))
         ):
             return {"result": "no-change", "project": str(project)}
@@ -1202,7 +1255,7 @@ def preview(
                 raise LocalError("project and render have the wrong merge base")
             JJ(out).run("new", active_head, next_render, "-m", "copyroom:preview")
             conflict_paths = JJ(out).conflicts()
-            new_snapshot = _snapshot_for_plan(source, project, out, plan)
+            new_snapshot = _snapshot_for_plan(content, project, out, plan)
             if new_snapshot:
                 # The source snapshot becomes part of the reviewed tree and is replayable.
                 JJ(out).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
@@ -1234,7 +1287,8 @@ def preview(
                 "prepared_head": preview_head,
                 "preview_tree": preview_tree,
                 "revision": revision,
-                "source": str(source),
+                "source": source.locator,
+                "pin": source.pin,
                 "source_digest": plan.source_digest,
                 "manifest_digest": plan.manifest_digest,
                 "templateer_version": plan.templateer_version,
@@ -2176,17 +2230,23 @@ def inspect(project: Path) -> dict[str, Any]:
     marker_render_mismatches, render_ids = _marker_render_mismatches(data, records, jj)
     layers: dict[str, Any] = {}
     for name, record in records.items():
+        pin = read_pin(record)
         source = Path(str(record["source"]))
-        source_ok = source.is_dir() and not source.is_symlink()
-        if source_ok:
-            try:
-                source_ok = digest_source(source) == record["source_digest"]
-            except LocalError:
-                source_ok = False
+        if pin is not None:
+            # A pinned layer reads its commit. The working tree of the repository does not count.
+            source_ok = commit_exists(Path(pin["repo"]), pin["commit"])
+        else:
+            source_ok = source.is_dir() and not source.is_symlink()
+            if source_ok:
+                try:
+                    source_ok = digest_source(source) == record["source_digest"]
+                except LocalError:
+                    source_ok = False
         snapshot = snapshot_path(project, str(record["source_digest"]))
         snapshot_ok = snapshot.is_dir() and digest_source(snapshot) == record["source_digest"]
         layers[str(name)] = {
             "source": record["source"],
+            **describe(record),
             "source_digest": record["source_digest"],
             "source_reachable": source_ok,
             "snapshot_reachable": snapshot_ok,
@@ -2204,6 +2264,7 @@ def inspect(project: Path) -> dict[str, Any]:
         heads = mismatch["render_heads"]
         layers[name] = {
             "source": None,
+            **describe({}),
             "source_digest": None,
             "source_reachable": False,
             "snapshot_reachable": False,
@@ -2237,6 +2298,25 @@ def status(project: Path) -> dict[str, Any]:
     """Return a concise project status report."""
 
     report = inspect(project)
+    data = marker(normalize_path(project))
+    records = data.get("layers", {"base": data})
+    available: list[dict[str, Any]] = []
+    for name, layer in report["layers"].items():
+        layer["updates_available"] = []
+        layer["updates_error"] = None
+        pin = read_pin(records[name]) if isinstance(records.get(name), dict) else None
+        if pin is None:
+            continue
+        try:
+            layer["updates_available"] = newer_tags(pin)
+        except LocalError as exc:
+            # An unreadable repository is a finding in the report. It is not a crash.
+            layer["updates_error"] = str(exc)
+        if layer["updates_available"]:
+            available.append({
+                "layer": name, "ref": pin["ref"], "newer": layer["updates_available"],
+            })
+    report["updates_available"] = available
     report["has_pending_publication"] = any(
         transaction["journal_state"] == "publishing"
         or transaction["kind"] == "layer_add"

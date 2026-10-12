@@ -22,8 +22,9 @@ from .composer import (
     safe_output_path,
 )
 from .errors import LocalError
+from .pinned import ResolvedSource
 from .source import marker
-from .workflow import _attach_layer, _layer_record, preview
+from .workflow import _attach_layer, _layer_record, normalize_path, preview
 
 
 def _generation(
@@ -117,7 +118,9 @@ def generate(
     plan, metadata = _generation(source, template_name, request, model_name, context or {}, max_attempts)
     slug = re.sub(r"[^A-Za-z0-9_-]+", "-", template_name).strip("-") or "artifact"
     layer = f"gen-{slug}"
-    return _attach_layer(project, source, plan, layer, metadata)
+    return _attach_layer(
+        project, ResolvedSource.of_path(normalize_path(source)), plan, layer, metadata,
+    )
 
 
 def refresh(

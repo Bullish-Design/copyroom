@@ -89,6 +89,33 @@ rm -rf "$ROOT/adopted/.jj" "$ROOT/adopted/.copyroom-local" "$ROOT/adopted/.copyr
 copyroom adopt "$SOURCE" --project "$ROOT/adopted" --answers "$ANSWERS" --write --template-only keep
 [[ -f "$ROOT/adopted/.copyroom-local.json" ]] || die "adoption marker is missing"
 
+step "Pin a project to a tagged version of a source"
+VERSIONED="$ROOT/versioned-source"
+mkdir -p "$VERSIONED"
+cp -R "$REPO/.scratch/projects/26-templateer-jj-slice/example" "$VERSIONED/source"
+GIT=(git -C "$VERSIONED" -c user.email=demo@example.invalid -c user.name=demo)
+"${GIT[@]}" init -q -b main
+"${GIT[@]}" add -A
+"${GIT[@]}" commit -q -m "first release"
+"${GIT[@]}" tag v1
+printf '\nmaintenance: "enabled"\n' >> "$VERSIONED/source/templates/settings/template.j2"
+"${GIT[@]}" commit -q -am "second release"
+"${GIT[@]}" tag v2
+printf '\nmaintenance: "work in progress"\n' >> "$VERSIONED/source/templates/settings/template.j2"
+"${GIT[@]}" commit -q -am "unreleased work"
+PINNED="$ROOT/pinned"
+copyroom new "$VERSIONED/source" "$PINNED" --answers "$ANSWERS" --ref v1
+grep -q 'maintenance' "$PINNED/config/project.yml" && die "v1 must not hold the later change"
+(
+  cd "$PINNED"
+  copyroom status --json | grep -q '"updates_available"' || die "status must report the newer tag"
+  copyroom update --out "$ROOT/pinned-same" | grep -q no-change || die "an update must keep the pinned commit"
+  copyroom update --ref v2 --out "$ROOT/pinned-preview"
+  copyroom update --apply "$ROOT/pinned-preview" ${GUARD_FLAG[@]+"${GUARD_FLAG[@]}"}
+)
+grep -q 'maintenance: "enabled"' "$PINNED/config/project.yml" || die "update --ref v2 was not applied"
+grep -q 'work in progress' "$PINNED/config/project.yml" && die "an unreleased commit leaked in"
+
 step "Create an isolated candidate template workspace"
 (
   cd "$WORKSHOP"

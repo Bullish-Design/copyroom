@@ -7,15 +7,15 @@ Workshop commands use `copyroom.yml`, `registry/`, and `scenarios/`.
 
 | Command | Behavior |
 | --- | --- |
-| `copyroom new SOURCE TARGET --answers FILE` | Create from a local Templateer source. |
-| `copyroom update [--layer NAME] [--source DIR] [--answers FILE] [--out DIR]` | Create a separate update preview. |
+| `copyroom new SOURCE TARGET --answers FILE [--ref REF]` | Create from a local Templateer source, optionally pinned to a Git ref. |
+| `copyroom update [--layer NAME] [--source DIR] [--ref REF] [--answers FILE] [--out DIR]` | Create a separate update preview. A pinned layer renders its pinned commit. `--ref` moves it. |
 | `copyroom update --apply DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom apply --preview DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom discard --preview DIR` | Discard a pending preview. |
 | `copyroom preview list --project DIR` | List pending previews. |
-| `copyroom status [--json]` | Report jj, source snapshots, conflicts, and previews. |
+| `copyroom status [--json]` | Report jj, source snapshots, source ref and commit, newer version tags, conflicts, and previews. |
 | `copyroom inspect [--json]` | Report source provenance, render heads, and path owners. |
-| `copyroom layer add --source SOURCE --as NAME --answers FILE [--publish-unguarded]` | Add an independent layer through the pyjutsu guard. |
+| `copyroom layer add --source SOURCE --as NAME --answers FILE [--ref REF] [--publish-unguarded]` | Add an independent layer through the pyjutsu guard. |
 | `copyroom layer list [--json]` | List layer render heads and owners. |
 | `copyroom generate --source DIR --template NAME --request TEXT` | Explicitly call a model and freeze the result. |
 | `copyroom refresh --layer NAME --out DIR --request TEXT` | Generate and preview a new frozen result. |
@@ -24,7 +24,10 @@ With no `--out`, `update` creates a unique path beside the project in
 `.copyroom-previews/`. Every `--out` path must be outside the project and the
 source. CopyRoom creates the parent directory of `--out`. `--apply` cannot be
 combined with preview inputs.
-Remote refs, branch flags, and hooks are not supported by local updates.
+`--ref` names a tag, branch, or commit of the local Git repository that holds the
+source. CopyRoom never fetches; a missing ref exits `2`. See
+[Versioned sources](local-workflows.md#versioned-sources). Hooks are not
+supported by local updates.
 
 ## Adoption commands
 
@@ -32,6 +35,7 @@ Remote refs, branch flags, and hooks are not supported by local updates.
 | --- | --- |
 | `copyroom adopt SOURCE --project DIR --answers FILE` | Report source drift without writing. |
 | `copyroom adopt SOURCE --project DIR --answers FILE --write` | Record the source marker and jj history. |
+| `copyroom adopt SOURCE --project DIR --answers FILE --ref REF [--write]` | Compare with, or pin to, a Git ref of the source repository. |
 | `copyroom adopt SOURCE --project DIR --answers FILE --template-only keep --write` | Keep template-only paths outside project ownership. |
 | `copyroom templatize --project DIR --target SOURCE [--name NAME] [--parameterize PATH]` | Extract and exact-check a local source. |
 

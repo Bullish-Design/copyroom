@@ -90,6 +90,7 @@ def test_jj_warning_stays_off_json_stdout(tmp_path: Path, monkeypatch) -> None:
 
     def report_with_warning(
         project: Path, out: Path, source: Path | None, answers: Path | None, layer: str,
+        ref: str | None = None,
     ) -> dict[str, str]:
         return {"result": "warning-test", "path": JJ(project).run("new", "preview")}
 

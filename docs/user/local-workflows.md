@@ -29,7 +29,8 @@ files retain their bytes. Executable files retain their mode. Symlinks must be
 relative and must point to a path in the output tree.
 
 Answers are JSON files that match the shared schema. The source path is a
-locator. The project snapshot under `.copyroom-local/sources/<digest>` is the
+locator. A source can also be pinned to a Git ref; see
+[Versioned sources](#versioned-sources). The project snapshot under `.copyroom-local/sources/<digest>` is the
 saved input used to replay that render.
 
 ## Create and update
@@ -216,6 +217,72 @@ a new file that jj did not track.
 Recovery also reports tracked preview, journal, lock, and write-temporary paths.
 Use `copyroom recover --prune` to untrack those paths. It keeps their files on
 disk.
+
+## Versioned sources
+
+A source can follow a version. Without `--ref`, the marker records the source
+path and the digest. An update reads whatever is at that path. Use this for
+template development.
+
+With `--ref REF`, CopyRoom pins the source to a commit. SOURCE stays a path to
+the source directory. `REF` is a tag, a branch, or a commit of the Git
+repository that holds SOURCE. CopyRoom reads only the local repository. It never
+fetches. `--ref` works on `new`, `adopt`, `layer add`, `update`, and
+`preview create`.
+
+```bash
+copyroom new ~/src/template-py/source ./app --answers answers.json --ref v0.8.0
+copyroom adopt ~/src/template-py/source --answers answers.json --ref v0.8.0 --write
+copyroom layer add --source ~/src/docs/source --as docs --answers docs.json --ref v1.2.0
+```
+
+CopyRoom finds the repository root with `git rev-parse --show-toplevel`. Jj
+repositories that are colocated with Git work the same way. It resolves `REF` to
+a commit and reads that commit's subdirectory from the Git object store. It
+does not use the working tree, `.gitattributes`, or line-ending filters.
+Executable bits and symlinks stay as the commit holds them. A source symlink is
+refused, as for a path source.
+
+The marker records these fields for each pinned layer, in `pin`:
+
+| Field | Meaning |
+|---|---|
+| `repo` | Absolute path of the repository root |
+| `subdir` | Source directory inside the repository (empty at the root) |
+| `ref` | The ref as you gave it |
+| `commit` | The commit that the ref named at that time |
+
+The `source` field holds `repo/subdir`. The digest and the snapshot stay as before.
+
+Updates follow these rules:
+
+- `copyroom update` with no `--source` and no `--ref` renders the pinned commit
+  again. Only the answers can change it. A moving branch, new commits, and
+  working-tree edits have no effect. CopyRoom reads the project snapshot first,
+  so the update works when the repository is gone.
+- `copyroom update --ref NEW` moves the layer to a new ref of the same
+  repository.
+- `copyroom update --source PATH --ref REF` switches to another repository or
+  subdirectory. It also moves a path-source project onto a versioned source.
+- `copyroom update --source PATH` without `--ref` switches the layer to a path
+  source and drops the pin.
+- `--layer NAME` selects the layer, as before. A pin belongs to one layer.
+
+A missing ref makes CopyRoom exit with code `2`: `ref v0.9.0 not found in
+/path; fetch it first`. Run `git fetch` in the repository, then retry. A SOURCE
+outside a Git repository, with `--ref`, also exits `2`. A ref that starts with
+`-` exits `3`.
+
+`copyroom status` and `copyroom layer list` show the source kind (`path` or
+`ref`), the ref, and the commit for each layer. When the pinned ref is a version
+tag, `status` lists newer version tags of the repository as `updates_available`
+and prints `update available: ...` on stderr. A version tag looks like `v1`,
+`v1.2`, or `v1.2.3`. Pre-release tags do not count. A newer tag is information.
+It does not change the exit code. If CopyRoom cannot read the repository, the
+layer shows `updates_error` and `status` still finishes.
+
+The workshop is unchanged. It renders the working source, so template authors
+see their edits.
 
 ## Layers
 

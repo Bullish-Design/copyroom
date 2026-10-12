@@ -110,8 +110,13 @@ def _has_legacy_project_marker(path: Path) -> bool:
     )
 
 
-def _source(path: Path) -> Path:
-    if not (path / "manifest.json").is_file():
+def _source(path: Path, ref: str | None = None) -> Path:
+    """Check a source argument. With a ref, the commit holds the manifest, not the working tree."""
+
+    if ref is not None:
+        if not path.is_dir():
+            _error(f"not a source directory: {path}", 3)
+    elif not (path / "manifest.json").is_file():
         _error(f"not a local Templateer source: {path}", 3)
     return path
 
@@ -150,12 +155,15 @@ def new_command(
     source: Path = typer.Argument(..., help="Local Templateer source directory"),
     target: Path = typer.Argument(Path("."), help="New project directory"),
     answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
+    ref: str | None = typer.Option(
+        None, "--ref", help="Git ref (tag, branch, or commit) of the repository that holds the source",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     """Create a project from a trusted local source."""
     from .local.workflow import new
 
-    _call(new, _source(source), target, answers, json_output=json_output)
+    _call(new, _source(source, ref), target, answers, ref, json_output=json_output)
 
 
 @app.command("update")
@@ -163,6 +171,9 @@ def update_command(
     out: Path | None = typer.Option(None, "--out", help="Preview workspace path"),
     apply_preview: Path | None = typer.Option(None, "--apply", help="Apply this reviewed preview"),
     source: Path | None = typer.Option(None, "--source", help="Local source override"),
+    ref: str | None = typer.Option(
+        None, "--ref", help="Move the layer to this ref (with --source, of that source's repository)",
+    ),
     answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
     layer: str = typer.Option("base", "--layer", help="Layer to converge"),
     publish_unguarded: bool = typer.Option(
@@ -171,12 +182,15 @@ def update_command(
     ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
-    """Create a project update preview or apply a reviewed preview."""
+    """Create a project update preview or apply a reviewed preview.
+
+    Without --source or --ref, a pinned layer renders its pinned commit again.
+    """
     from .local.workflow import apply, preview
 
     project = _project_root()
     if apply_preview is not None:
-        if out is not None or source is not None or answers is not None:
+        if out is not None or source is not None or answers is not None or ref is not None:
             _error("--apply cannot be combined with preview inputs", 3)
         result = _call(
             apply, project, apply_preview, publish_unguarded=publish_unguarded,
@@ -188,7 +202,8 @@ def update_command(
             / f"{project.name}-{uuid.uuid4().hex[:10]}"
         )
         result = _call(
-            preview, project, destination, source, answers, layer, json_output=json_output,
+            preview, project, destination, source, answers, layer, ref=ref,
+            json_output=json_output,
         )
     if isinstance(result, dict) and result.get("conflicts"):
         raise typer.Exit(code=1)
@@ -199,13 +214,16 @@ def preview_create(
     project: Path = typer.Option(..., "--project", help="Managed project directory"),
     out: Path = typer.Option(..., "--out", help="Preview workspace path"),
     source: Path | None = typer.Option(None, "--source", help="Local source override"),
+    ref: str | None = typer.Option(
+        None, "--ref", help="Move the layer to this ref (with --source, of that source's repository)",
+    ),
     answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
     layer: str = typer.Option("base", "--layer", help="Layer to converge"),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     from .local.workflow import preview
 
-    _call(preview, project, out, source, answers, layer, json_output=json_output)
+    _call(preview, project, out, source, answers, layer, ref=ref, json_output=json_output)
 
 
 @preview_app.command("list")
@@ -264,6 +282,16 @@ def status_command(
     from .local.workflow import status
 
     report = _call(status, project or _project_root(), json_output=json_output)
+    if isinstance(report, dict):
+        # Newer tags are information. They do not change the exit code.
+        for item in report["updates_available"]:
+            typer.echo(
+                f"update available: {item['layer']} {item['ref']} -> {', '.join(item['newer'])}",
+                err=True,
+            )
+        for name, layer_report in report["layers"].items():
+            if layer_report["updates_error"]:
+                typer.echo(f"cannot check updates: {name}: {layer_report['updates_error']}", err=True)
     if isinstance(report, dict) and (
         not report["ok"] or report["has_conflicts"] or report["has_marker_render_mismatch"]
     ):
@@ -317,6 +345,9 @@ def layer_add(
     source: Path = typer.Option(..., "--source", help="Local Templateer source"),
     answers: Path = typer.Option(..., "--answers", help="JSON answers file"),
     as_layer: str = typer.Option(..., "--as", help="New layer name"),
+    ref: str | None = typer.Option(
+        None, "--ref", help="Git ref (tag, branch, or commit) of the repository that holds the source",
+    ),
     project: Path | None = typer.Option(None, "--project", help="Managed project directory"),
     publish_unguarded: bool = typer.Option(
         False, "--publish-unguarded",
@@ -327,8 +358,8 @@ def layer_add(
     from .local.workflow import add_layer
 
     _call(
-        add_layer, project or _project_root(), _source(source), answers, as_layer,
-        publish_unguarded=publish_unguarded, json_output=json_output,
+        add_layer, project or _project_root(), _source(source, ref), answers, as_layer,
+        publish_unguarded=publish_unguarded, ref=ref, json_output=json_output,
     )
 
 
@@ -392,13 +423,16 @@ def adopt_command(
     project: Path = typer.Option(Path("."), "--project", help="Existing project directory"),
     write: bool = typer.Option(False, "--write", help="Record the source and initialize jj"),
     template_only: str | None = typer.Option(None, "--template-only", help="Keep template-only paths"),
+    ref: str | None = typer.Option(
+        None, "--ref", help="Git ref (tag, branch, or commit) of the repository that holds the source",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     """Report drift or attach a local source to an existing project."""
     from .local.manage import adopt
 
     report = _call(
-        adopt, project, _source(source), answers, write, template_only,
+        adopt, project, _source(source, ref), answers, write, template_only, ref,
         json_output=json_output,
     )
     if isinstance(report, dict) and not write and not report["exact"]:
