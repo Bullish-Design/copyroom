@@ -21,9 +21,11 @@ The resolution deleted only `copyroom.project.yml` beyond the template's normal 
 
 pytuin joined template-py directly at v0.8.0. It has no valid template creation ref. Main is `8398ba3886a30d02a12a619b7c71d938a6dfaa84` and matches origin. Testee passed 4/4; CopyRoom status reports pin v0.8.0, and the next update reports `no-change`.
 
-## Repos deferred
+## Additional migration: Linkman
 
-Linkman was not migrated. Its default workspace is clean. The `v6-linkman` workspace points to `v6-vendomat-description`, which has unlanded changes in 11 files, including one `pyproject.toml` overlap with main. Defer Linkman until a disposable preview shows how to integrate that branch, or until the user chooses a main-only migration.
+Linkman's default workspace migrated and pushed at `14f5ce2a0d6f49d6e471bc2c6ae828b79f7a2dda`. Testee passed 4/4. CopyRoom reports the v0.8.0 pin, and the next update reports `no-change`. The `v6-linkman` workspace and its side commit `b923040f4b7ad67fb40a1755adba1c91af330d57` remain unchanged.
+
+## Repo not touched
 
 Talkee was not touched, per user direction.
 
