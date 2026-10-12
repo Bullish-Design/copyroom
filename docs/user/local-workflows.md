@@ -141,7 +141,7 @@ stays in the repository but leaves the active line. To resolve it, run `jj op
 log`, move the foreign work back onto the active line, and apply or discard the
 preview. Do not run `jj op restore`; it hides the foreign work.
 
-The guard does not remove four limits:
+The guard does not remove five limits:
 
 1. A direct file write that lands during the checkout can be lost when the file
    is one that the checkout rewrites. A new file and a file the checkout does not
@@ -150,6 +150,38 @@ The guard does not remove four limits:
    operation log. Its content stays visible. Its `@` move does not.
 3. Power loss. jj does not fsync the operation head file or any directory.
 4. A raw `git` write in a colocated repository. `git` does not take jj's lock.
+5. A colocated child workspace, with a pyjutsu build that embeds jj-lib older than
+   0.45. See the next section.
+
+### Colocated child workspaces
+
+`gitman work` makes a colocated child workspace: a jj workspace that is also a Git
+worktree. Its root holds a `.git` file that reads `gitdir: .../.git/worktrees/NAME`.
+Since jj 0.45, jj records one Git HEAD for each workspace. A pyjutsu build with
+jj-lib older than 0.45 drops the Git HEAD of every workspace except `default`
+when it writes an operation. It also skips the Git HEAD sync in a child workspace.
+The next jj command in the child imports the old Git HEAD. That moves `@` off the
+published commit. jj prints no message, because it treats the dropped Git HEAD as
+a first checkout.
+
+CopyRoom checks this before it changes anything. If the project root is a
+colocated child workspace and the guard is too old, `apply` and `layer add` exit
+`2`, change nothing, and keep the preview. The error names the pyjutsu and jj-lib
+versions. Choose one of these:
+
+1. Run the command from the `default` workspace. Other colocated child workspaces
+   of the same repository can still lose their Git HEAD. jj imports it again on
+   the next command in that workspace. The parent stays, and `@` gets a new change
+   ID.
+2. Pass `--publish-unguarded`. This path runs `jj new` with the jj CLI. The jj 0.46
+   CLI writes the Git HEAD of every workspace, so `@` stays on the published
+   commit. The path loses the guard's rejection of a foreign writer.
+
+CopyRoom reads the jj-lib version from `pyjutsu.JJ_VERSION`. The build is safe at
+jj-lib 0.45 or later. If CopyRoom cannot read that version, it uses the pyjutsu
+version, and 0.24.0 is the first safe release. If it reads neither, it refuses.
+The refusal lifts by itself when a safe pyjutsu is installed. `copyroom doctor`
+reports `guard_jj_lib` and `guard_child_workspace` (`ok` or `refused`).
 
 A rejected guard call can leave unreferenced jj operations and Git objects. Run
 `jj util gc` to remove them. They are not damage.

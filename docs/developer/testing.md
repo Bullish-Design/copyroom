@@ -20,7 +20,9 @@ devenv shell -- bash demo/walkthrough.sh
   templatize, workshop goldens, and candidate workspaces.
 - `tests/integration/test_guarded_publication.py` checks publication through the
   pyjutsu guard: rejection before `@` moves, the capability gate, and the
-  `--publish-unguarded` record. Its guard tests skip when no guard is installed.
+  `--publish-unguarded` record. It also covers colocated child workspaces: the
+  refusal, and the unguarded path. One test expects failure while the installed
+  pyjutsu embeds jj-lib older than 0.45. Its guard tests skip when no guard is installed.
 - `tests/crash/` holds the slow crash matrix. It forces the unguarded path,
   because it kills a process around `jj new`.
 - `tests/integration/test_cli.py` checks public commands, exit codes, workshop

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -16,6 +17,11 @@ GUARD_ENV = "COPYROOM_PYJUTSU"
 UNGUARDED_ENV = "COPYROOM_PUBLISH_UNGUARDED"
 PROBE_ID = "0" * 40
 PROBE_SECONDS = 30
+# jj 0.45 and later record a Git HEAD for each workspace. An older jj-lib drops the Git
+# HEAD of every workspace except `default` when it writes an operation. The fix first
+# shipped in pyjutsu 0.24.0, so that version stands in when the jj-lib version is unknown.
+CHILD_SAFE_JJ_LIB = (0, 45)
+CHILD_SAFE_PYJUTSU = (0, 24, 0)
 
 
 @dataclass(frozen=True)
@@ -24,9 +30,23 @@ class Guard:
 
     path: str
     version: str | None
+    jj_lib: str | None = None
 
     def describe(self) -> dict[str, object]:
-        return {"guard": True, "path": self.path, "version": self.version}
+        return {"guard": True, "path": self.path, "version": self.version, "jj_lib": self.jj_lib}
+
+    def keeps_child_git_head(self) -> bool:
+        """Tell whether this build keeps the Git HEAD of a child workspace.
+
+        The jj-lib version decides. When it is unknown, the pyjutsu version decides.
+        When both are unknown, the answer is no.
+        """
+
+        jj_lib = _release(self.jj_lib)
+        if jj_lib is not None:
+            return jj_lib[:2] >= CHILD_SAFE_JJ_LIB
+        pyjutsu = _release(self.version)
+        return pyjutsu is not None and pyjutsu >= CHILD_SAFE_PYJUTSU
 
 
 @dataclass
@@ -40,6 +60,35 @@ class GuardResult:
     @property
     def result(self) -> str:
         return self.fields.get("result", "")
+
+
+def _release(text: str | None) -> tuple[int, ...] | None:
+    """Read the numeric release parts of a version such as `0.44.0`."""
+
+    match = re.match(r"\d+(?:\.\d+)*", text or "")
+    return tuple(int(part) for part in match.group().split(".")) if match else None
+
+
+def is_colocated_child_workspace(project: Path) -> bool:
+    """Tell whether `project` is a colocated jj workspace that is a Git worktree.
+
+    `jj workspace add --colocate` writes a `.git` file there. It reads
+    `gitdir: <repo>/.git/worktrees/NAME`. The main repository and a workspace without
+    `--colocate` have no such file. A Git submodule has one, but it points into `modules`.
+    """
+
+    marker = project / ".git"
+    if not marker.is_file():
+        return False
+    try:
+        lines = marker.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return False
+    for line in lines:
+        key, separator, value = line.partition(":")
+        if separator and key.strip() == "gitdir":
+            return (project / value.strip()).resolve().parent.name == "worktrees"
+    return False
 
 
 def _parse(stdout: str) -> dict[str, str]:
@@ -78,20 +127,27 @@ def _interpreter(path: str) -> str | None:
     return str(sibling) if sibling.exists() else None
 
 
-def _version(path: str) -> str | None:
-    """Read the pyjutsu version with the interpreter that runs the script."""
+def _versions(path: str) -> tuple[str | None, str | None]:
+    """Read the pyjutsu version and its jj-lib version with the script's interpreter."""
 
     python = _interpreter(path)
     if python is None:
-        return None
+        return None, None
+    code = (
+        "import pyjutsu; print(pyjutsu.__version__); "
+        "print(getattr(pyjutsu, 'JJ_VERSION', ''))"
+    )
     try:
         completed = subprocess.run(
-            [python, "-c", "import pyjutsu; print(pyjutsu.__version__)"],
-            text=True, capture_output=True, check=False, timeout=PROBE_SECONDS,
+            [python, "-c", code], text=True, capture_output=True, check=False,
+            timeout=PROBE_SECONDS,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return None
-    return (completed.stdout.strip() or None) if completed.returncode == 0 else None
+        return None, None
+    if completed.returncode != 0:
+        return None, None
+    lines = [*completed.stdout.splitlines(), "", ""]
+    return lines[0].strip() or None, lines[1].strip() or None
 
 
 @lru_cache(maxsize=8)
@@ -121,7 +177,7 @@ def _probe(path: str) -> Guard | None:
             return None
     if probed.code != 2 or probed.fields.get("reason") != "repo-not-found":
         return None
-    return Guard(path, _version(path))
+    return Guard(path, *_versions(path))
 
 
 def resolve_guard() -> Guard | None:
@@ -165,5 +221,5 @@ def recover(guard: Guard, repo: Path) -> GuardResult:
 
 __all__ = [
     "GUARD_ENV", "UNGUARDED_ENV", "Guard", "GuardResult", "publish_if", "recover",
-    "resolve_guard", "unguarded_requested",
+    "is_colocated_child_workspace", "resolve_guard", "unguarded_requested",
 ]

@@ -28,7 +28,10 @@ serializes CopyRoom writes. `resolve_jj` returns the absolute jj path from
 executable only after a probe: `publish-if` against a repository that does not
 exist must answer `result=error reason=repo-not-found`. `publish_if` and `recover`
 run the commands and parse their `key=value` output. `unguarded_requested` reads
-`--publish-unguarded` and `COPYROOM_PUBLISH_UNGUARDED`.
+`--publish-unguarded` and `COPYROOM_PUBLISH_UNGUARDED`. The guard also records the
+pyjutsu and jj-lib versions. `Guard.keeps_child_git_head` is the version gate, and
+`is_colocated_child_workspace` finds a `.git` file that points into `worktrees`.
+`_publication_mode` in `local/workflow.py` uses both and refuses with exit code `2`.
 
 ## `local/workflow.py`
 

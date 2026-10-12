@@ -26,7 +26,7 @@ from .composer import (
     plan_digest,
 )
 from .errors import LocalError
-from .guard import Guard, resolve_guard, unguarded_requested
+from .guard import Guard, is_colocated_child_workspace, resolve_guard, unguarded_requested
 from .jj import JJ, project_lock
 from .source import (
     JOURNAL_DIR,
@@ -398,18 +398,34 @@ NO_GUARD_MESSAGE = (
 )
 
 
+def _child_workspace_message(guard: Guard) -> str:
+    return (
+        "publication guard cannot publish in a colocated child workspace: pyjutsu "
+        f"{guard.version or 'unknown'} (jj-lib {guard.jj_lib or 'unknown'}) drops the Git "
+        "HEAD of this workspace, and the next jj command moves `@` off the published "
+        "commit; nothing was changed. Run the command from the default workspace, or "
+        "pass --publish-unguarded to publish with `jj new`"
+    )
+
+
 class GuardRejected(LocalError):
     """The guard refused to publish and changed nothing."""
 
 
-def _publication_mode(publish_unguarded: bool) -> dict[str, Any]:
-    """Choose guarded or unguarded publication before the command mutates anything."""
+def _publication_mode(project: Path, publish_unguarded: bool) -> dict[str, Any]:
+    """Choose guarded or unguarded publication before the command mutates anything.
+
+    An old pyjutsu build loses the Git HEAD of a colocated child workspace. CopyRoom
+    refuses that case here, with exit code 2, before it changes anything.
+    """
 
     if unguarded_requested(publish_unguarded):
         return {"guard": False}
     guard = resolve_guard()
     if guard is None:
         raise LocalError(NO_GUARD_MESSAGE, 2)
+    if is_colocated_child_workspace(project) and not guard.keeps_child_git_head():
+        raise LocalError(_child_workspace_message(guard), 2)
     return guard.describe()
 
 
@@ -774,7 +790,7 @@ def _attach_layer(
     """Attach one prevalidated render as an independent layer."""
 
     project = normalize_path(project)
-    publish_mode = _publication_mode(publish_unguarded)
+    publish_mode = _publication_mode(project, publish_unguarded)
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", layer) or layer == "base":
         raise LocalError("layer name must start with a letter and use letters, digits, '_' or '-'", 3)
     source = _refuse_symlink(source)
@@ -1788,7 +1804,7 @@ def apply(project: Path, out: Path, publish_unguarded: bool = False) -> dict[str
     """Apply the reviewed preview tree and record its source state."""
 
     project = normalize_path(project)
-    publish_mode = _publication_mode(publish_unguarded)
+    publish_mode = _publication_mode(project, publish_unguarded)
     out = normalize_path(out)
     state = _load_preview(out)
     if normalize_path(Path(str(state["project"]))) != project:
@@ -2157,6 +2173,9 @@ def doctor() -> dict[str, Any]:
         templateer_ok = False
     jj_path = shutil.which("jj")
     guard = resolve_guard()
+    child = None
+    if guard is not None:
+        child = "ok" if guard.keeps_child_git_head() else "refused"
     return {
         "ok": templateer_ok and jj_path is not None,
         "templateer": templateer_version,
@@ -2164,6 +2183,10 @@ def doctor() -> dict[str, Any]:
         # The guard is optional. Without it, apply and layer add need --publish-unguarded.
         "guard": guard.path if guard else None,
         "guard_version": guard.version if guard else None,
+        "guard_jj_lib": guard.jj_lib if guard else None,
+        # An old jj-lib drops the Git HEAD of a colocated child workspace. Then `apply`
+        # and `layer add` refuse in such a workspace. `ok` means they do not refuse.
+        "guard_child_workspace": child,
     }
 
 

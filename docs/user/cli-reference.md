@@ -59,7 +59,9 @@ from that tree. Legacy answer files are not rewritten.
 - `--mode project` and `--mode workshop` force mode detection.
 - `--version` prints the CopyRoom version.
 - `copyroom doctor` checks Templateer and jj. It also reports the pyjutsu guard
-  (`guard` and `guard_version`, or `null`). A missing guard does not fail the check.
+  (`guard`, `guard_version`, and `guard_jj_lib`, or `null`). `guard_child_workspace`
+  is `refused` when the guard is too old to publish in a colocated child workspace,
+  and `ok` otherwise. A missing or old guard does not fail the check.
 
 Exit codes are part of the CLI interface:
 

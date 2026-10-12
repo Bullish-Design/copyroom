@@ -54,3 +54,21 @@ def test_doctor_reports_the_guard_without_failing_when_it_is_missing(monkeypatch
     assert report["ok"] is True
     assert report["guard"] is None
     assert report["guard_version"] is None
+
+
+def test_doctor_reports_whether_the_guard_publishes_in_a_child_workspace(monkeypatch) -> None:
+    from copyroom.local import workflow
+    from copyroom.local.guard import Guard
+
+    for guard, expected in (
+        (Guard("/opt/pyjutsu", "0.23.0", "0.44.0"), "refused"),
+        (Guard("/opt/pyjutsu", "0.24.0", "0.45.0"), "ok"),
+        (None, None),
+    ):
+        monkeypatch.setattr(workflow, "resolve_guard", lambda guard=guard: guard)
+
+        report = doctor()
+
+        assert report["ok"] is True
+        assert report["guard_child_workspace"] == expected
+        assert report["guard_jj_lib"] == (guard.jj_lib if guard else None)
