@@ -452,7 +452,7 @@ def verify(ctx: Ctx) -> None:
     digest = str(layer.get("source_digest") or "")
     if not digest or f"refs/copyroom/sources/{digest}" not in refs:
         problems.append("the private source ref of the pinned source is missing")
-    marks = run(ctx, ["jj", "bookmark", "list", "--all"], ctx.repo).stdout
+    marks = run(ctx, ["jj", "bookmark", "list", "--all", "-T", 'name ++ "\\n"'], ctx.repo).stdout
     if "copyroom" in marks.lower():
         problems.append("a jj bookmark names a copyroom ref")
     if problems:
