@@ -1,22 +1,19 @@
 # {{ project_name }} devenv.
 #
-# Testee runs the checks below. Run `testee verify --full` for the full gate.
-# Run `testee verify` for the quick profile and `testee check <id>` for one check.
+# Testee runs the checks below on a fixed commit. Run `testee verify` for the gate
+# and `testee verify <id>` for one check. Run `testee status` to read the verdict.
+# The module comes from the locked `testee` input in `devenv.yaml`.
 { pkgs, config, ... }:
 
-let
-  # Take the module and the package from the same pinned tag.
-  testeeFlake = builtins.getFlake "git+https://github.com/Bullish-Design/testee?ref=refs/tags/v0.5.1";
-in
 {
-  imports = [ testeeFlake.devenvModules.default ];
-  testee.package = testeeFlake.packages.${pkgs.stdenv.hostPlatform.system}.testee;
-
   languages.python = {
     enable = true;
     venv.enable = true;
     uv.enable = true;
   };
+
+  # Testee checks a clean worktree. Build its venv from the lock file first.
+  testee.prepare = [ [ "uv" "sync" "--locked" ] ];
 
   testee.checks = {
     ruff = {

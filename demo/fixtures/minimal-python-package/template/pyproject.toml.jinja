@@ -13,7 +13,7 @@ authors = [
 dependencies = []
 
 [dependency-groups]
-# Testee 0.5 does not ship pytest, ruff, or ty. Declare each tool here.
+# Testee does not ship pytest, ruff, or ty. Declare each tool here.
 # The checks in devenv.nix run them. Testee is not a uv dependency: the host
 # profile provides the `testee` wrapper, and devenv.nix pins the Nix module.
 dev = ["pytest", "ruff", "ty"]

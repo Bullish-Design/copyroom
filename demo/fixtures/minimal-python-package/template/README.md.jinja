@@ -10,14 +10,15 @@ devenv shell --no-tui -- uv sync
 
 ## Verify
 
-Run the checks with Testee. Testee 0.5.1 starts its own clean devenv shell.
+Run the checks with Testee. Testee 0.6.1 checks a commit in its own worktree.
 
 ```bash
-testee verify          # quick profile (partial gate)
-testee verify --full   # full gate
-testee check pytest    # one named check
-testee report          # latest summary
+testee verify                   # every required check
+testee verify --profile quick   # quick profile (partial gate)
+testee verify pytest            # one named check
+testee status                   # GREEN, RED, or NO VERDICT for the commit
+testee show                     # latest summary
 ```
 
-Testee writes run state to `.testee/`. Git ignores this directory.
-Commit `devenv.lock` and `uv.lock`. Testee warns when Git ignores `devenv.lock`.
+Commit your work before you verify. Testee keeps run state outside the project.
+Commit `devenv.lock` and `uv.lock`. Testee refuses a stale lock.

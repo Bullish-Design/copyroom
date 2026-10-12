@@ -2,3 +2,8 @@
 inputs:
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
+  testee:
+    url: git+https://github.com/Bullish-Design/testee?ref=refs/tags/v0.6.1
+    flake: false
+imports:
+  - testee/nix/testee.nix
