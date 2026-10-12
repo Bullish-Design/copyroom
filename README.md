@@ -48,7 +48,7 @@ pinned nixpkgs with the `pyjutsu` and `templateer` flakes at pinned tags. The pa
 the host `PATH`.
 
 ```nix
-inputs.copyroom.url = "git+https://github.com/Bullish-Design/copyroom?ref=refs/tags/v0.8.5";
+inputs.copyroom.url = "git+https://github.com/Bullish-Design/copyroom?ref=refs/tags/v0.8.6";
 ```
 
 `overlays.default` adds `pyjutsu`, `minijinja`, `templateer`, and `copyroom` to the Python
