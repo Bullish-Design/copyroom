@@ -41,7 +41,7 @@ The disposable baseline and first migrated Testee results are in [BATCH-A.md](BA
 
 ## Stale template text
 
-The generated README in scopeman and shellij contains this stale paragraph:
+The generated README in scopeman and shellij contains this stale paragraph. The text is in more repos; see [the follow-up](#follow-up-eventic-pin-update-text-scope-and-template-tags):
 
 > This project was created from the `template-py` source. CopyRoom saves a snapshot of that source in `.copyroom-local/`. Pull template updates with:
 
@@ -59,3 +59,54 @@ Proposed replacement:
 > This project uses template-py pinned at v0.8.0. Check for newer tags with `copyroom status`. Preview a new version with `copyroom update --ref NEW_REF`, then apply the reviewed preview with `copyroom update --apply PATH`.
 
 The migration did not change this text. A documentation-only template release can carry the replacement after the fleet migration.
+
+## Follow-up: Eventic pin, update text scope, and template tags
+
+Date: 2026-10-12 (later session).
+
+### Eventic pin repaired
+
+The Eventic marker pinned `/tmp/eventic-gate-FMgCga/template-py`. That path was a disposable clone and is gone. CopyRoom could not read the pinned repository from it. Flora had the same fault and got the same repair.
+
+`copyroom update --source /home/andrew/Documents/Projects/template-py/source --ref v0.8.0` made a preview with no conflicts. Only `.copyroom-local.json` changed. The source and render digests stayed equal. Eventic `main` is now `08c05895fc16`, and origin matches. The next update returns `no-change`. No tests ran, as the user directed for Eventic.
+
+### Stale update text: real scope
+
+The paragraph is not only in scopeman and shellij. The `README.md` of 11 repos has it: poddantic, agentman, argentic, flora, flora-core, flora-qc, linkman, llgym, pyllij, scopeman, and shellij. The `AGENTS.md` of 12 repos has the matching "Template updates" bullet: the same 11 plus Eventic. inferference and pytuin have neither text.
+
+### template-py v0.8.1
+
+The commit `cf2ec939f8f1` is on `main` and on origin. It does four things:
+
+- It replaces the stale text in the README template and in `source/static/AGENTS.md`. The new text does not name a version, so it stays true for later tags.
+- It fixes the Release note in the template README. CopyRoom does read tags now.
+- It bumps `pyproject.toml` and `uv.lock` from 0.7.0 to 0.8.1. The 0.8.0 release left them at 0.7.0.
+- It refreshes the `basic` and `probe` goldens. `copyroom release-check py` and `scripts/check_render.py` pass.
+
+**The tag `v0.8.1` is not pushed.** The permission policy denied the tag push. Run this to publish it:
+
+```bash
+git -C /home/andrew/Documents/Projects/template-py tag -a v0.8.1 -m 'template-py 0.8.1' cf2ec939f8f1
+git -C /home/andrew/Documents/Projects/template-py push origin v0.8.1
+```
+
+After the tag exists, update each repo above with `copyroom update --ref v0.8.1`. The change is documentation only, so each update should merge with no conflict.
+
+### template-nix migration: pilot only
+
+template-nix `main` is `7d977175f9d0` and has no release tag after `v0.3.0`. The six consumers pin `v0.2.2` (loci.nvim, nix-desktop, nix-nvim, nix-paseo, nix-secrets) or `v0.3.0` (mnemonix). A migration needs a pushed tag, so no real repo changed. The pilot ran in a disposable clone of nix-desktop with a local tag and was then deleted.
+
+What the pilot proved:
+
+- The baseline source builds from `v0.2.2` with `schemas/v0_2.py`. `adopt --template-only keep` succeeds. Only `repoman.lock` is template-only.
+- The `module` layer attaches after the project removes `flake.nix` and the module files and restores them. Only `flake.nix` differed from the baseline in nix-desktop.
+- The base update fails with `output path collision: .repoman/project.toml`. The target base renders that file, and the baseline does not. Remove the file, run the update, and restore the project bytes. In four repos the file equals the template file. loci.nvim and nix-secrets carry a stale vendomat comment header.
+- The answers file has no `project_id`. The schema then derives `nix_desktop`, but `.devman/project.toml` says `nix-desktop`. Set `project_id` from `.devman/project.toml` in the target answers for every repo.
+- The base preview has four conflicts in nix-desktop: `.gitignore`, `AGENTS.md`, `devenv.nix`, and `devenv.yaml`. Each needs a decision. The project keeps vendomat and shellij inputs that the template dropped. `AGENTS.md` is project text, so the project side stays.
+
+Open states to settle before a real run:
+
+- loci.nvim: the default workspace has an uncommitted `devenv.lock` change and a WIP commit above `main`.
+- nix-nvim: the default workspace sits on a conflicted WIP commit (`stray-devenv`) with three modified files.
+- mnemonix: `main` and the `memprojects` bookmark share one commit. The repo has an untracked `.agents.devman-promoted` directory.
+- nix-desktop, nix-paseo, and nix-secrets are clean.
