@@ -23,7 +23,8 @@ from copyroom.local.generation import generate, refresh
 from copyroom.local.guard import UNGUARDED_ENV
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt, templatize
-from copyroom.local.source import LOCK_FILE, MARKER, TEMP_EXCLUDE, TEMP_PREFIX, marker, snapshot_path
+from copyroom.local.source import LOCK_FILE, MARKER, TEMP_EXCLUDE, TEMP_PREFIX, marker
+from copyroom.local.store import has_stored
 from copyroom.local.workflow import (
     add_layer,
     apply,
@@ -153,16 +154,16 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(1, len(journals))
         return json.loads(journals[0].read_text(encoding="utf-8"))
 
-    def test_new_saves_source_snapshot_modes_and_answers(self) -> None:
+    def test_new_stores_source_privately_and_keeps_modes_and_answers(self) -> None:
         self.create()
         data = marker(self.project)
         self.assertEqual(5, len(data["owners"]))
         self.assertTrue((self.project / "scripts/about.py").stat().st_mode & 0o111)
-        snapshot = snapshot_path(self.project, data["source_digest"])
-        self.assertTrue(snapshot.is_dir())
+        self.assertTrue(has_stored(self.project, data["source_digest"]))
+        self.assertFalse((self.project / ".copyroom-local/sources").exists())
         self.assertEqual(data["source_digest"], marker(self.project)["source_digest"])
 
-    def test_preview_apply_preserves_local_edits_and_snapshots_new_source(self) -> None:
+    def test_preview_apply_preserves_local_edits_and_stores_new_source(self) -> None:
         self.create()
         readme = self.project / "README.md"
         readme.write_text(readme.read_text(encoding="utf-8") + "\nLocal note.\n", encoding="utf-8")
@@ -177,13 +178,15 @@ class LocalTemplateerJJTests(unittest.TestCase):
         state = preview(self.project, out)
         self.assertEqual(before, working_digest(self.project))
         self.assertEqual(old_head, state["active_head"])
-        self.assertTrue((out / ".copyroom-local/sources" / state["source_digest"]).is_dir())
+        self.assertFalse((out / ".copyroom-local/sources").exists())
+        self.assertTrue(has_stored(self.project, state["source_digest"]))
         self.assertEqual(1, len(list_previews(self.project)))
         apply(self.project, out)
         self.assertFalse(out.exists())
         self.assertIn("Local note.", readme.read_text(encoding="utf-8"))
         self.assertIn('revision: "v2"', (self.project / "config/project.yml").read_text(encoding="utf-8"))
-        self.assertTrue(snapshot_path(self.project, state["source_digest"]).is_dir())
+        self.assertTrue(has_stored(self.project, state["source_digest"]))
+        self.assertFalse((self.project / ".copyroom-local/sources").exists())
         self.assertEqual(1, marker(self.project)["revision"])
 
     def test_exclude_rules_keep_preview_state_out_of_the_colocated_tree(self) -> None:
@@ -1294,7 +1297,6 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertIn(dead_workspace, {row["name"] for row in JJ(self.project).workspaces()})
 
         pruned = recover(self.project, prune=True)
-
         self.assertTrue(pruned["ok"])
         self.assertFalse(dead_temporary.exists())
         self.assertNotIn(dead_workspace, {row["name"] for row in JJ(self.project).workspaces()})

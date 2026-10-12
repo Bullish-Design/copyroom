@@ -5,8 +5,8 @@ previews and applies source updates, manages independent layers, freezes explici
 generated artifacts, adopts existing trees, and provides a local template
 workshop.
 
-Template sources stay on disk. CopyRoom saves a source snapshot and its digest
-in each project. jj records each owner's render history and merges updates.
+Template sources stay on disk. CopyRoom records the source digest in each
+project and keeps the source tree in a private Git ref, not in the working tree. jj records each owner's render history and merges updates.
 Normal renders and updates never call a model.
 
 ## Documentation
@@ -65,8 +65,8 @@ copyroom update --apply ../my-project-preview
 ```
 
 `new` and `update` accept local Templateer sources only. Each project stores
-source snapshots under `.copyroom-local/sources/` and records them in
-`.copyroom-local.json`. A preview uses a separate jj workspace. If jj reports a
+the source in the private ref `refs/copyroom/sources/<digest>` and records its
+digest in `.copyroom-local.json`. A preview uses a separate jj workspace. If jj reports a
 conflict, resolve it in that preview and apply it after review. A changed active
 project makes the preview stale.
 

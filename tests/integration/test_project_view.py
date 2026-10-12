@@ -151,7 +151,7 @@ def test_failed_adopt_write_leaves_the_project_untouched(
     def fail(*args: object, **kwargs: object) -> None:
         raise LocalError("forced failure after the project tree moved", 1)
 
-    monkeypatch.setattr(manage_module, "snapshot_source", fail)
+    monkeypatch.setattr(manage_module, "store_source", fail)
     with pytest.raises(LocalError, match="forced failure"):
         adopt(project, source, source / "answers.json", write=True, template_only_choice="keep")
 

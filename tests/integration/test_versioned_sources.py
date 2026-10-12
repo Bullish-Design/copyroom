@@ -20,6 +20,7 @@ from copyroom.local.errors import LocalError
 from copyroom.local.jj import JJ
 from copyroom.local.pinned import find_repo, materialise, resolve_commit
 from copyroom.local.source import MARKER
+from copyroom.local.store import restore_stored
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_FIXTURE = ROOT / ".scratch" / "projects" / "26-templateer-jj-slice" / "example"
@@ -164,9 +165,10 @@ def test_new_with_a_ref_pins_the_commit(repo: Repo, tmp_path: Path) -> None:
     assert _marker(project)["pin"] == pin
     assert _marker(project)["source"] == str(repo.source)
     assert "revision:" not in _settings_text(project)
-    # The saved snapshot holds the pinned tree, not the working tree.
-    snapshot = project / ".copyroom-local/sources" / _marker(project)["source_digest"]
-    assert "wip" not in (snapshot / SETTINGS).read_text(encoding="utf-8")
+    # The private ref holds the pinned tree, not the working tree.
+    stored = tmp_path / "stored"
+    assert restore_stored(project, _marker(project)["source_digest"], stored)
+    assert "wip" not in (stored / SETTINGS).read_text(encoding="utf-8")
 
 
 def test_annotated_tag_pins_its_commit(repo: Repo, tmp_path: Path) -> None:
@@ -216,7 +218,7 @@ def test_update_re_renders_the_pinned_commit_with_new_answers(repo: Repo, tmp_pa
     assert _marker(project)["pin"]["commit"] == repo.v1
 
 
-def test_update_uses_the_snapshot_when_the_repository_is_gone(repo: Repo, tmp_path: Path) -> None:
+def test_update_uses_the_private_ref_when_the_repository_is_gone(repo: Repo, tmp_path: Path) -> None:
     project = _new(repo, tmp_path, "v1")
     shutil.rmtree(repo.root)
 
@@ -573,7 +575,7 @@ def test_status_survives_an_unreadable_repository(repo: Repo, tmp_path: Path) ->
     assert layer["updates_error"]
     assert layer["updates_available"] == []
     assert layer["source_reachable"] is False
-    assert layer["snapshot_reachable"] is True
+    assert layer["ref_reachable"] is True
     assert "cannot check updates: base" in result.stderr
 
 

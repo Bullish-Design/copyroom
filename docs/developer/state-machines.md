@@ -7,7 +7,7 @@ proposed changes.
 ## Create
 
 `copyroom new` validates the source and answers before it creates the target. It
-then writes the base render, stores a source snapshot, writes the local marker,
+then writes the base render, records the source in the private ref, writes the local marker,
 and verifies the render head.
 
 ## Preview and apply

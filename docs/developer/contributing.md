@@ -20,7 +20,8 @@ completed changes through the current gitman lane.
 | Change | Main module |
 | --- | --- |
 | Render validation and output paths | `local/composer.py` |
-| Source snapshots and markers | `local/source.py` |
+| Markers and local state | `local/source.py` |
+| Private source store (Git refs) | `local/store.py` |
 | Versioned sources (Git refs) | `local/pinned.py` |
 | jj workspaces and locks | `local/jj.py` |
 | Project create, update, and recovery | `local/workflow.py` |

@@ -14,7 +14,7 @@ local source + JSON answers
 TemplateRegistry + local composer
           │ validate schema, paths, bytes, modes, links
           ▼
-immutable render plan ─── source snapshot
+immutable render plan ─── private source ref
           │
           ├── new ──► project render T0 ──► project marker
           │
@@ -31,8 +31,10 @@ validated artifact bytes so later updates replay the saved result.
 ## Package areas
 
 - `local/composer.py` validates the source and builds an immutable tree plan.
-- `local/source.py` reads project markers and stores content-addressed source
-  snapshots.
+- `local/source.py` reads and writes project markers and finds the Git
+  directory of a project.
+- `local/store.py` writes a source tree as Git objects behind the private ref
+  `refs/copyroom/sources/<digest>`. It reads the tree back.
 - `local/pinned.py` pins a source to a commit of its local Git repository and
   reads that commit into a temporary directory.
 - `local/jj.py` runs jj commands and holds project write locks. It spawns jj by
@@ -53,13 +55,16 @@ validated artifact bytes so later updates replay the saved result.
 
 `.copyroom-local.json` records the project ID, source locator, source digest,
 Templateer and composer digests, normalized answers, output digest, owners, and
-render revision. `.copyroom-local/sources/<digest>` stores source snapshots.
+render revision. The project tree holds no source copy. The Git object database
+of the project stores each source behind the private ref
+`refs/copyroom/sources/<digest>`.
 Each layer has its own render line. The base layer uses the reserved name
 `base`.
 
 jj commits record both project state and render history. CopyRoom does not use a
-lock file as the source revision. It records the source tree digest and keeps a
-snapshot so a project can update after its original source path moves.
+lock file as the source revision. It records the source tree digest. A pinned
+layer reads its commit. The private ref lets a project update after its source
+path or repository moves.
 
 ## Update safety
 

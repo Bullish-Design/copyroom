@@ -12,8 +12,8 @@ binary bytes, and relative symlinks before it writes a project tree.
 
 Templateer validators and Python schema modules run from the source directory.
 Treat source directories as trusted code. CopyRoom rejects a source symlink and
-records a content digest before it renders. The project keeps a source snapshot
-for exact replay.
+records a content digest before it renders. The project keeps the source in a
+private Git ref for exact replay.
 
 ## jj boundary
 

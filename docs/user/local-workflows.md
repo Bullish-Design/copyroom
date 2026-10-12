@@ -1,8 +1,9 @@
 # Local Workflows
 
 CopyRoom uses local Templateer sources and jj. It does not fetch project
-templates. Each managed project stores a source snapshot, its answers, a render
-head for each layer, and a `.copyroom-local.json` marker.
+templates. Each managed project tracks its answers, a render head for each
+layer, and a `.copyroom-local.json` marker. The project tree holds no copy of
+the template source.
 
 ## Source format
 
@@ -30,8 +31,8 @@ relative and must point to a path in the output tree.
 
 Answers are JSON files that match the shared schema. The source path is a
 locator. A source can also be pinned to a Git ref; see
-[Versioned sources](#versioned-sources). The project snapshot under `.copyroom-local/sources/<digest>` is the
-saved input used to replay that render.
+[Versioned sources](#versioned-sources). The private source store of the
+project holds the saved input used to replay that render.
 
 ## Create and update
 
@@ -63,7 +64,8 @@ copyroom update --apply ../app-update-1
 The active project does not change during preview. If the project changes after
 preview, CopyRoom refuses the apply. A jj conflict remains in the preview
 workspace. Resolve the file there, inspect the result, then apply it. Discard a
-preview with `copyroom discard --preview PATH`.
+preview with `copyroom discard --preview PATH`. Discard removes the workspace
+and abandons the preview commits, so none stays in `jj log`.
 
 The preview contains the next marker and the full prepared project tree. Its
 state records the active head, source digest, render head, and tracked-tree
@@ -252,14 +254,15 @@ The marker records these fields for each pinned layer, in `pin`:
 | `ref` | The ref as you gave it |
 | `commit` | The commit that the ref named at that time |
 
-The `source` field holds `repo/subdir`. The digest and the snapshot stay as before.
+The `source` field holds `repo/subdir`. The digest stays as before.
 
 Updates follow these rules:
 
 - `copyroom update` with no `--source` and no `--ref` renders the pinned commit
   again. Only the answers can change it. A moving branch, new commits, and
-  working-tree edits have no effect. CopyRoom reads the project snapshot first,
-  so the update works when the repository is gone.
+  working-tree edits have no effect. CopyRoom reads the pinned commit first.
+  When the repository or the commit is gone, it reads the private source store,
+  so the update still works.
 - `copyroom update --ref NEW` moves the layer to a new ref of the same
   repository.
 - `copyroom update --source PATH --ref REF` switches to another repository or
@@ -283,6 +286,60 @@ layer shows `updates_error` and `status` still finishes.
 
 The workshop is unchanged. It renders the working source, so template authors
 see their edits.
+
+### The private source store
+
+A project keeps no copy of its source in the working tree. Lint, type check, and
+packaging tools see only project files. CopyRoom stores each source it renders
+in the Git object database of the project. It writes the source tree as Git
+objects and points one private ref at the tree:
+
+```text
+refs/copyroom/sources/<source_digest>
+```
+
+The ref name is the source digest from the marker. CopyRoom keeps modes 644 and
+755 and symlinks. Git holds only the executable bit, so the digest of a source
+ignores all other mode bits. `new`, `adopt --write`, `layer add`, and every
+`update` preview write the ref. A ref never changes: the same digest names the
+same tree. A new source digest gets a new ref. Old refs stay.
+
+CopyRoom reads a source in this order:
+
+1. A pinned layer reads the pinned commit from the template repository. The
+   tree must match the recorded digest.
+2. When the repository, the commit, or the match is missing, CopyRoom writes the
+   tree of the private ref to a temporary directory. It checks the digest again
+   and removes the directory when the command ends.
+3. A path layer reads its recorded path while that directory exists. A changed
+   path is a new template, and the update converges to it. When the path is
+   gone, CopyRoom reads the private ref.
+
+When no source matches the recorded digest, CopyRoom exits with code `2`. The
+message says what to do: fetch the template repository, or run
+`copyroom update --source PATH` (with `--ref REF` for a pinned layer).
+
+The private ref belongs to one machine:
+
+- A clone does not fetch it. `git clone`, `git fetch`, `git push`, and
+  `jj git push` ignore `refs/copyroom/`. Only `git push --mirror` sends it.
+- jj does not import it as a bookmark. `jj bookmark list --all` does not show it.
+- `git gc` and `jj util gc` keep it. A ref keeps its objects alive.
+- A fresh clone has no ref. It relies on the pin. Keep the template repository
+  and its tags reachable.
+- `copyroom status` shows `ref_reachable` for each layer. It is true when the
+  private ref holds a tree that matches the digest.
+
+#### Projects from an older CopyRoom
+
+Before 0.8.4, CopyRoom committed a source copy at `.copyroom-local/sources/`.
+CopyRoom no longer reads it. The next `copyroom update` removes that directory
+in its preview, so you review the removal and apply it with the update. It
+counts as a change, so `update` does not answer `no-change` while the directory
+is tracked. `layer add` removes the directory in the same way. The update needs
+the pinned repository or the path, because the old copy is not a source for the
+new store. If the source is gone, the update exits with code `2`. Run
+`copyroom update --source PATH` then.
 
 ## Layers
 

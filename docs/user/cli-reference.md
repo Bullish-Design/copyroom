@@ -13,7 +13,7 @@ Workshop commands use `copyroom.yml`, `registry/`, and `scenarios/`.
 | `copyroom apply --preview DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom discard --preview DIR` | Discard a pending preview. |
 | `copyroom preview list --project DIR` | List pending previews. |
-| `copyroom status [--json]` | Report jj, source snapshots, source ref and commit, newer version tags, conflicts, and previews. |
+| `copyroom status [--json]` | Report jj, the private source ref, source ref and commit, newer version tags, conflicts, and previews. |
 | `copyroom inspect [--json]` | Report source provenance, render heads, and path owners. |
 | `copyroom layer add --source SOURCE --as NAME --answers FILE [--ref REF] [--publish-unguarded]` | Add an independent layer through the pyjutsu guard. |
 | `copyroom layer list [--json]` | List layer render heads and owners. |

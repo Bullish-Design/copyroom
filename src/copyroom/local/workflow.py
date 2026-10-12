@@ -40,20 +40,19 @@ from .pinned import (
 )
 from .source import (
     JOURNAL_DIR,
+    LEGACY_SOURCE_DIR,
     LOCK_FILE,
     MARKER,
     PREVIEW_DIR,
-    SOURCE_DIR,
     TEMP_PREFIX,
     exclude_local_state,
     marker,
     marker_with_plan,
     read_json,
-    snapshot_path,
-    snapshot_source,
     temp_exclude_active,
     write_json,
 )
+from .store import store_source, stored_source_ok
 
 PREVIEW_SUFFIX = ".copyroom-preview.json"
 WORKSPACE_PREFIX = "copyroom-"
@@ -278,14 +277,12 @@ def clear_workspace(root: Path) -> None:
             entry.unlink()
 
 
-def _validate_disjoint(source: Path, project: Path, allow_snapshot: bool = False) -> None:
+def _validate_disjoint(source: Path, project: Path) -> None:
     """Reject paths that can cause a render to consume or replace its source."""
 
     source = normalize_path(source)
     project = normalize_path(project)
     if source == project or project in source.parents or source in project.parents:
-        if allow_snapshot and source.is_relative_to(project / SOURCE_DIR):
-            return
         raise LocalError("source and project directories must be separate")
 
 
@@ -364,7 +361,8 @@ def _preflight_paths(
     }
     project_files = {name for name in tracked_paths if not _is_local_state(name)}
     internal = {MARKER}
-    internal.update(name for name in project_files if name.startswith(f"{SOURCE_DIR}/"))
+    # An older CopyRoom copied the source into the tree. The next publication removes it.
+    internal.update(name for name in project_files if name.startswith(f"{LEGACY_SOURCE_DIR}/"))
     all_owned = other_paths | old_paths
     project_only = project_files - all_owned - internal
     for name in new_owners:
@@ -738,6 +736,20 @@ def _set_journal_phase(
     return journal
 
 
+def _abandon_unpublished(jj: JJ, head: str) -> None:
+    """Abandon the commits that only a forgotten preview workspace holds.
+
+    ``head`` is the working-copy commit of that workspace. Its ancestors, up to
+    the shared history, are the render, the merge, and the input commits of a
+    transaction that never published. Without this step they stay as visible
+    heads. A commit that the project, a bookmark, a tag, or another workspace
+    reaches stays.
+    """
+
+    kept = "(@ | bookmarks() | tags() | working_copies())"
+    jj.run("abandon", "-r", f"::{head} ~ ::{kept}")
+
+
 def _cleanup_transaction(project: Path, journal: dict[str, Any]) -> None:
     """Finish cleanup for one published or discarded transaction."""
 
@@ -781,7 +793,12 @@ def _cleanup_transaction(project: Path, journal: dict[str, Any]) -> None:
 
     registered = {row["name"] for row in jj.workspaces()}
     if workspace in registered:
+        # Read the head before the workspace goes. Abandon after, so jj has no
+        # working copy to move onto a parent that the abandon removes.
+        head = jj.commit_id(f"{workspace}@")
         jj.run("workspace", "forget", workspace)
+        if journal.get("journal_state") != "published":
+            _abandon_unpublished(jj, head)
 
     if temporary_path is not None:
         if temporary_path.is_dir():
@@ -795,16 +812,21 @@ def _cleanup_transaction(project: Path, journal: dict[str, Any]) -> None:
     _journal_path(project, workspace).unlink(missing_ok=True)
 
 
-def _snapshot_for_plan(source: Path, project: Path, out: Path, plan: RenderPlan) -> bool:
-    """Put the source snapshot in the reviewed workspace when it is new."""
+def _has_legacy_sources(paths: set[str]) -> bool:
+    """Tell whether jj tracks a source copy that an older CopyRoom wrote."""
 
-    target = snapshot_path(out, plan.source_digest)
-    if target.exists():
-        if digest_source(target) != plan.source_digest:
-            raise LocalError(f"saved source snapshot has a digest mismatch: {target}")
-        return False
-    snapshot_source(source, out, plan.source_digest)
-    return True
+    return any(name.startswith(f"{LEGACY_SOURCE_DIR}/") for name in paths)
+
+
+def _drop_legacy_sources(workspace: Path) -> None:
+    """Remove the source copy that an older CopyRoom tracked in the tree.
+
+    The reviewed tree then drops the copy when the publication lands.
+    """
+
+    legacy = workspace / LEGACY_SOURCE_DIR
+    if legacy.is_dir() and not legacy.is_symlink():
+        shutil.rmtree(legacy)
 
 
 def _next_marker(
@@ -871,7 +893,7 @@ def new(
             project_id = uuid.uuid4().hex
             jj.run("commit", "-m", _render_subject(project_id, "base", 0, plan.source_digest))
             render = jj.commit_id("@-")
-            snapshot_source(resolved.path, target, plan.source_digest)
+            store_source(target, resolved.path, plan.source_digest)
             data = marker_with_plan(plan, resolved.locator, project_id, pin=resolved.pin)
             write_json(target / MARKER, data)
             jj.run("commit", "-m", "copyroom:project inputs")
@@ -966,10 +988,8 @@ def _attach_layer(
             conflicts = JJ(workspace_path).conflicts()
             if conflicts:
                 raise LocalError("layer add has conflicts: " + ", ".join(conflicts), 1)
-            has_snapshot = snapshot_path(workspace_path, plan.source_digest).exists()
-            snapshot_source(source.path, workspace_path, plan.source_digest)
-            if not has_snapshot:
-                JJ(workspace_path).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
+            store_source(project, source.path, plan.source_digest)
+            _drop_legacy_sources(workspace_path)
 
             next_data = _next_marker(
                 data, {}, layer, source, plan, 0, record_metadata,
@@ -1159,7 +1179,7 @@ def _preview(
     """Render one layer from an opened source and merge it in a separate jj workspace."""
 
     content = normalize_path(source.path)
-    _validate_disjoint(content, project, allow_snapshot=content.is_relative_to(project / SOURCE_DIR))
+    _validate_disjoint(content, project)
     if out.exists() or _preview_sidecar(out).exists():
         raise LocalError(f"preview path already exists: {out}")
     if project == out or project in out.parents or out in project.parents:
@@ -1205,6 +1225,8 @@ def _preview(
             # A new pin is a change even when the tree is the same. A moved path is not.
             and source.pin == read_pin(record)
             and (record_metadata is None or record_metadata == record.get("generation"))
+            # A source copy in the tree is a change: this update removes it.
+            and not _has_legacy_sources(jj.tracked_paths("@"))
         ):
             return {"result": "no-change", "project": str(project)}
         old_render = jj.render_head(str(data["project_id"]), layer)
@@ -1255,10 +1277,9 @@ def _preview(
                 raise LocalError("project and render have the wrong merge base")
             JJ(out).run("new", active_head, next_render, "-m", "copyroom:preview")
             conflict_paths = JJ(out).conflicts()
-            new_snapshot = _snapshot_for_plan(content, project, out, plan)
-            if new_snapshot:
-                # The source snapshot becomes part of the reviewed tree and is replayable.
-                JJ(out).run("commit", "-m", f"copyroom:source snapshot {plan.source_digest}")
+            # The private store keeps the source. The reviewed tree holds no copy of it.
+            store_source(project, content, plan.source_digest)
+            _drop_legacy_sources(out)
             next_data = _next_marker(
                 data, record, layer, source, plan, revision, record_metadata,
             )
@@ -2242,14 +2263,13 @@ def inspect(project: Path) -> dict[str, Any]:
                     source_ok = digest_source(source) == record["source_digest"]
                 except LocalError:
                     source_ok = False
-        snapshot = snapshot_path(project, str(record["source_digest"]))
-        snapshot_ok = snapshot.is_dir() and digest_source(snapshot) == record["source_digest"]
+        stored_ok = stored_source_ok(project, str(record["source_digest"]))
         layers[str(name)] = {
             "source": record["source"],
             **describe(record),
             "source_digest": record["source_digest"],
             "source_reachable": source_ok,
-            "snapshot_reachable": snapshot_ok,
+            "ref_reachable": stored_ok,
             "revision": record["revision"],
             "render_head": render_ids[str(name)],
             "marker_render_mismatch": any(
@@ -2267,7 +2287,7 @@ def inspect(project: Path) -> dict[str, Any]:
             **describe({}),
             "source_digest": None,
             "source_reachable": False,
-            "snapshot_reachable": False,
+            "ref_reachable": False,
             "revision": None,
             "render_head": heads[0]["commit"] if len(heads) == 1 else None,
             "marker_render_mismatch": True,
@@ -2280,7 +2300,7 @@ def inspect(project: Path) -> dict[str, Any]:
         "source": data["source"],
         "source_digest": data["source_digest"],
         "source_reachable": layers["base"]["source_reachable"],
-        "snapshot_reachable": layers["base"]["snapshot_reachable"],
+        "ref_reachable": layers["base"]["ref_reachable"],
         "render_head": layers["base"]["render_head"],
         "layers": layers,
         "marker_render_mismatches": marker_render_mismatches,
@@ -2325,7 +2345,7 @@ def status(project: Path) -> dict[str, Any]:
         for transaction in report["pending_transactions"]
     )
     report["ok"] = all(
-        item["source_reachable"] or item["snapshot_reachable"]
+        item["source_reachable"] or item["ref_reachable"]
         for item in report["layers"].values()
     ) and not report["has_marker_render_mismatch"] and not report["has_pending_publication"]
     report["has_conflicts"] = bool(report["conflicts"])

@@ -7,25 +7,21 @@ it, and the commit that the ref named at that time.
 
 from __future__ import annotations
 
-import os
 import re
 import shutil
-import subprocess
 import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 from .composer import digest_source
 from .errors import LocalError
-from .source import snapshot_path
+from .store import materialise, open_stored, run_git
 
 PIN_FIELDS = ("repo", "subdir", "ref", "commit")
 _VERSION = re.compile(r"v?(\d+)(?:\.(\d+))?(?:\.(\d+))?")
-_FILE_MODES = {"100644": 0o644, "100755": 0o755}
-_SYMLINK_MODE = "120000"
 
 
 @dataclass(frozen=True)
@@ -63,34 +59,11 @@ def read_pin(record: dict[str, Any]) -> dict[str, str] | None:
     return pin
 
 
-def _git(repo: Path, *args: str, stdin: bytes | None = None) -> bytes:
-    """Run one read-only Git command in ``repo``. Raise ``LocalError`` on failure."""
-
-    executable = shutil.which("git")
-    if executable is None:
-        raise LocalError("git is required for versioned sources")
-    environment = {
-        name: value for name, value in os.environ.items()
-        if name not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY"}
-    }
-    try:
-        result = subprocess.run(
-            [executable, *args], cwd=repo, input=stdin, capture_output=True, check=False,
-            env=environment,
-        )
-    except OSError as exc:
-        raise LocalError(f"cannot run git in {repo}: {exc}", 2) from exc
-    if result.returncode:
-        detail = result.stderr.decode(errors="replace").strip()
-        raise LocalError(f"git {' '.join(args[:2])} failed in {repo}: {detail}", 2)
-    return result.stdout
-
-
 def find_repo(source: Path) -> tuple[Path, str]:
     """Return the repository root of ``source`` and its subdirectory (POSIX text)."""
 
     try:
-        top = _git(source, "rev-parse", "--show-toplevel").decode().strip()
+        top = run_git(source, "rev-parse", "--show-toplevel").decode().strip()
     except LocalError as exc:
         raise LocalError(f"--ref needs a source inside a Git repository: {source}", 2) from exc
     repo = Path(top).resolve()
@@ -107,7 +80,7 @@ def resolve_commit(repo: Path, ref: str) -> str:
     if not ref or ref.startswith("-"):
         raise LocalError(f"invalid ref: {ref!r}", 3)
     try:
-        commit = _git(repo, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
+        commit = run_git(repo, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
     except LocalError as exc:
         raise LocalError(f"ref {ref} not found in {repo}; fetch it first", 2) from exc
     return commit.decode().strip()
@@ -117,71 +90,10 @@ def commit_exists(repo: Path, commit: str) -> bool:
     """Tell whether the repository still holds ``commit``."""
 
     try:
-        _git(repo, "cat-file", "-e", f"{commit}^{{commit}}")
+        run_git(repo, "cat-file", "-e", f"{commit}^{{commit}}")
     except LocalError:
         return False
     return True
-
-
-def materialise(repo: Path, commit: str, subdir: str, destination: Path) -> None:
-    """Write the ``subdir`` tree of ``commit`` into ``destination``.
-
-    Read blobs straight from the object store. This keeps ``.gitattributes``,
-    line-ending filters, and ``export-ignore`` out of the result. Keep the
-    executable bit and symlinks.
-    """
-
-    tree = f"{commit}:{subdir}" if subdir else commit
-    try:
-        listing = _git(repo, "ls-tree", "-r", "-z", tree)
-    except LocalError as exc:
-        raise LocalError(
-            f"commit {commit[:12]} of {repo} has no source directory {subdir or '.'}", 2,
-        ) from exc
-    entries: list[tuple[str, str, str]] = []
-    for row in listing.split(b"\0"):
-        if not row:
-            continue
-        meta, _, raw = row.partition(b"\t")
-        mode, kind, oid = meta.decode().split(" ")
-        name = raw.decode("utf-8", errors="surrogateescape")
-        parts = PurePosixPath(name).parts
-        if not parts or PurePosixPath(name).is_absolute() or ".." in parts or ".git" in parts:
-            raise LocalError(f"unsafe path in source commit: {name!r}", 2)
-        if kind != "blob":
-            raise LocalError(f"source commit holds a submodule: {name}", 2)
-        entries.append((name, mode, oid))
-    contents = _read_blobs(repo, sorted({oid for _, _, oid in entries}))
-    destination.mkdir(parents=True, exist_ok=True)
-    for name, mode, oid in sorted(entries):
-        target = destination / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if mode == _SYMLINK_MODE:
-            os.symlink(contents[oid], target)
-        elif mode in _FILE_MODES:
-            target.write_bytes(contents[oid])
-            target.chmod(_FILE_MODES[mode])
-        else:
-            raise LocalError(f"unsupported file mode {mode} in source commit: {name}", 2)
-
-
-def _read_blobs(repo: Path, oids: list[str]) -> dict[str, bytes]:
-    """Read many blobs with one ``git cat-file --batch`` process."""
-
-    if not oids:
-        return {}
-    output = _git(repo, "cat-file", "--batch", stdin=("\n".join(oids) + "\n").encode())
-    blobs: dict[str, bytes] = {}
-    position = 0
-    for oid in oids:
-        end = output.index(b"\n", position)
-        header = output[position:end].split()
-        if len(header) != 3 or header[1] != b"blob":
-            raise LocalError(f"cannot read source object {oid} in {repo}", 2)
-        size = int(header[2])
-        blobs[oid] = output[end + 1:end + 1 + size]
-        position = end + 1 + size + 1
-    return blobs
 
 
 @contextmanager
@@ -240,9 +152,8 @@ def open_layer_source(
     * ``override`` only: use the path source.
     * ``ref`` only: move the layer to a new ref of the same repository.
     * Neither: keep the pinned commit, or the recorded path source.
+      When that source is gone, read the private copy of the project.
     """
-
-    from .source import resolve_source
 
     pin = read_pin(record)
     if override is not None:
@@ -254,40 +165,70 @@ def open_layer_source(
     elif ref is not None:
         with open_source(Path(str(record["source"])), ref) as resolved:
             yield resolved
-    elif pin is not None:
-        with _open_pinned(project, record, pin) as resolved:
-            yield resolved
     else:
-        # The locator stays as recorded, also when the saved snapshot stands in for it.
-        path = resolve_source(project, data, None, record)
-        yield ResolvedSource(path, str(record["source"]))
+        with _open_recorded(project, record, pin) as resolved:
+            yield resolved
+
+
+def _pinned_tree(pin: dict[str, str], digest: str, destination: Path) -> str | None:
+    """Write the pinned commit to ``destination``. Return why it fails, or ``None``."""
+
+    repo = Path(pin["repo"])
+    if not repo.is_dir():
+        return f"repository {repo} is missing"
+    if not commit_exists(repo, pin["commit"]):
+        return f"commit {pin['commit'][:12]} is missing in {repo}"
+    try:
+        materialise(repo, pin["commit"], pin["subdir"], destination)
+        if digest_source(destination) == digest:
+            return None
+    except LocalError as exc:
+        shutil.rmtree(destination, ignore_errors=True)
+        return str(exc)
+    shutil.rmtree(destination, ignore_errors=True)
+    return f"commit {pin['commit'][:12]} of {repo} does not match the recorded digest"
 
 
 @contextmanager
-def _open_pinned(
-    project: Path, record: dict[str, Any], pin: dict[str, str],
+def _open_recorded(
+    project: Path, record: dict[str, Any], pin: dict[str, str] | None,
 ) -> Iterator[ResolvedSource]:
-    """Yield the pinned commit. Prefer the saved snapshot, then read the commit."""
+    """Yield the source that the marker records.
+
+    A pinned layer reads its commit first. Its tree must match the recorded
+    digest. The private ref of the project comes next. A path layer reads its
+    recorded path while that directory exists. When the directory is gone, the
+    private ref stands in. The locator stays as recorded.
+    """
 
     digest = str(record["source_digest"])
-    snapshot = snapshot_path(project, digest)
     locator = str(record["source"])
-    if snapshot.is_dir() and digest_source(snapshot) == digest:
-        yield ResolvedSource(snapshot, locator, pin)
-        return
-    repo = Path(pin["repo"])
-    if not commit_exists(repo, pin["commit"]):
-        raise LocalError(
-            f"pinned commit {pin['commit'][:12]} is missing in {repo} and the saved snapshot is "
-            "missing or invalid; fetch it, or pass --source and --ref",
-            2,
-        )
-    with _materialised(repo, pin["subdir"], pin["commit"], locator, pin) as resolved:
-        if digest_source(resolved.path) != digest:
+    reason: str
+    if pin is None:
+        path = Path(locator)
+        if path.is_dir() and not path.is_symlink():
+            yield ResolvedSource(path, locator)
+            return
+        reason = f"source directory {path} is missing"
+    else:
+        scratch = Path(tempfile.mkdtemp(prefix="copyroom-source-"))
+        try:
+            failure = _pinned_tree(pin, digest, scratch / "source")
+            if failure is None:
+                yield ResolvedSource(scratch / "source", locator, pin)
+                return
+            reason = failure
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+    with open_stored(project, digest) as stored:
+        if stored is None:
             raise LocalError(
-                f"commit {pin['commit'][:12]} no longer matches the marker digest", 2,
+                f"{reason}, and the project has no stored copy of source {digest[:12]}; "
+                "fetch the template repository, or run update --source PATH"
+                + (" --ref REF" if pin is not None else ""),
+                2,
             )
-        yield resolved
+        yield ResolvedSource(stored, locator, pin)
 
 
 def _version(name: str) -> tuple[int, int, int] | None:
@@ -308,7 +249,7 @@ def newer_tags(pin: dict[str, str]) -> list[str]:
     if current is None:
         return []
     repo = Path(pin["repo"])
-    names = _git(repo, "tag", "--list").decode().split()
+    names = run_git(repo, "tag", "--list").decode().split()
     found = [(version, name) for name in names if (version := _version(name)) is not None]
     return [name for version, name in sorted(found) if version > current]
 

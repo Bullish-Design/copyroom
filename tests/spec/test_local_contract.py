@@ -11,7 +11,8 @@ import pytest
 
 from copyroom.local.errors import LocalError
 from copyroom.local.jj import JJ
-from copyroom.local.source import SCHEMA_VERSION, marker, snapshot_path
+from copyroom.local.source import SCHEMA_VERSION, marker
+from copyroom.local.store import has_stored
 from copyroom.local.workflow import apply, new, preview, working_digest, working_files
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,7 +25,7 @@ def _source(tmp_path: Path) -> tuple[Path, Path]:
     return source, source / "answers.json"
 
 
-def test_new_records_a_replayable_source_snapshot(tmp_path: Path) -> None:
+def test_new_records_a_replayable_source_in_the_private_store(tmp_path: Path) -> None:
     source, answers = _source(tmp_path)
     project = tmp_path / "project"
 
@@ -33,7 +34,8 @@ def test_new_records_a_replayable_source_snapshot(tmp_path: Path) -> None:
     state = marker(project)
     assert state["schema"] == SCHEMA_VERSION
     assert state["layers"]["base"]["answers"]["project_name"] == "cedar-lab"
-    assert snapshot_path(project, state["source_digest"]).is_dir()
+    assert has_stored(project, state["source_digest"])
+    assert not (project / ".copyroom-local/sources").exists()
     assert JJ(project).render_head(state["project_id"], "base")
 
 

@@ -22,9 +22,9 @@ from .composer import (
     safe_output_path,
 )
 from .errors import LocalError
-from .pinned import ResolvedSource
+from .pinned import ResolvedSource, open_layer_source
 from .source import marker
-from .workflow import _attach_layer, _layer_record, normalize_path, preview
+from .workflow import _attach_layer, _layer_record, _preview, _refuse_symlink, normalize_path
 
 
 def _generation(
@@ -135,28 +135,25 @@ def refresh(
 ) -> dict[str, Any]:
     """Generate a replacement artifact and preview it for review."""
 
-    project = project.absolute()
+    project = normalize_path(project)
+    out = normalize_path(out)
+    if source_override is not None:
+        source_override = _refuse_symlink(source_override)
     data = marker(project)
     record = _layer_record(data, layer)
     if record.get("kind") != "generated" or not isinstance(record.get("generation"), dict):
         raise LocalError(f"layer is not a generated artifact owner: {layer}", 3)
-    from .source import resolve_source
-
-    source = resolve_source(project, data, source_override, record)
     template_name = str(record["generation"]["template_name"])
-    plan, metadata = _generation(
-        source, template_name, request, model_name, context or {}, max_attempts,
-    )
-    if plan.owners != record["owners"]:
-        raise LocalError("refresh changed the generated artifact path; use an explicit ownership transfer", 1)
-    return preview(
-        project,
-        out,
-        source_override=source,
-        layer=layer,
-        plan_override=plan,
-        record_metadata=metadata,
-    )
+    with open_layer_source(project, data, record, source_override, None) as source:
+        plan, metadata = _generation(
+            source.path, template_name, request, model_name, context or {}, max_attempts,
+        )
+        if plan.owners != record["owners"]:
+            raise LocalError(
+                "refresh changed the generated artifact path; use an explicit ownership transfer",
+                1,
+            )
+        return _preview(project, out, source, data, record, None, layer, plan, metadata)
 
 
 __all__ = ["generate", "refresh"]

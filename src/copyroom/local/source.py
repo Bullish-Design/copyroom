@@ -1,20 +1,19 @@
-"""Project markers and source snapshots."""
+"""Project markers and local state."""
 
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
 
-from .composer import digest_source, is_local_path
 from .errors import LocalError
 
 MARKER = ".copyroom-local.json"
 STATE_DIR = ".copyroom-local"
-SOURCE_DIR = f"{STATE_DIR}/sources"
+# Older CopyRoom versions copied the source into the tree here. The next write removes it.
+LEGACY_SOURCE_DIR = f"{STATE_DIR}/sources"
 PREVIEW_DIR = f"{STATE_DIR}/previews"
 JOURNAL_DIR = f"{STATE_DIR}/journal"
 LOCK_FILE = f"{STATE_DIR}/write.lock"
@@ -107,78 +106,6 @@ def marker(project: Path) -> dict[str, Any]:
     return data
 
 
-def snapshot_path(project: Path, source_digest: str) -> Path:
-    """Return the project-owned snapshot path for a source digest."""
-
-    return project / SOURCE_DIR / source_digest
-
-
-def snapshot_source(source: Path, project: Path, expected_digest: str | None = None) -> Path:
-    """Copy a source tree into project state and verify its digest."""
-
-    source = source.absolute()
-    if source.is_symlink():
-        raise LocalError(f"source must not be a symlink: {source}")
-    digest = digest_source(source)
-    if expected_digest is not None and digest != expected_digest:
-        raise LocalError("source digest changed before snapshot", 1)
-    destination = snapshot_path(project, digest)
-    if destination.exists():
-        if digest_source(destination) != digest:
-            raise LocalError(f"saved source snapshot has a digest mismatch: {destination}")
-        return destination
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        for path in sorted(source.rglob("*")):
-            relative = path.relative_to(source)
-            if is_local_path(relative):
-                continue
-            target = destination / relative
-            if path.is_symlink():
-                raise LocalError(f"source symlinks are not supported: {relative.as_posix()}")
-            if path.is_dir():
-                target.mkdir(parents=True, exist_ok=True)
-            elif path.is_file():
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(path, target)
-            else:
-                raise LocalError(f"source entry is not a regular file: {relative.as_posix()}")
-    except Exception:
-        shutil.rmtree(destination, ignore_errors=True)
-        raise
-    if digest_source(destination) != digest:
-        shutil.rmtree(destination, ignore_errors=True)
-        raise LocalError("saved source snapshot failed its digest check")
-    return destination
-
-
-def resolve_source(
-    project: Path,
-    data: dict[str, Any],
-    override: Path | None,
-    record: dict[str, Any] | None = None,
-) -> Path:
-    """Resolve an override, source locator, or saved source snapshot."""
-
-    if override is not None:
-        source = override.absolute()
-        if source.is_symlink():
-            raise LocalError(f"source must not be a symlink: {source}")
-        return source
-    record = record or data
-    source = Path(str(record["source"]))
-    if source.is_dir() and not source.is_symlink():
-        return source
-    snapshot = snapshot_path(project, str(record["source_digest"]))
-    if snapshot.is_dir() and digest_source(snapshot) == record["source_digest"]:
-        return snapshot
-    raise LocalError(
-        "source locator is unavailable and its saved snapshot is missing or invalid; pass --source",
-        2,
-    )
-
-
 def exclude_local_state(project: Path) -> None:
     """Exclude local state and write temporaries from the project tree."""
 
@@ -219,6 +146,12 @@ def temp_exclude_active(project: Path) -> bool:
         return TEMP_EXCLUDE in exclude.read_text(encoding="utf-8").splitlines()
     except OSError:
         return False
+
+
+def backing_git_directory(project: Path) -> Path | None:
+    """Return the Git directory that holds the objects and refs of a project."""
+
+    return _jj_git_directory(project) or _git_directory(project)
 
 
 def is_colocated(project: Path) -> bool:
@@ -310,9 +243,8 @@ def marker_with_plan(
 
 
 __all__ = [
-    "JOURNAL_DIR", "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION", "SOURCE_DIR", "STATE_DIR",
-    "TEMP_EXCLUDE", "TEMP_PREFIX",
-    "exclude_local_state", "marker", "marker_with_plan", "read_json", "resolve_source",
-    "temp_exclude_active",
-    "snapshot_path", "snapshot_source", "write_json",
+    "JOURNAL_DIR", "LEGACY_SOURCE_DIR", "LOCK_FILE", "MARKER", "PREVIEW_DIR", "SCHEMA_VERSION",
+    "STATE_DIR", "TEMP_EXCLUDE", "TEMP_PREFIX",
+    "backing_git_directory", "exclude_local_state", "marker", "marker_with_plan", "read_json",
+    "temp_exclude_active", "write_json",
 ]

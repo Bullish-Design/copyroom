@@ -33,7 +33,8 @@ cd app
 copyroom status
 ```
 
-CopyRoom writes the source snapshot and a `.copyroom-local.json` marker. jj
+CopyRoom writes a `.copyroom-local.json` marker and keeps the source in a private
+Git ref. jj
 records the initial render as the base layer.
 
 To pin the project to a tagged version of a source, add `--ref`:

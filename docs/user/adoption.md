@@ -1,7 +1,7 @@
 # Adoption and templatize
 
 Use `copyroom adopt` to compare a local source with an existing project. The
-report is read-only. Add `--write` to record the source snapshot and jj render
+report is read-only. Add `--write` to record the private source ref and jj render
 history after you review the report.
 
 Use `copyroom templatize` to extract a local Templateer source from an existing

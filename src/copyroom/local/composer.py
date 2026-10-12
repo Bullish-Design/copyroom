@@ -96,7 +96,9 @@ def digest_source(source: Path) -> str:
             raise LocalError(f"source entry is not a regular file: {relative.as_posix()}")
         _feed(digest, relative.as_posix().encode())
         _feed(digest, path.read_bytes())
-        _feed(digest, f"{stat.S_IMODE(path.stat().st_mode):o}".encode())
+        # Git keeps only the executable bit, so the digest does too.
+        executable = stat.S_IMODE(path.stat().st_mode) & 0o111
+        _feed(digest, b"755" if executable else b"644")
     return digest.hexdigest()
 
 

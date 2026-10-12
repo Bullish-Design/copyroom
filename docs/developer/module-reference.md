@@ -12,16 +12,26 @@ colliding paths before writing.
 
 ## `local/source.py`
 
-Reads `.copyroom-local.json`, writes marker updates atomically, and saves source
-snapshots by digest under `.copyroom-local/sources/`. A project can replay a
-snapshot when its original source locator is unavailable.
+Reads `.copyroom-local.json`, writes marker updates atomically, and finds the
+Git directory of a project. `LEGACY_SOURCE_DIR` names the source copy that
+CopyRoom before 0.8.4 tracked in the tree. The next update removes it.
+
+## `local/store.py`
+
+The private source store. `store_source` writes a source tree as Git objects
+(`git hash-object -w`, `git mktree`) and points
+`refs/copyroom/sources/<digest>` at the tree with `git update-ref`.
+`restore_stored` writes the tree back to a directory and checks its digest.
+`materialise` reads any commit or tree from the object store without filters.
+jj does not import the ref. `git push` does not send it. `git gc` keeps it.
 
 ## `local/pinned.py`
 
 Pins a source directory to a commit of the local Git repository that holds it.
 `open_source` and `open_layer_source` yield a `ResolvedSource`: the directory to
 compose from, the `source` locator text, and the `pin` record. They remove the
-temporary directory on exit. `materialise` reads blobs from the Git object store
+temporary directory on exit. A pinned layer reads its commit first. Then it reads
+the private ref from `local/store.py`. `materialise` reads blobs from the Git object store
 (`git ls-tree` and `git cat-file`). It never runs `git archive` or `git checkout`,
 so attributes and filters have no effect. `newer_tags` lists newer version tags
 for `status`. All commands read the local repository only.
@@ -45,8 +55,8 @@ pyjutsu and jj-lib versions. `Guard.keeps_child_git_head` is the version gate, a
 
 ## `local/workflow.py`
 
-- `new` composes a base layer, initializes jj, saves a source snapshot, and
-  writes the project marker.
+- `new` composes a base layer, initializes jj, records the source in the
+  private ref, and writes the project marker.
 - `preview` renders a new layer revision and merges it with the active project
   in a separate jj workspace.
 - `apply` verifies the recorded state and applies the reviewed preview tree. It

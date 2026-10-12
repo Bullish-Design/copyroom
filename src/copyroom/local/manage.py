@@ -19,15 +19,14 @@ from .pinned import ResolvedSource, open_source
 from .source import (
     LOCK_FILE,
     MARKER,
-    SOURCE_DIR,
     STATE_DIR,
     exclude_local_state,
     is_colocated,
     marker_with_plan,
     read_json,
-    snapshot_source,
     write_json,
 )
+from .store import drop_stored, has_stored, store_source
 from .workflow import (
     _render_subject,
     _validate_disjoint,
@@ -104,19 +103,20 @@ def compare(project: Path, plan: RenderPlan) -> dict[str, Any]:
 class _AdoptionUndo:
     """Remember what a project looked like, so a failed adoption can restore it.
 
-    Adoption can create ``.jj``, ``.git``, the lock file, the source snapshot,
+    Adoption can create ``.jj``, ``.git``, the lock file, the private source ref,
     and the marker. A jj colocate init also moves a Git repository to a
     detached head and adds ``refs/jj``. This class undoes all of that.
     """
 
-    def __init__(self, project: Path) -> None:
+    def __init__(self, project: Path, source_digest: str) -> None:
         self.project = project
         self.enabled = True
         self.had_jj = (project / ".jj").exists()
         self.had_git = (project / ".git").exists()
         self.had_state = (project / STATE_DIR).exists()
         self.had_lock = (project / LOCK_FILE).exists()
-        self.had_source = (project / SOURCE_DIR).exists()
+        self.source_digest = source_digest
+        self.had_source_ref = has_stored(project, source_digest)
         self.git_files: dict[str, bytes | None] = {}
         git_directory = project / ".git"
         if not self.had_jj and git_directory.is_dir():
@@ -142,8 +142,8 @@ class _AdoptionUndo:
                     else:
                         path.write_bytes(content)
         (project / MARKER).unlink(missing_ok=True)
-        if not self.had_source:
-            shutil.rmtree(project / SOURCE_DIR, ignore_errors=True)
+        if not self.had_source_ref:
+            drop_stored(project, self.source_digest)
         if not self.had_lock:
             (project / LOCK_FILE).unlink(missing_ok=True)
         if not self.had_state:
@@ -205,7 +205,7 @@ def _write_adoption(
         last_operation = jj.operation_id()
         if working_digest(project) != before_tree:
             raise LocalError("adoption changed project files before marker write", 1)
-        snapshot_source(source.path, project, plan.source_digest)
+        store_source(project, source.path, plan.source_digest)
         data = marker_with_plan(plan, source.locator, project_id, pin=source.pin)
         base_record = {**data["layers"]["base"], "omissions": omissions}
         data["layers"]["base"] = base_record
@@ -320,7 +320,7 @@ def _adopt(
         )
 
     jj = JJ(project)
-    undo = _AdoptionUndo(project)
+    undo = _AdoptionUndo(project, plan.source_digest)
     try:
         with project_lock(project):
             render = _write_adoption(project, source, plan, omissions, jj, undo)

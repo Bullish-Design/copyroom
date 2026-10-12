@@ -16,7 +16,7 @@ devenv shell -- bash demo/walkthrough.sh
   behavior.
 - `tests/integration/test_local_templateer_jj.py` uses local Templateer
   sources and disposable jj repositories. It covers rendering, preview,
-  apply, conflicts, snapshots, layers, frozen generation, adoption,
+  apply, conflicts, the private source store, layers, frozen generation, adoption,
   templatize, workshop goldens, and candidate workspaces.
 - `tests/integration/test_guarded_publication.py` checks publication through the
   pyjutsu guard: rejection before `@` moves, the capability gate, and the
