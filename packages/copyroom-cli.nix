@@ -82,10 +82,14 @@ buildPythonApplication {
     patch
   ];
   # The suite builds real jj repositories. jj and git want a writable home.
+  # jj does not read the git identity, and it refuses to push a commit that has no author.
+  # JJ_USER and JJ_EMAIL give jj its own identity inside the sandbox.
   preInstallCheck = lib.optionalString runTests ''
     export HOME=$TMPDIR
     git config --global user.name test
     git config --global user.email test@example.com
+    export JJ_USER=test
+    export JJ_EMAIL=test@example.com
   '';
   postInstallCheck = ''
     export HOME=$TMPDIR
