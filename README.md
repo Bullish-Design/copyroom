@@ -23,7 +23,7 @@ The detailed guides live in [`docs/`](docs/README.md):
 ## Development
 
 The root devenv pins Python 3.13 and provides jj. `uv sync` installs Templateer
-0.4.2 from its pinned git tag.
+0.5.0 from its pinned git tag.
 
 ```bash
 devenv shell

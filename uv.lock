@@ -213,7 +213,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
-    { name = "templateer", git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.4.2" },
+    { name = "templateer", git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.5.0" },
     { name = "tomlkit", specifier = ">=0.13" },
     { name = "typer", specifier = ">=0.12" },
 ]
@@ -953,8 +953,8 @@ wheels = [
 
 [[package]]
 name = "templateer"
-version = "0.4.2"
-source = { git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.4.2#a342d1e473b406ad141d028c00756bd0bf958d53" }
+version = "0.5.0"
+source = { git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.5.0#55af56f91ecf5ea30cf2bb90d0aefd056830bd65" }
 dependencies = [
     { name = "click" },
     { name = "minijinja" },

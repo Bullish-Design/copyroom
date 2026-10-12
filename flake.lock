@@ -51,16 +51,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1791600723,
-        "narHash": "sha256-H3B3qMlKnko7GMOLupmGZP0/HH+p7Z0dwA2rMHC3bI4=",
-        "ref": "refs/tags/v0.4.2",
-        "rev": "a342d1e473b406ad141d028c00756bd0bf958d53",
-        "revCount": 56,
+        "lastModified": 1791829150,
+        "narHash": "sha256-JgJQ9zSwvuTJ7disfUQtDpvgmcRctgBNflvQ0NZ1oAY=",
+        "ref": "refs/tags/v0.5.0",
+        "rev": "55af56f91ecf5ea30cf2bb90d0aefd056830bd65",
+        "revCount": 63,
         "type": "git",
         "url": "https://github.com/Bullish-Design/templateer_v2"
       },
       "original": {
-        "ref": "refs/tags/v0.4.2",
+        "ref": "refs/tags/v0.5.0",
         "type": "git",
         "url": "https://github.com/Bullish-Design/templateer_v2"
       }
