@@ -177,7 +177,7 @@ wheels = [
 
 [[package]]
 name = "copyroom"
-version = "0.8.0"
+version = "0.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
@@ -953,7 +953,7 @@ wheels = [
 
 [[package]]
 name = "templateer"
-version = "0.4.1"
+version = "0.4.2"
 source = { editable = "../templateer_v2" }
 dependencies = [
     { name = "click" },
