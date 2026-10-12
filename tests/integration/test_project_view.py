@@ -19,7 +19,14 @@ from copyroom.local.errors import LocalError
 from copyroom.local.jj import JJ
 from copyroom.local.manage import adopt
 from copyroom.local.source import LOCK_FILE, MARKER
-from copyroom.local.workflow import project_paths, tree_files, working_files, write_tree
+from copyroom.local.workflow import (
+    project_paths,
+    tracked_tree_digest,
+    tree_files,
+    working_digest,
+    working_files,
+    write_tree,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_FIXTURE = ROOT / ".scratch" / "projects" / "26-templateer-jj-slice" / "example"
@@ -263,6 +270,52 @@ def test_working_files_lists_a_symlinked_directory_once(tmp_path: Path) -> None:
     assert not [name for name in files if name.startswith("linked/")]
     assert tree_files(project)["linked"] == ("symlink", str(outside).encode(), 0)
     assert not [name for name in tree_files(project) if name.startswith("linked/")]
+
+
+@pytest.mark.parametrize("vcs", ["git", "jj"])
+def test_project_view_uses_vcs_modes_for_regular_files(tmp_path: Path, vcs: str) -> None:
+    source = _source(tmp_path)
+    project = _existing_project(tmp_path, source, vcs)
+    jj = JJ(project) if vcs == "jj" else None
+    path = project / "notes.txt"
+
+    path.chmod(0o444)
+    read_only_view = working_files(project, jj)
+    read_only_digest = working_digest(project)
+    read_only_tree_digest = tracked_tree_digest(project, jj) if jj is not None else None
+
+    assert read_only_view["notes.txt"][2] == 0o644
+
+    path.chmod(0o664)
+
+    assert working_files(project, jj) == read_only_view
+    assert working_digest(project) == read_only_digest
+    if jj is not None:
+        assert tracked_tree_digest(project, jj) == read_only_tree_digest
+
+    for mode in (0o641, 0o654):
+        path.chmod(mode)
+        project_view = working_files(project, jj)
+        project_digest = working_digest(project)
+        project_tree_digest = tracked_tree_digest(project, jj) if jj is not None else None
+        expected_mode = 0o755 if vcs == "jj" else 0o644
+        assert project_view["notes.txt"][2] == expected_mode
+        if vcs == "jj":
+            assert project_digest != read_only_digest
+            assert project_tree_digest != read_only_tree_digest
+        else:
+            assert project_view == read_only_view
+            assert project_digest == read_only_digest
+
+        path.chmod(0o444)
+
+    path.chmod(0o744)
+
+    executable_view = working_files(project, jj)
+    assert executable_view["notes.txt"][2] == 0o755
+    assert working_digest(project) != read_only_digest
+    if jj is not None:
+        assert tracked_tree_digest(project, jj) != read_only_tree_digest
 
 
 def test_project_view_hides_ignored_paths_with_and_without_jj(tmp_path: Path) -> None:

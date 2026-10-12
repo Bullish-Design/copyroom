@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Move one template-py repo from Copier to CopyRoom 0.8.4 or newer.
+"""Move one template-py repo from Copier to CopyRoom 0.8.5 or newer.
 
 Usage:
     migrate.py [options] REPO TEMPLATE_REPO REF WORKDIR
@@ -45,7 +45,7 @@ import sys
 from pathlib import Path
 
 OK, FINDING, INFRA, USAGE = 0, 1, 2, 3
-MIN_COPYROOM = (0, 8, 4)
+MIN_COPYROOM = (0, 8, 5)
 MARKER = ".copyroom-local.json"
 LEGACY = ".copier-answers.yml"
 # devman links these paths into a repo. The script records them and checks them at the end.
@@ -140,7 +140,7 @@ def preflight(ctx: Ctx) -> dict:
         if not shutil.which(tool):
             raise Stop(INFRA, f"{tool} is not on PATH; run inside the CopyRoom devenv shell")
     if copyroom_version(ctx) < MIN_COPYROOM:
-        raise Stop(INFRA, "copyroom is older than 0.8.4 (earlier versions track a source copy in the tree)")
+        raise Stop(INFRA, "copyroom is older than 0.8.5 (earlier versions do not normalize project file modes)")
     if not ctx.repo.is_dir():
         raise Stop(INFRA, f"{ctx.repo} is not a directory")
     if not (ctx.repo / ".jj").is_dir() or run(ctx, ["jj", "root"], ctx.repo).returncode != 0:
@@ -440,12 +440,12 @@ def verify(ctx: Ctx) -> None:
         if not path.is_symlink() or os.readlink(path) != target:
             problems.append(f"link {name} changed or vanished")
     tracked = run(ctx, ["jj", "file", "list", "-r", "@"], ctx.repo).stdout.splitlines()
-    # CopyRoom 0.8.4 tracks no source copy: .copyroom-local/ holds only untracked state.
+    # CopyRoom 0.8.5 tracks no source copy: .copyroom-local/ holds only untracked state.
     bad = [t for t in tracked if t.startswith(".copyroom-local/")]
     bad += [t for t in tracked if t.startswith((".agents", ".claude/"))]
     if bad:
         problems.append(f"state tracked wrongly: {bad[:5]}")
-    # CopyRoom 0.8.4 keeps sources in private Git refs. They must exist, and no jj bookmark may name them.
+    # CopyRoom 0.8.5 keeps sources in private Git refs. They must exist, and no jj bookmark may name them.
     refs = run(ctx, ["git", "for-each-ref", "refs/copyroom/sources/"], ctx.repo).stdout.strip()
     digest = str(layer.get("source_digest") or "")
     if not digest or f"refs/copyroom/sources/{digest}" not in refs:

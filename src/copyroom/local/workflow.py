@@ -146,6 +146,29 @@ def _read_entry(path: Path) -> tuple[str, bytes, int] | None:
     return None
 
 
+def _git_file_mode(mode: int) -> int:
+    """Return Git's regular-file mode from a filesystem mode."""
+
+    return 0o755 if mode & stat.S_IXUSR else 0o644
+
+
+def _jj_file_mode(mode: int) -> int:
+    """Return jj's regular-file mode from a filesystem mode."""
+
+    return 0o755 if mode & 0o111 else 0o644
+
+
+def _project_entry(path: Path, *, jj_project: bool) -> tuple[str, bytes, int] | None:
+    """Read one project entry with its VCS regular-file mode semantics."""
+
+    entry = _read_entry(path)
+    if entry is None or entry[0] != "file":
+        return entry
+    kind, content, mode = entry
+    project_mode = _jj_file_mode(mode) if jj_project else _git_file_mode(mode)
+    return (kind, content, project_mode)
+
+
 def working_files(root: Path, jj: JJ | None = None) -> dict[str, tuple[str, bytes, int]]:
     """Read the files and symlinks of the project tree.
 
@@ -153,8 +176,9 @@ def working_files(root: Path, jj: JJ | None = None) -> dict[str, tuple[str, byte
     """
 
     files: dict[str, tuple[str, bytes, int]] = {}
+    jj_project = (root / ".jj").exists()
     for name in sorted(project_paths(root, jj)):
-        entry = _read_entry(root / name)
+        entry = _project_entry(root / name, jj_project=jj_project)
         if entry is not None:
             files[name] = entry
     return files
@@ -201,7 +225,8 @@ def tracked_tree_digest(root: Path, jj: JJ | None = None, rev: str = "@") -> str
         elif path.is_file():
             kind = "file"
             content = path.read_bytes()
-            mode = stat.S_IMODE(path.stat().st_mode)
+            physical_mode = stat.S_IMODE(path.stat().st_mode)
+            mode = _jj_file_mode(physical_mode)
         elif path.is_dir():
             kind, content = "directory", b""
             mode = stat.S_IMODE(path.stat().st_mode)
