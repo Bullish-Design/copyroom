@@ -62,6 +62,14 @@ def _call(function: Any, *args: Any, json_output: bool = False, **kwargs: Any) -
     return _emit(result, json_output)
 
 
+LEGACY_MARKER_MESSAGE = (
+    "this project has a Copier answers file; CopyRoom no longer reads it. "
+    "Convert the template to a local Templateer source (a directory with manifest.json). "
+    "Write a JSON answers file for the project. "
+    "Then run 'copyroom adopt SOURCE --answers FILE.json --write'"
+)
+
+
 def _project_root() -> Path:
     if _MODE_OVERRIDE == "workshop":
         _error("project command cannot run in workshop mode", 1)
@@ -69,10 +77,7 @@ def _project_root() -> Path:
         if (path / ".copyroom-local.json").is_file():
             return path
         if _has_legacy_project_marker(path):
-            _error(
-                "legacy project markers need local adoption; use 'copyroom adopt SOURCE --answers FILE --write'",
-                1,
-            )
+            _error(LEGACY_MARKER_MESSAGE, 1)
         if (
             (path / "copyroom.yml").is_file()
             and (path / "registry").is_dir()
@@ -89,10 +94,7 @@ def _workshop_root() -> Path:
         if (path / ".copyroom-local.json").is_file():
             _error("workshop command cannot run in project mode", 1)
         if _has_legacy_project_marker(path):
-            _error(
-                "legacy project markers need local adoption; use 'copyroom adopt SOURCE --answers FILE --write'",
-                1,
-            )
+            _error(LEGACY_MARKER_MESSAGE, 1)
         if (
             (path / "copyroom.yml").is_file()
             and (path / "registry").is_dir()

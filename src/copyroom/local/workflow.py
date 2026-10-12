@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import tempfile
 import uuid
 from collections.abc import Callable
@@ -79,23 +80,94 @@ def _feed(digest: Any, data: bytes) -> None:
     digest.update(data)
 
 
-def working_files(root: Path) -> dict[str, tuple[str, bytes, int]]:
-    """Read project files and symlinks, excluding jj and local preview state."""
+def _is_local_state(name: str) -> bool:
+    """Return whether a path is CopyRoom preview, journal, or lock state."""
+
+    return name == LOCK_FILE or name.startswith((f"{PREVIEW_DIR}/", f"{JOURNAL_DIR}/"))
+
+
+def _git_visible_paths(root: Path) -> set[str]:
+    """List tracked and unignored paths of a directory that has no jj repository.
+
+    Git applies the same ignore rules as jj. A directory without ``.git`` gets a
+    scratch Git directory, so a parent repository never changes the answer.
+    """
+
+    git = shutil.which("git")
+    if git is None:
+        raise LocalError("git is required to read the ignore rules of a project without jj", 2)
+    environment = {
+        key: value for key, value in os.environ.items()
+        if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"}
+    }
+    arguments = ["ls-files", "-z", "--cached", "--others", "--exclude-standard"]
+    with tempfile.TemporaryDirectory(prefix="copyroom-view-") as scratch:
+        if not (root / ".git").exists():
+            subprocess.run([git, "init", "--quiet", scratch], capture_output=True, check=True)
+            environment.update(GIT_DIR=str(Path(scratch) / ".git"), GIT_WORK_TREE=str(root))
+        result = subprocess.run(
+            [git, *arguments], cwd=root, env=environment, capture_output=True, check=False,
+        )
+    if result.returncode:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise LocalError(f"git {' '.join(arguments)} failed ({result.returncode}): {detail}", 2)
+    return {item.decode() for item in result.stdout.split(b"\0") if item}
+
+
+def project_paths(root: Path, jj: JJ | None = None) -> set[str]:
+    """Return the paths of the project tree.
+
+    The project tree is what jj tracks. A path that the repository ignores is
+    not part of it. A directory without jj gets the same answer from Git's
+    ignore rules. CopyRoom preview, journal, and lock state is not part of it.
+    """
+
+    if (root / ".jj").exists():
+        paths = (jj or JJ(root)).tracked_paths("@")
+    else:
+        paths = _git_visible_paths(root)
+    return {name for name in paths if not _is_local_state(name)}
+
+
+def _read_entry(path: Path) -> tuple[str, bytes, int] | None:
+    """Read one file or symlink. Return ``None`` for any other entry."""
+
+    if path.is_symlink():
+        return ("symlink", os.readlink(path).encode(), 0)
+    if path.is_file():
+        return ("file", path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
+    return None
+
+
+def working_files(root: Path, jj: JJ | None = None) -> dict[str, tuple[str, bytes, int]]:
+    """Read the files and symlinks of the project tree.
+
+    A symlinked directory is one entry. The reader never descends into it.
+    """
+
+    files: dict[str, tuple[str, bytes, int]] = {}
+    for name in sorted(project_paths(root, jj)):
+        entry = _read_entry(root / name)
+        if entry is not None:
+            files[name] = entry
+    return files
+
+
+def tree_files(root: Path) -> dict[str, tuple[str, bytes, int]]:
+    """Read every file and symlink under a plain directory.
+
+    This walk ignores repository rules. Use it for rendered output and goldens,
+    which are not projects. Use ``working_files`` for a project.
+    """
 
     files: dict[str, tuple[str, bytes, int]] = {}
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
         if any(part in STATE_EXCLUDES for part in relative.parts):
             continue
-        if relative.as_posix() == LOCK_FILE or relative.parts[:2] == (".copyroom-local", "previews"):
-            continue
-        if relative.parts[:2] == (".copyroom-local", "journal"):
-            continue
-        name = relative.as_posix()
-        if path.is_symlink():
-            files[name] = ("symlink", os.readlink(path).encode(), 0)
-        elif path.is_file():
-            files[name] = ("file", path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
+        entry = _read_entry(path)
+        if entry is not None:
+            files[relative.as_posix()] = entry
     return files
 
 
@@ -237,15 +309,38 @@ def _owner_map(data: dict[str, Any]) -> dict[str, str]:
     return owners
 
 
+def _refuse_symlinked_parents(project: Path, names: Any) -> None:
+    """Refuse a render path under a symlinked project directory.
+
+    A write through the link would change files outside the project.
+    """
+
+    for name in sorted(names):
+        parts = Path(name).parts
+        for end in range(1, len(parts)):
+            if project.joinpath(*parts[:end]).is_symlink():
+                link = "/".join(parts[:end])
+                raise LocalError(
+                    f"render path {name} is under symlinked directory {link}; "
+                    "remove it from the source",
+                    1,
+                )
+
+
 def _preflight_paths(
     project: Path,
     data: dict[str, Any],
     layer: str,
     new_owners: dict[str, str],
-    tracked_paths: set[str] | None = None,
+    tracked_paths: set[str],
 ) -> None:
-    """Check a layer plan against all owners and project files."""
+    """Check a layer plan against all owners and the project tree.
 
+    ``tracked_paths`` is the project tree from jj. A path that the repository
+    ignores is not in it, so it never collides with a render path.
+    """
+
+    _refuse_symlinked_parents(project, new_owners)
     records = data.get("layers", {"base": data})
     if not isinstance(records, dict):
         raise LocalError("invalid layer records in project marker")
@@ -259,16 +354,15 @@ def _preflight_paths(
         path for name, record in records.items() if name != layer and isinstance(record, dict)
         for path in record.get("owners", {})
     }
-    project_files = set(working_files(project))
+    project_files = {name for name in tracked_paths if not _is_local_state(name)}
     internal = {MARKER}
     internal.update(name for name in project_files if name.startswith(f"{SOURCE_DIR}/"))
     all_owned = other_paths | old_paths
     project_only = project_files - all_owned - internal
-    if tracked_paths is not None:
-        for name in new_owners:
-            path = project / name
-            if (path.exists() or path.is_symlink()) and name not in tracked_paths:
-                raise LocalError(f"render-owned path is not tracked by jj: {name}", 1)
+    for name in new_owners:
+        path = project / name
+        if (path.exists() or path.is_symlink()) and name not in tracked_paths:
+            raise LocalError(f"render-owned path is not tracked by jj: {name}", 1)
     for new_path in new_owners:
         collisions = other_paths | project_only
         check_paths([new_path, *collisions])
@@ -2192,5 +2286,6 @@ def doctor() -> dict[str, Any]:
 
 __all__ = [
     "add_layer", "apply", "discard", "doctor", "inspect", "list_layers", "list_previews", "recover",
-    "new", "preview", "status", "update", "working_digest", "working_files",
+    "new", "preview", "project_paths", "status", "tree_files", "update", "working_digest",
+    "working_files",
 ]

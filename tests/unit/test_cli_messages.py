@@ -44,7 +44,7 @@ def test_legacy_project_marker_gives_migration_refusal(tmp_path: Path, monkeypat
     result = runner.invoke(app, ["inspect"])
 
     assert result.exit_code == 1
-    assert "legacy project markers need local adoption" in result.stderr
+    assert "copyroom adopt SOURCE --answers FILE.json --write" in result.stderr
 
 
 def test_nested_project_marker_takes_precedence_over_outer_workshop(

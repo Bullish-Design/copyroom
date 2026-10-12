@@ -17,7 +17,7 @@ from .composer import compose, safe_output_path
 from .errors import LocalError
 from .jj import JJ
 from .source import read_json, write_json
-from .workflow import discard, new, preview, working_files, write_tree
+from .workflow import discard, new, preview, tree_files, write_tree
 
 WORKSHOP_STATE = ".copyroom-workshop"
 _ID_PATTERN = re.compile(r"[A-Za-z0-9_-]+\Z")
@@ -203,7 +203,7 @@ def _golden(root: Path, template_id: str, scenario_id: str) -> Path:
 def _tree(root: Path) -> dict[str, tuple[str, bytes, int]]:
     """Read a complete tree, including symlinks and executable bits."""
 
-    return working_files(root)
+    return tree_files(root)
 
 
 def _render(root: Path, template_id: str, scenario_id: str, source: Path | None = None) -> tuple[Path, Any]:

@@ -16,7 +16,10 @@ from .composer import RenderPlan, check_paths, compose, digest_bytes, plan_diges
 from .errors import LocalError
 from .jj import JJ, project_lock
 from .source import (
+    LOCK_FILE,
     MARKER,
+    SOURCE_DIR,
+    STATE_DIR,
     exclude_local_state,
     is_colocated,
     marker_with_plan,
@@ -33,6 +36,8 @@ from .workflow import (
     working_files,
     write_tree,
 )
+
+GIT_STATE_FILES = ("HEAD", "index", "info/exclude")
 
 IGNORED_PARTS = {
     ".git", ".jj", ".devenv", ".direnv", ".venv", ".copyroom-local",
@@ -87,6 +92,146 @@ def compare(project: Path, plan: RenderPlan) -> dict[str, Any]:
         "template_only": template_only,
         "exact": not changed and not project_only and not template_only,
     }
+
+
+class _AdoptionUndo:
+    """Remember what a project looked like, so a failed adoption can restore it.
+
+    Adoption can create ``.jj``, ``.git``, the lock file, the source snapshot,
+    and the marker. A jj colocate init also moves a Git repository to a
+    detached head and adds ``refs/jj``. This class undoes all of that.
+    """
+
+    def __init__(self, project: Path) -> None:
+        self.project = project
+        self.enabled = True
+        self.had_jj = (project / ".jj").exists()
+        self.had_git = (project / ".git").exists()
+        self.had_state = (project / STATE_DIR).exists()
+        self.had_lock = (project / LOCK_FILE).exists()
+        self.had_source = (project / SOURCE_DIR).exists()
+        self.git_files: dict[str, bytes | None] = {}
+        git_directory = project / ".git"
+        if not self.had_jj and git_directory.is_dir():
+            for name in GIT_STATE_FILES:
+                path = git_directory / name
+                self.git_files[name] = path.read_bytes() if path.is_file() else None
+
+    def run(self) -> None:
+        """Remove what adoption created. Keep what the project already had."""
+
+        project = self.project
+        if not self.had_jj:
+            shutil.rmtree(project / ".jj", ignore_errors=True)
+            if not self.had_git:
+                shutil.rmtree(project / ".git", ignore_errors=True)
+            else:
+                git_directory = project / ".git"
+                shutil.rmtree(git_directory / "refs" / "jj", ignore_errors=True)
+                for name, content in self.git_files.items():
+                    path = git_directory / name
+                    if content is None:
+                        path.unlink(missing_ok=True)
+                    else:
+                        path.write_bytes(content)
+        (project / MARKER).unlink(missing_ok=True)
+        if not self.had_source:
+            shutil.rmtree(project / SOURCE_DIR, ignore_errors=True)
+        if not self.had_lock:
+            (project / LOCK_FILE).unlink(missing_ok=True)
+        if not self.had_state:
+            try:
+                (project / STATE_DIR).rmdir()
+            except OSError:
+                pass
+
+
+def _write_adoption(
+    project: Path,
+    source: Path,
+    plan: RenderPlan,
+    omissions: list[str],
+    jj: JJ,
+    undo: _AdoptionUndo,
+) -> str:
+    """Attach the source to the project under the project lock. Return the render commit.
+
+    On failure, restore the repository to its state before adoption. Set
+    ``undo.enabled`` to false when the repository moved on, so the caller keeps
+    the evidence.
+    """
+
+    # The init snapshot of an existing Git repository must already skip the lock file.
+    exclude_local_state(project)
+    if not (project / ".jj").exists():
+        jj.run("git", "init", "--colocate")
+        exclude_local_state(project)
+        jj.run("commit", "-m", "copyroom:adoption baseline")
+    before_tree = working_digest(project)
+    project_head = jj.commit_id("@")
+    project_id = uuid.uuid4().hex
+    temporary_root = Path(tempfile.mkdtemp(prefix="copyroom-adopt-"))
+    workspace_path = temporary_root / "workspace"
+    workspace_name = f"copyroom-{uuid.uuid4().hex[:12]}"
+    workspace_added = False
+    operation = jj.operation_id()
+    last_operation = operation
+    try:
+        root = jj.commit_id("root()")
+        jj.run("workspace", "add", "--name", workspace_name, "-r", root, str(workspace_path))
+        workspace_added = True
+        clear_workspace(workspace_path)
+        write_tree(workspace_path, plan.files)
+        JJ(workspace_path).run(
+            "commit", "-m", _render_subject(project_id, "base", 0, plan.source_digest),
+        )
+        render = JJ(workspace_path).commit_id("@-")
+        last_operation = jj.operation_id()
+        JJ(workspace_path).run("new", project_head, render, "-m", "copyroom:adoption merge")
+        JJ(workspace_path).run("restore", "--from", project_head, "--into", "@")
+        JJ(workspace_path).run("commit", "-m", "copyroom:adoption tree")
+        merge = JJ(workspace_path).commit_id("@-")
+        last_operation = jj.operation_id()
+        if working_digest(workspace_path) != before_tree:
+            raise LocalError("adoption merge did not preserve the project tree", 1)
+        jj.run("new", merge, "-m", "copyroom:adopted project")
+        last_operation = jj.operation_id()
+        if working_digest(project) != before_tree:
+            raise LocalError("adoption changed project files before marker write", 1)
+        snapshot_source(source, project, plan.source_digest)
+        data = marker_with_plan(plan, source, project_id)
+        base_record = {**data["layers"]["base"], "omissions": omissions}
+        data["layers"]["base"] = base_record
+        data.update(base_record)
+        write_json(project / MARKER, data)
+        jj.run("commit", "-m", "copyroom:project inputs")
+        last_operation = jj.operation_id()
+        if jj.render_head(project_id, "base") != render:
+            raise LocalError("adopted render head is wrong", 1)
+    except Exception as exc:
+        current_operation = jj.operation_id()
+        if current_operation == last_operation:
+            jj.run("op", "restore", operation)
+            if workspace_added:
+                jj.run("workspace", "forget", workspace_name)
+            shutil.rmtree(temporary_root, ignore_errors=True)
+        elif isinstance(exc, LocalError):
+            undo.enabled = False
+            raise LocalError(
+                f"{exc}; repository advanced during adoption (saved operation {operation}, "
+                f"current operation {current_operation}); workspace kept at {workspace_path}",
+                exc.code,
+            ) from exc
+        else:
+            undo.enabled = False
+            raise LocalError(
+                f"adoption failed; repository advanced (saved operation {operation}, "
+                f"current operation {current_operation}); workspace kept at {workspace_path}",
+            ) from exc
+        raise
+    jj.run("workspace", "forget", workspace_name)
+    shutil.rmtree(temporary_root, ignore_errors=True)
+    return render
 
 
 def adopt(
@@ -150,75 +295,14 @@ def adopt(
         )
 
     jj = JJ(project)
-    with project_lock(project):
-        if not (project / ".jj").exists():
-            jj.run("git", "init", "--colocate")
-            exclude_local_state(project)
-            jj.run("commit", "-m", "copyroom:adoption baseline")
-        else:
-            exclude_local_state(project)
-        before_tree = working_digest(project)
-        project_head = jj.commit_id("@")
-        project_id = uuid.uuid4().hex
-        temporary_root = Path(tempfile.mkdtemp(prefix="copyroom-adopt-"))
-        workspace_path = temporary_root / "workspace"
-        workspace_name = f"copyroom-{uuid.uuid4().hex[:12]}"
-        workspace_added = False
-        operation = jj.operation_id()
-        last_operation = operation
-        try:
-            root = jj.commit_id("root()")
-            jj.run("workspace", "add", "--name", workspace_name, "-r", root, str(workspace_path))
-            workspace_added = True
-            clear_workspace(workspace_path)
-            write_tree(workspace_path, plan.files)
-            JJ(workspace_path).run(
-                "commit", "-m", _render_subject(project_id, "base", 0, plan.source_digest),
-            )
-            render = JJ(workspace_path).commit_id("@-")
-            last_operation = jj.operation_id()
-            JJ(workspace_path).run("new", project_head, render, "-m", "copyroom:adoption merge")
-            JJ(workspace_path).run("restore", "--from", project_head, "--into", "@")
-            JJ(workspace_path).run("commit", "-m", "copyroom:adoption tree")
-            merge = JJ(workspace_path).commit_id("@-")
-            last_operation = jj.operation_id()
-            if working_digest(workspace_path) != before_tree:
-                raise LocalError("adoption merge did not preserve the project tree", 1)
-            jj.run("new", merge, "-m", "copyroom:adopted project")
-            last_operation = jj.operation_id()
-            if working_digest(project) != before_tree:
-                raise LocalError("adoption changed project files before marker write", 1)
-            snapshot_source(source, project, plan.source_digest)
-            data = marker_with_plan(plan, source, project_id)
-            base_record = {**data["layers"]["base"], "omissions": omissions}
-            data["layers"]["base"] = base_record
-            data.update(base_record)
-            write_json(project / MARKER, data)
-            jj.run("commit", "-m", "copyroom:project inputs")
-            last_operation = jj.operation_id()
-            if jj.render_head(project_id, "base") != render:
-                raise LocalError("adopted render head is wrong", 1)
-        except Exception as exc:
-            current_operation = jj.operation_id()
-            if current_operation == last_operation:
-                jj.run("op", "restore", operation)
-                if workspace_added:
-                    jj.run("workspace", "forget", workspace_name)
-                shutil.rmtree(temporary_root, ignore_errors=True)
-            elif isinstance(exc, LocalError):
-                raise LocalError(
-                    f"{exc}; repository advanced during adoption (saved operation {operation}, "
-                    f"current operation {current_operation}); workspace kept at {workspace_path}",
-                    exc.code,
-                ) from exc
-            else:
-                raise LocalError(
-                    f"adoption failed; repository advanced (saved operation {operation}, "
-                    f"current operation {current_operation}); workspace kept at {workspace_path}",
-                ) from exc
-            raise
-        jj.run("workspace", "forget", workspace_name)
-        shutil.rmtree(temporary_root, ignore_errors=True)
+    undo = _AdoptionUndo(project)
+    try:
+        with project_lock(project):
+            render = _write_adoption(project, source, plan, omissions, jj, undo)
+    except Exception:
+        if undo.enabled:
+            undo.run()
+        raise
     report["result"] = "adopted"
     report["render"] = render
     report["project_tree_preserved"] = True

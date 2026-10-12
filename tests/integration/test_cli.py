@@ -235,7 +235,7 @@ def test_legacy_project_is_not_silently_converted(tmp_path: Path) -> None:
     result = _run("inspect", cwd=tmp_path)
 
     assert result.returncode == 1
-    assert "legacy project markers need local adoption" in result.stderr
+    assert "copyroom adopt SOURCE --answers FILE.json --write" in result.stderr
 
 
 def test_update_test_no_change_exits_zero_with_structured_report(

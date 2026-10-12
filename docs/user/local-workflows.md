@@ -261,6 +261,18 @@ omissions for paths that should remain outside template ownership.
 Git directory. A non-colocated repository makes CopyRoom exit with code `2`.
 Run `jj git init --colocate`, then retry adoption.
 
+CopyRoom sees a project as jj does. A path that the repository ignores is not
+part of the project. Adoption, `templatize`, and collision checks skip ignored
+paths, such as links that devman adds. If adoption fails, CopyRoom removes
+what it created, and the project looks untouched.
+
+A render path under a symlinked project directory makes CopyRoom exit with code
+`1`. CopyRoom never writes through a link. Remove the path from the source.
+
+If a project has a Copier answers file, CopyRoom exits with code `1` and names
+the steps. Convert the template to a local Templateer source, write a JSON
+answers file, then run `copyroom adopt SOURCE --answers FILE.json --write`.
+
 Run these commands from the directory that holds the project and the source.
 Name the project with `--project`.
 
