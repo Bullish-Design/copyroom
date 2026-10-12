@@ -7,7 +7,7 @@ source format and command details.
 ## Requirements
 
 - Python 3.13
-- Templateer from the sibling `templateer_v2` checkout
+- Templateer 0.4.2, which `uv sync` installs from its pinned git tag
 - jj from the root devenv
 - devenv in projects that use the workshop test commands
 

@@ -28,6 +28,11 @@ completed changes through the current gitman lane.
 | Workshop registry and candidate flow | `local/workshop.py` |
 | Public commands | `cli.py` |
 
+## Develop Templateer with CopyRoom
+
+To test a local Templateer checkout, run `uv pip install -e ../templateer_v2` in
+the devenv shell. Do not commit this setup. `uv sync` restores the pinned release.
+
 ## Before publish
 
 Run pytest, Ruff, and the walkthrough in the root devenv shell. Run a fresh

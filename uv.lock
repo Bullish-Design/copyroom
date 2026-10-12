@@ -213,7 +213,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
-    { name = "templateer", editable = "../templateer_v2" },
+    { name = "templateer", git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.4.2" },
     { name = "tomlkit", specifier = ">=0.13" },
     { name = "typer", specifier = ">=0.12" },
 ]
@@ -954,7 +954,7 @@ wheels = [
 [[package]]
 name = "templateer"
 version = "0.4.2"
-source = { editable = "../templateer_v2" }
+source = { git = "https://github.com/Bullish-Design/templateer_v2.git?tag=v0.4.2#a342d1e473b406ad141d028c00756bd0bf958d53" }
 dependencies = [
     { name = "click" },
     { name = "minijinja" },
@@ -962,20 +962,6 @@ dependencies = [
     { name = "pydantic-ai-slim", extra = ["openai"] },
     { name = "pyyaml" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.0" },
-    { name = "minijinja", specifier = ">=2.0" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pydantic-ai-slim", extras = ["openai"], specifier = ">=2,<3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
-    { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.40" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "tiktoken"
