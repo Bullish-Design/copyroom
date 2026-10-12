@@ -21,7 +21,7 @@
     };
 
     templateer = {
-      url = "git+https://github.com/Bullish-Design/templateer_v2?ref=refs/tags/v0.5.0";
+      url = "git+https://github.com/Bullish-Design/templateer_v2?ref=refs/tags/v0.6.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

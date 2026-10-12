@@ -13,13 +13,13 @@
 
 buildPythonApplication {
   pname = "templateer";
-  version = "0.5.0";
+  version = "0.6.0";
 
   src = fetchFromGitHub {
     owner = "Bullish-Design";
     repo = "templateer_v2";
-    rev = "55af56f91ecf5ea30cf2bb90d0aefd056830bd65";
-    hash = "sha256-JgJQ9zSwvuTJ7disfUQtDpvgmcRctgBNflvQ0NZ1oAY=";
+    rev = "a6d609d5b662d79a8f2512772e23ec32129c59ec";
+    hash = "sha256-05j3nadtG/0P/BIHyQGkhkuMVcXKA+oMQOkXQjKaoyE=";
   };
   pyproject = true;
 

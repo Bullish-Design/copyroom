@@ -14,7 +14,7 @@ dependencies = [
   "pydantic>=2.12.5",
   "pyjutsu==0.23.0",
   "pyyaml>=6.0",
-  "templateer==0.5.0",
+  "templateer==0.6.0",
   "tomlkit>=0.13",
   "typer>=0.12",
 ]
@@ -55,7 +55,7 @@ include = [
 
 [tool.uv.sources]
 # Templateer is not on PyPI under this name. Install the pinned release from git.
-templateer = { git = "https://github.com/Bullish-Design/templateer_v2.git", tag = "v0.5.0" }
+templateer = { git = "https://github.com/Bullish-Design/templateer_v2.git", tag = "v0.6.0" }
 # pyjutsu is not on PyPI. This release wheel needs Linux x86-64 with glibc 2.39 or later.
 # Other platforms build the sdist from the same release with Rust 1.89 or later.
 pyjutsu = { url = "https://github.com/Bullish-Design/Pyjutsu/releases/download/v0.23.0/pyjutsu-0.23.0-cp313-abi3-manylinux_2_39_x86_64.whl" }
