@@ -83,18 +83,13 @@ The commit `cf2ec939f8f1` is on `main` and on origin. It does four things:
 - It bumps `pyproject.toml` and `uv.lock` from 0.7.0 to 0.8.1. The 0.8.0 release left them at 0.7.0.
 - It refreshes the `basic` and `probe` goldens. `copyroom release-check py` and `scripts/check_render.py` pass.
 
-**The tag `v0.8.1` is not pushed.** The permission policy denied the tag push. Run this to publish it:
+The tag `v0.8.1` is published. It is annotated and points to `cf2ec939f8f1`. The user authorized the push after the permission policy first denied it.
 
-```bash
-git -C /home/andrew/Documents/Projects/template-py tag -a v0.8.1 -m 'template-py 0.8.1' cf2ec939f8f1
-git -C /home/andrew/Documents/Projects/template-py push origin v0.8.1
-```
-
-After the tag exists, update each repo above with `copyroom update --ref v0.8.1`. The change is documentation only, so each update should merge with no conflict.
+No repo uses the tag yet. Update each repo above with `copyroom update --ref v0.8.1`. The change is documentation only, so each update should merge with no conflict.
 
 ### template-nix migration: pilot only
 
-template-nix `main` is `7d977175f9d0` and has no release tag after `v0.3.0`. The six consumers pin `v0.2.2` (loci.nvim, nix-desktop, nix-nvim, nix-paseo, nix-secrets) or `v0.3.0` (mnemonix). A migration needs a pushed tag, so no real repo changed. The pilot ran in a disposable clone of nix-desktop with a local tag and was then deleted.
+template-nix `main` is `7d977175f9d0`. The tag `v0.4.0` is published, annotated, and points to that commit. `scripts/release-check.sh` passed before the tag. Before the tag, the last release was `v0.3.0`. The six consumers pin `v0.2.2` (loci.nvim, nix-desktop, nix-nvim, nix-paseo, nix-secrets) or `v0.3.0` (mnemonix). No real repo has migrated yet. The pilot ran in a disposable clone of nix-desktop with a local tag and was then deleted.
 
 What the pilot proved:
 
