@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from .composer import LOCAL_DIRS, digest_source
+from .composer import digest_source, is_local_path
 from .errors import LocalError
 
 MARKER = ".copyroom-local.json"
@@ -132,7 +132,7 @@ def snapshot_source(source: Path, project: Path, expected_digest: str | None = N
     try:
         for path in sorted(source.rglob("*")):
             relative = path.relative_to(source)
-            if any(part in LOCAL_DIRS for part in relative.parts) or path.suffix == ".pyc":
+            if is_local_path(relative):
                 continue
             target = destination / relative
             if path.is_symlink():

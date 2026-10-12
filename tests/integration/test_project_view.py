@@ -227,8 +227,12 @@ def test_render_path_under_a_symlinked_directory_is_refused(tmp_path: Path, igno
     project = _managed_project(tmp_path, source)
     store = tmp_path / "devman-store"
     _link_devman_files(project, store, ignore=ignored)
-    (store / "agents" / "skills").mkdir()
-    overlay = _overlay_into(tmp_path, source, ".agents/skills/x.md")
+    (store / "vendor" / "skills").mkdir(parents=True)
+    (project / "vendor").symlink_to(store / "vendor")
+    if ignored:
+        with (project / ".gitignore").open("a", encoding="utf-8") as handle:
+            handle.write("vendor\n")
+    overlay = _overlay_into(tmp_path, source, "vendor/skills/x.md")
     before = sorted(str(path.relative_to(store)) for path in store.rglob("*"))
 
     result = _run(
@@ -238,11 +242,11 @@ def test_render_path_under_a_symlinked_directory_is_refused(tmp_path: Path, igno
 
     assert result.returncode == 1, result.stderr
     assert (
-        "render path .agents/skills/x.md is under symlinked directory .agents; "
+        "render path vendor/skills/x.md is under symlinked directory vendor; "
         "remove it from the source"
     ) in result.stderr
     assert sorted(str(path.relative_to(store)) for path in store.rglob("*")) == before
-    assert not (store / "agents" / "skills" / "x.md").exists()
+    assert not (store / "vendor" / "skills" / "x.md").exists()
 
 
 def test_working_files_lists_a_symlinked_directory_once(tmp_path: Path) -> None:

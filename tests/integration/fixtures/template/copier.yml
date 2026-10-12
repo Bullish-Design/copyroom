@@ -3,7 +3,7 @@ _answers_file: .copier-answers.yml
 # template ships (they contain literal {{ }} examples).
 _preserve_symlinks: true
 _copy_without_render:
-  - ".agents/skills/**"
+  - "vendor/skills/**"
 
 project_name:
   type: str

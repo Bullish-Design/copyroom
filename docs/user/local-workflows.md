@@ -269,6 +269,10 @@ what it created, and the project looks untouched.
 A render path under a symlinked project directory makes CopyRoom exit with code
 `1`. CopyRoom never writes through a link. Remove the path from the source.
 
+A source never renders at `.agents` or `.claude`. devman owns both paths. A
+source with an artifact, static file, or symlink there makes CopyRoom exit with
+code `2`. `adopt` and `templatize` leave both paths out of the project tree.
+
 If a project has a Copier answers file, CopyRoom exits with code `1` and names
 the steps. Convert the template to a local Templateer source, write a JSON
 answers file, then run `copyroom adopt SOURCE --answers FILE.json --write`.

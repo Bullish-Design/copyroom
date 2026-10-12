@@ -23,7 +23,19 @@ RESERVED = {
     ".git", ".jj", ".devenv", ".direnv", ".venv", ".copyroom-local",
     ".copyroom-local.json",
 }
+# devman owns these top-level paths as a machine-local view. No source renders there.
+AGENT_VIEW = {".agents", ".claude"}
 LOCAL_DIRS = RESERVED | {"__pycache__", ".pytest_cache", ".ruff_cache"}
+
+
+def is_local_path(relative: Path) -> bool:
+    """Tell whether a source path is local state that a source never holds."""
+
+    return (
+        any(part in LOCAL_DIRS for part in relative.parts)
+        or relative.parts[0] in AGENT_VIEW
+        or relative.suffix == ".pyc"
+    )
 
 
 @dataclass(frozen=True)
@@ -74,7 +86,7 @@ def digest_source(source: Path) -> str:
     paths = list(source.rglob("*"))
     for path in sorted(paths):
         relative = path.relative_to(source)
-        if any(part in LOCAL_DIRS for part in relative.parts) or path.suffix == ".pyc":
+        if is_local_path(relative):
             continue
         if path.is_symlink():
             raise LocalError(f"source symlinks are not supported: {relative.as_posix()}")
@@ -123,6 +135,10 @@ def safe_output_path(pattern: str, answers: dict[str, Any]) -> str:
             if not isinstance(value, str):
                 raise LocalError(f"path answer {match.group(1)} must be text")
             part = value
+        if not parts and part in AGENT_VIEW:
+            raise LocalError(
+                f"source path {pattern} is reserved: devman owns .agents and .claude"
+            )
         if (
             part in {"", ".", ".."}
             or part in RESERVED
@@ -376,7 +392,7 @@ def compose(source: Path, answers_input: dict[str, Any]) -> RenderPlan:
 
 
 __all__ = [
-    "FileEntry", "LOCAL_DIRS", "RenderPlan", "RESERVED", "check_paths", "compose",
-    "digest_bytes", "digest_composer", "digest_source", "digest_templateer", "plan_digest",
-    "safe_output_path", "safe_symlink_target",
+    "AGENT_VIEW", "FileEntry", "LOCAL_DIRS", "RenderPlan", "RESERVED", "check_paths",
+    "compose", "digest_bytes", "digest_composer", "digest_source", "digest_templateer",
+    "is_local_path", "plan_digest", "safe_output_path", "safe_symlink_target",
 ]

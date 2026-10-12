@@ -2,7 +2,8 @@
 
 CopyRoom uses local source directories. Review a source before you render it.
 Templateer validators run before CopyRoom writes output. Path checks reject
-traversal, reserved paths, and collisions between layers.
+traversal, reserved paths (including `.agents` and `.claude`), and collisions
+between layers.
 
 Preview changes stay in a separate jj workspace. Resolve conflicts there.
 CopyRoom refuses to apply a stale preview and applies the reviewed tree without

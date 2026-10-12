@@ -1101,6 +1101,87 @@ class LocalTemplateerJJTests(unittest.TestCase):
 
         self.assertFalse(self.project.exists())
 
+    def refuse_agent_view(self, path: str) -> None:
+        """Check that the source is refused and leaves no project."""
+
+        with self.assertRaises(LocalError) as caught:
+            new(self.source, self.project, self.answers)
+        self.assertEqual(
+            f"source path {path} is reserved: devman owns .agents and .claude",
+            str(caught.exception),
+        )
+        self.assertEqual(2, caught.exception.code)
+        self.assertFalse(self.project.exists())
+
+    def test_artifact_output_under_the_agent_view_is_refused(self) -> None:
+        metadata = self.source / "templates/about/metadata.yml"
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace(
+                "scripts/about.py", ".agents/skills/about.py",
+            ),
+            encoding="utf-8",
+        )
+        manifest_path = self.source / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["executable"] = []
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        self.refuse_agent_view(".agents/skills/about.py")
+
+    def test_static_entry_under_the_agent_view_is_refused(self) -> None:
+        (self.source / "assets").mkdir()
+        (self.source / "assets/note.txt").write_text("note\n", encoding="utf-8")
+        manifest_path = self.source / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["static"] = [{"path": ".claude/note.txt", "source": "assets/note.txt"}]
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        self.refuse_agent_view(".claude/note.txt")
+
+    def test_symlink_entry_at_the_agent_view_is_refused(self) -> None:
+        manifest_path = self.source / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["symlinks"] = [{"path": ".agents", "target": "docs"}]
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        self.refuse_agent_view(".agents")
+
+    def test_nested_agent_view_name_is_not_reserved(self) -> None:
+        manifest_path = self.source / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["symlinks"] = [{"path": "docs/.agents", "target": "../README.md"}]
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        self.create()
+
+        self.assertTrue((self.project / "docs/.agents").is_symlink())
+
+    def test_source_root_agent_view_is_not_part_of_the_source(self) -> None:
+        before = compose(self.source, json.loads(self.answers.read_text(encoding="utf-8")))
+        (self.source / ".agents").mkdir()
+        (self.source / ".agents/skill.md").write_text("machine-local\n", encoding="utf-8")
+        (self.source / ".claude").symlink_to(self.source / ".agents")
+
+        after = compose(self.source, json.loads(self.answers.read_text(encoding="utf-8")))
+
+        self.assertEqual(before.source_digest, after.source_digest)
+
+    def test_templatize_leaves_the_agent_view_out_of_the_source(self) -> None:
+        project = self.root / "viewed"
+        project.mkdir()
+        (project / "README.md").write_text("# viewed\n", encoding="utf-8")
+        (project / ".agents/skills").mkdir(parents=True)
+        (project / ".agents/skills/note.md").write_text("tracked skill\n", encoding="utf-8")
+        (project / ".claude").symlink_to(".agents")
+        source = self.root / "viewed-template"
+
+        report = templatize(project, source)
+
+        self.assertTrue(report["golden_exact"])
+        self.assertEqual(1, report["files"])
+        self.assertNotIn(".agents", (source / "manifest.json").read_text(encoding="utf-8"))
+        self.assertNotIn(".claude", (source / "manifest.json").read_text(encoding="utf-8"))
+
     def test_status_reports_render_head_and_pending_preview(self) -> None:
         self.create()
         template = self.source / "templates/settings/template.j2"

@@ -12,7 +12,7 @@ from typing import Any
 
 import yaml
 
-from .composer import RenderPlan, check_paths, compose, digest_bytes, plan_digest
+from .composer import AGENT_VIEW, RenderPlan, check_paths, compose, digest_bytes, plan_digest
 from .errors import LocalError
 from .jj import JJ, project_lock
 from .source import (
@@ -46,11 +46,17 @@ IGNORED_PARTS = {
 
 
 def _project_files(project: Path) -> dict[str, tuple[str, bytes, int]]:
-    """Return the project tree without CopyRoom state."""
+    """Return the project tree without CopyRoom state and the devman view.
+
+    devman owns ``.agents`` and ``.claude``. A source never renders there, so
+    adopt and templatize leave them out.
+    """
 
     return {
         name: value for name, value in working_files(project).items()
-        if name != MARKER and not name.startswith(".copyroom-local/")
+        if name != MARKER
+        and not name.startswith(".copyroom-local/")
+        and name.split("/", 1)[0] not in AGENT_VIEW
     }
 
 
