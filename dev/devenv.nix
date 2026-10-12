@@ -10,6 +10,10 @@
   ...
 }:
 
+let
+  # Pinned release jj. nixpkgs lags behind jj 0.46, which gitman needs.
+  jj = import ./jj.nix { inherit pkgs; };
+in
 {
   # https://devenv.sh/basics/
   env.GREET = "copyroom";
@@ -17,7 +21,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    pkgs.jujutsu
+    jj
     pkgs.uv
     pkgs.secretspec
   ];
