@@ -18,10 +18,9 @@ UNGUARDED_ENV = "COPYROOM_PUBLISH_UNGUARDED"
 PROBE_ID = "0" * 40
 PROBE_SECONDS = 30
 # jj 0.45 and later record a Git HEAD for each workspace. An older jj-lib drops the Git
-# HEAD of every workspace except `default` when it writes an operation. The fix first
-# shipped in pyjutsu 0.24.0, so that version stands in when the jj-lib version is unknown.
+# HEAD of every workspace except `default` when it writes an operation.
 CHILD_SAFE_JJ_LIB = (0, 45)
-CHILD_SAFE_PYJUTSU = (0, 24, 0)
+VERSION_LINE = re.compile(r"^pyjutsu (\S+) \(jj-lib (\S+)\)\s*$")
 
 
 @dataclass(frozen=True)
@@ -38,15 +37,12 @@ class Guard:
     def keeps_child_git_head(self) -> bool:
         """Tell whether this build keeps the Git HEAD of a child workspace.
 
-        The jj-lib version decides. When it is unknown, the pyjutsu version decides.
-        When both are unknown, the answer is no.
+        Only the jj-lib version decides. A build that reports none is old: pyjutsu
+        0.23 has no `--version` probe.
         """
 
         jj_lib = _release(self.jj_lib)
-        if jj_lib is not None:
-            return jj_lib[:2] >= CHILD_SAFE_JJ_LIB
-        pyjutsu = _release(self.version)
-        return pyjutsu is not None and pyjutsu >= CHILD_SAFE_PYJUTSU
+        return jj_lib is not None and jj_lib[:2] >= CHILD_SAFE_JJ_LIB
 
 
 @dataclass
@@ -128,8 +124,27 @@ def _interpreter(path: str) -> str | None:
 
 
 def _versions(path: str) -> tuple[str | None, str | None]:
-    """Read the pyjutsu version and its jj-lib version with the script's interpreter."""
+    """Read the pyjutsu version and its jj-lib version.
 
+    pyjutsu 0.24.0 and later print `pyjutsu VERSION (jj-lib VERSION)` for `--version`.
+    Older builds have no such flag. For them, ask the script's interpreter instead.
+    """
+
+    try:
+        probed = subprocess.run(
+            [path, "--version"], text=True, capture_output=True, check=False,
+            timeout=PROBE_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        probed = None
+    if probed is not None and probed.returncode == 0:
+        match = VERSION_LINE.match(probed.stdout.strip())
+        if match:
+            return match.group(1), match.group(2)
+    return _interpreter_versions(path)
+
+
+def _interpreter_versions(path: str) -> tuple[str | None, str | None]:
     python = _interpreter(path)
     if python is None:
         return None, None

@@ -58,7 +58,7 @@ def test_an_old_jj_lib_still_publishes_outside_a_child_workspace(
 def test_a_fixed_jj_lib_publishes_in_a_child_workspace(
     child: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    guard = use_guard(monkeypatch, "0.24.0", "0.45.0")
+    guard = use_guard(monkeypatch, "0.24.0", "0.46.0")
 
     assert workflow._publication_mode(child, False) == guard.describe()
 

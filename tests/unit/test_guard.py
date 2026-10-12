@@ -136,27 +136,55 @@ def test_other_checkouts_are_not_colocated_child_workspaces(tmp_path: Path) -> N
     [
         ("0.23.0", "0.44.0", False),
         ("0.23.0", "0.45.0", True),
-        ("0.24.0", "0.45.1", True),
+        ("0.24.0", "0.46.0", True),
         ("0.24.0", "1.0.0", True),
-        # The jj-lib version wins over the pyjutsu version.
+        # Only the jj-lib version decides. The pyjutsu version alone proves nothing.
         ("0.30.0", "0.44.0", False),
         ("0.20.0", "0.46.0", True),
-        # Without a jj-lib version, 0.24.0 is the first fixed pyjutsu.
-        ("0.23.9", None, False),
-        ("0.24.0", None, True),
-        ("0.100.0", None, True),
-        ("1.0.0", "", True),
-        # Without either version, CopyRoom cannot prove the build is safe.
+        ("0.24.0", None, False),
+        ("1.0.0", "", False),
+        # A build that reports no version is old.
         (None, None, False),
         ("unknown", "unknown", False),
     ],
 )
-def test_the_version_gate_lifts_with_the_fixed_jj_lib_or_pyjutsu(
+def test_the_version_gate_follows_the_jj_lib_version(
     version: str | None, jj_lib: str | None, keeps: bool
 ) -> None:
     from copyroom.local.guard import Guard
 
     assert Guard("/opt/pyjutsu", version, jj_lib).keeps_child_git_head() is keeps
+
+
+def test_the_version_flag_gives_the_pyjutsu_and_jj_lib_versions(tmp_path: Path) -> None:
+    from copyroom.local.guard import _versions
+
+    fixed = script(
+        tmp_path / "pyjutsu-fixed",
+        'if [ "$1" = "--version" ]; then echo "pyjutsu 0.24.0 (jj-lib 0.46.0)"; exit 0; fi\nexit 2\n',
+    )
+
+    assert _versions(str(fixed)) == ("0.24.0", "0.46.0")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        # pyjutsu 0.23 rejects `--version`.
+        'echo "error: unrecognized arguments: --version" >&2; exit 2\n',
+        'echo "pyjutsu 0.24.0"; exit 0\n',
+        'echo "pyjutsu 0.24.0 (jj-lib 0.46.0)"; exit 1\n',
+    ],
+)
+def test_a_missing_or_unparseable_version_flag_leaves_the_build_old(
+    tmp_path: Path, body: str
+) -> None:
+    from copyroom.local.guard import Guard, _versions
+
+    old = script(tmp_path / "pyjutsu-old", body)
+
+    assert _versions(str(old)) == (None, None)
+    assert Guard(str(old), *_versions(str(old))).keeps_child_git_head() is False
 
 
 def test_versions_come_from_the_interpreter_in_the_shebang_with_the_jj_lib(

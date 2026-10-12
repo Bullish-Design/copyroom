@@ -177,11 +177,13 @@ versions. Choose one of these:
    CLI writes the Git HEAD of every workspace, so `@` stays on the published
    commit. The path loses the guard's rejection of a foreign writer.
 
-CopyRoom reads the jj-lib version from `pyjutsu.JJ_VERSION`. The build is safe at
-jj-lib 0.45 or later. If CopyRoom cannot read that version, it uses the pyjutsu
-version, and 0.24.0 is the first safe release. If it reads neither, it refuses.
-The refusal lifts by itself when a safe pyjutsu is installed. `copyroom doctor`
-reports `guard_jj_lib` and `guard_child_workspace` (`ok` or `refused`).
+CopyRoom reads the jj-lib version from `pyjutsu --version`. pyjutsu 0.24.0 and later
+print `pyjutsu 0.24.0 (jj-lib 0.46.0)`. Older builds have no such flag. For them,
+CopyRoom reads `pyjutsu.JJ_VERSION` through the interpreter of the `pyjutsu` script.
+The build is safe at jj-lib 0.45 or later. The pyjutsu version alone proves nothing.
+If CopyRoom reads no jj-lib version, it treats the build as old and refuses. The
+refusal lifts by itself when a safe pyjutsu is installed. `copyroom doctor` reports
+`guard_jj_lib` and `guard_child_workspace` (`ok` or `refused`).
 
 A rejected guard call can leave unreferenced jj operations and Git objects. Run
 `jj util gc` to remove them. They are not damage.
