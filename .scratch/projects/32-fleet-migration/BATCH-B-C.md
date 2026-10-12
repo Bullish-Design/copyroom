@@ -26,6 +26,17 @@ passed Testee on the final main tree.
 No files changed in linkman or talkee. Vendomat was not touched. An unrelated
 Testee worker for vendomat remained active during this batch.
 
+## Repos left untouched
+
+Both repos were excluded by instruction. Neither repo received a migration.
+Their default workspaces are clean, and their local `main` bookmarks match
+`origin/main`.
+
+| Repo | Main commit | Preflight state |
+|---|---|---|
+| linkman | `ee929fa27ce437d38dabd4cff19b50d07607a087` | The default workspace is clean. The `v6-linkman` workspace exists at `../gitman-workspaces/v6-linkman`; its working-copy commit is empty. Both workspaces remain untouched. |
+| talkee | `9f4013e9f342ec0f45f8a2211ab7c7b51adb2775` | The default workspace is clean. Three active workspaces remain: `17-devman-environment` has a conflicted change; `17-full-pipeline` has an active change and remote bookmark; `l3-structured-extraction` has an active benchmark change. All remain untouched. |
+
 ## Stale template text
 
 The generated README in scopeman and shellij contains this stale paragraph:
