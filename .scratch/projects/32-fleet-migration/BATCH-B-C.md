@@ -128,9 +128,7 @@ The user decided to follow the template and drop the vendomat and shellij inputs
 | mnemonix | `v0.3.0` | `3fac903655b7` | pushed |
 | nix-paseo | `v0.2.2` | `de8b5937b200` | pushed |
 | nix-secrets | `v0.2.2` | `83fd48cf9603` | pushed |
-| nix-desktop | `v0.2.2` | `f3d36d76bf14` (unchanged) | migrated tip `04caa2359d7a` is local; the push was denied by the permission policy |
-
-To land nix-desktop, run from the repo: `jj bookmark set main -r potslvwtswyk && jj git push --bookmark main`.
+| nix-desktop | `v0.2.2` | `04caa2359d7a` | pushed (the user ran the landing after the agent's push was denied) |
 
 Each pushed repo reports CopyRoom status ok with the `base` and `module` layers at `v0.4.0`, and both updates return `no-change`. Every pin points at `/home/andrew/Documents/Projects/template-nix`. No `flake.nix`, `flake.lock`, or module file changed (mnemonix: one stub that `layer add` rendered was deleted). The links are unchanged. No test gate exists for these repos: the template selects no Testee manager.
 
@@ -151,9 +149,9 @@ Decisions made while the agents ran:
 
 Findings for the user:
 
-- **The devman overlay imports a missing path.** `~/.config/devman/projects/<repo>/devenv.local.nix` imports `/home/andrew/Documents/Projects/vendomat/modules/devenv.nix`, and that path does not exist. `devenv info` fails inside nix-desktop, nix-paseo, and nix-secrets (nix-desktop failed the same way on an untouched `main`). The tracked tree evaluates with exit 0 without the overlay, before and after the migration. The migration did not edit the overlay files. Remove the vendomat import from each central overlay.
-- **nix-paseo tracks a 79-byte `.env`** that its `.gitignore` also lists. It predates the migration and was left alone. Check what it holds.
-- **template-nix `.gitignore` writes `.agents/` and `.claude/` with a trailing slash.** That form does not match a symlink. template-py writes the names with no slash for this reason. The links stay ignored here only because each repo lists them in `.git/info/exclude`. A `v0.4.1` fix is small.
+- **The devman overlays imported V4 vendomat modules.** See "After the rollout" below. The overlay files were cleaned.
+- **nix-paseo tracked a 79-byte `.env`.** See "After the rollout" below.
+- **template-nix `.gitignore` wrote `.agents/` and `.claude/` with a trailing slash.** Fixed on `main`; see "After the rollout".
 - The pilot found that the stub `modules/<name>.nix` can appear for a project that never had one (mnemonix). A later template bump may offer it again.
 - The v0.1.0 and v0.1.1 tag changes in nix-secrets were divergent before this work. They were left alone.
 
@@ -164,3 +162,38 @@ Deferred repos:
 - nix-nvim: the default workspace sits on a conflicted WIP commit (`stray-devenv`) with three modified files.
 
 Settle that work first. Then run the same flow.
+
+### After the rollout
+
+**nix-desktop** is pushed at `04caa2359d7a`. Status is ok, and both updates return `no-change`.
+
+**Overlays.** Eight central overlays in `~/.config/devman/projects/` imported a V4 vendomat consumer module:
+
+- tyo3, nix-paseo, nix-nvim, and nix-desktop pointed at `vendomat/modules/devenv.nix`. That path no longer exists, so `devenv info` failed in the real repos. An untouched `main` failed the same way.
+- flora-core, loci.nvim, loci-core, and nix-secrets pointed at the machine-delivered `/run/current-system/sw/share/vendomat/consumer-module.nix` of vendomat 0.5.0. It still resolves today and will not after the machine takes vendomat 0.6.0 or later.
+
+Evidence: vendomat `main` holds V5 only (`663b864`), and its backlog item 4 says to remove the import line and keep the devman link lines. The backlog gates this on RepoMan running managers from `PATH`. RepoMan has not referenced `REPOMAN_TOOLCHAIN_BIN` since at least `v0.12.1`, so the gate is met. The talkee overlay was already cleaned on 2026-10-09 with the same reason.
+
+All eight overlays now import only the devman link module (loci.nvim and tyo3 keep the machine RepoMan import, because their repos declare no `repoman` input). Each evaluated with exit 0 on a scratch copy of its `main`. In the real repos, `devenv info` exits 0 for nix-desktop, nix-paseo, nix-secrets, and mnemonix. The change is one local commit in `~/.config/devman` (that repo has no remote). The `vendomat.toml` files in flora-core, loci.nvim, loci-core, and nix-nvim are now unread. Delete each in its own lane (vendomat backlog item 5).
+
+**Regression found and fixed.** The nix-secrets overlay imported the machine RepoMan module too. The migrated `devenv.yaml` declares the `repoman` input, so the shell failed with `option repoman.enable is already declared`. Checks on a copy without the overlay could not see this. The fix removes the machine RepoMan import from that overlay. Lesson: evaluate a migrated repo with its overlay present.
+
+**nix-paseo `.env`.** The file held one API key. It was added by accident in `c03caa7` (2026-09-22). It is untracked, deleted from disk, and removed from the tree at `22dd17ad809e`. It is still in git history and on origin. Rotate the key. History was not rewritten.
+
+**template-nix `.gitignore`.** `main` is `8d623640dc3e`. The base template and the five goldens now write `.agents` and `.claude` with no trailing slash, with the explanatory comment from template-py. A symlink named `.agents` matches the rule (checked). `scripts/check_render.py` asserted the old slash form and was updated. No tag exists for this fix. `template/.gitignore` in the legacy Copier-era tree is still tracked with the old rule. Nothing reads it. Delete the tree or edit it.
+
+The four migrated repos still carry `.agents/` and `.claude/` with a slash. They reach the fix with `copyroom update --ref v0.4.1` after the tag.
+
+**loci.nvim** (read-only investigation):
+
+- `main` equals origin at `f0cca7c2`. Nothing is unpushed. The WIP commit is empty; its description is stale. The default working copy changes only `devenv.lock`: it removes the unused `shellij` input and node. This is plain lock drift.
+- The unreviewed commit `1e6c204b` (already on origin) dropped `cliProvider = "venv"` from `.repoman/project.toml` and `[toolchain] enable = false` from `vendomat.toml`. That moved the repo from the venv toolchain to the store toolchain.
+- Predicted migration conflicts: `devenv.nix`, `devenv.yaml`, `.gitignore`, `.repoman/project.toml`. README and `AGENTS.md` merge cleanly. `repoman.lock` is absent and comes from the template. `.copier-answers.yml` must be deleted. The repo has no module layer.
+- Decisions for the owner: land or discard the lock prune, confirm the toolchain switch, and say whether `devenv.nix`, `devenv.yaml`, and `.gitignore` keep project text or take the template.
+- The remote branch `038-devman-migration` is stale.
+
+**nix-nvim** (read-only investigation):
+
+- `main` equals origin at `edac5777`. The conflicted WIP commit `947aac03` (bookmark `stray-devenv`) is local only. It is a stale, earlier devman migration. Everything in it is already on `main` or outdated. The "uncommitted changes" are only the materialized conflict markers.
+- Predicted migration conflicts: `devenv.nix`, `devenv.yaml`, `.gitignore`, `AGENTS.md` (project prose). README, `flake.nix`, and `.repoman/project.toml` merge cleanly. `.copier-answers.yml` and `copyroom.project.yml` must be deleted.
+- Recommended: abandon `947aac03`, delete the `stray-devenv` bookmark, then run the migration flow with a `module` layer. The remote branch `038-devman-migration` is stale.
