@@ -197,3 +197,40 @@ The four migrated repos still carry `.agents/` and `.claude/` with a slash. They
 - `main` equals origin at `edac5777`. The conflicted WIP commit `947aac03` (bookmark `stray-devenv`) is local only. It is a stale, earlier devman migration. Everything in it is already on `main` or outdated. The "uncommitted changes" are only the materialized conflict markers.
 - Predicted migration conflicts: `devenv.nix`, `devenv.yaml`, `.gitignore`, `AGENTS.md` (project prose). README, `flake.nix`, and `.repoman/project.toml` merge cleanly. `.copier-answers.yml` and `copyroom.project.yml` must be deleted.
 - Recommended: abandon `947aac03`, delete the `stray-devenv` bookmark, then run the migration flow with a `module` layer. The remote branch `038-devman-migration` is stale.
+
+### template-nix v0.4.1 and the `vendomat.toml` removals
+
+Tag `v0.4.1` (`8d623640dc3e`) is published. It carries the `.gitignore` fix.
+
+Four migrated repos moved both layers to `v0.4.1`. Each preview had one change to `.gitignore` (plus the marker), and the module preview moved the pin only. Each repo reports status ok, `no-change` for both layers, and `devenv info` exit 0 with its overlay present.
+
+| Repo | Main commit |
+|---|---|
+| mnemonix | `86514798f118` |
+| nix-paseo | `e6e1b147a4aa` |
+| nix-secrets | `04d7714c51ce` |
+| nix-desktop | `5558c20e06f1` |
+
+Each final `.gitignore` has the exact lines `.agents` and `.claude`, no slash forms, and the project's own lines (`result`, `result-*`, `.testee/`, and in nix-paseo the `.env` and `.jj/` sections). A symlink named `.agents` is matched in nix-paseo, nix-secrets, and nix-desktop. In nix-desktop `.claude/settings.local.json` (a symlink) is tracked; consider untracking it.
+
+`vendomat.toml` was the V4 consumer-module settings file. No overlay reads it now. It was deleted in a separate lane workspace in each repo. Each lane diff was exactly `D vendomat.toml`, and `devenv info` exited 0 before and after on `git archive` trees with the overlay present.
+
+| Repo | Result | Main commit |
+|---|---|---|
+| loci.nvim | pushed; default workspace untouched (uncommitted `devenv.lock`) | `e087858e0e3e` |
+| nix-nvim | pushed; default workspace untouched (conflicted WIP) | `2c997b8c73a0` |
+| flora-core | pushed after Testee GREEN 4/4 | `adf5f9d22e7e` |
+| loci-core | NOT pushed: lane commit `c76145bce7c7`, Testee GREEN 4/4; the push was denied by the permission policy | origin still `b0749c3cd8be` |
+
+For loci-core: the local `main` bookmark in the repo points at `c76145bc` (unpushed), and the lane `remove-vendomat-toml` still exists. To land, run `jj git push --bookmark main` from the lane directory as its own command. To undo, run `jj bookmark set main -r main@origin --allow-backwards`.
+
+The user's `testee_integrate_gate` hook refuses a push for repos with a Testee gate until `testee status` shows a verdict for the exact commit, and it refuses a compound command line that changes the repository before the push. Run `testee verify -r COMMIT`, then push as its own command.
+
+Stale comments that still mention vendomat (left unchanged):
+
+- flora-core: `devenv.yaml` line 28.
+- loci.nvim: `devenv.nix` lines 10 to 13 (also cites `cliProvider = "venv"`).
+- loci-core: `devenv.nix` line 91, `devenv.yaml` lines 22 to 24; also `AGENTS.md` line 62, `pyproject.toml` lines 51 to 54 (a vendomat input and wheelhouse note), `tests/unit/test_skill_conformance.py` line 60, `.gitignore` line 235.
+- nix-nvim: `devenv.nix` lines 11, 13, and 14; `devenv.yaml` line 15.
+
+Open items: the loci.nvim and nix-nvim migrations wait for the owner decisions listed above.
