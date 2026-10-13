@@ -119,21 +119,48 @@ Two lessons for a later rollout:
 
 agentman and flora-qc still list an old pending preview each (`copyroom status` reports `pending_previews`). Those previews predate this rollout and were left alone.
 
-### template-nix migration: pilot only
+### template-nix v0.4.0 rollout
 
-template-nix `main` is `7d977175f9d0`. The tag `v0.4.0` is published, annotated, and points to that commit. `scripts/release-check.sh` passed before the tag. Before the tag, the last release was `v0.3.0`. The six consumers pin `v0.2.2` (loci.nvim, nix-desktop, nix-nvim, nix-paseo, nix-secrets) or `v0.3.0` (mnemonix). No real repo has migrated yet. The pilot ran in a disposable clone of nix-desktop with a local tag and was then deleted.
+The user decided to follow the template and drop the vendomat and shellij inputs. Four clean repos migrated in parallel, one agent per repo. loci.nvim and nix-nvim stay deferred because of unfinished work in their default workspaces.
 
-What the pilot proved:
+| Repo | Old tag | Main commit | State |
+|---|---|---|---|
+| mnemonix | `v0.3.0` | `3fac903655b7` | pushed |
+| nix-paseo | `v0.2.2` | `de8b5937b200` | pushed |
+| nix-secrets | `v0.2.2` | `83fd48cf9603` | pushed |
+| nix-desktop | `v0.2.2` | `f3d36d76bf14` (unchanged) | migrated tip `04caa2359d7a` is local; the push was denied by the permission policy |
 
-- The baseline source builds from `v0.2.2` with `schemas/v0_2.py`. `adopt --template-only keep` succeeds. Only `repoman.lock` is template-only.
-- The `module` layer attaches after the project removes `flake.nix` and the module files and restores them. Only `flake.nix` differed from the baseline in nix-desktop.
-- The base update fails with `output path collision: .repoman/project.toml`. The target base renders that file, and the baseline does not. Remove the file, run the update, and restore the project bytes. In four repos the file equals the template file. loci.nvim and nix-secrets carry a stale vendomat comment header.
-- The answers file has no `project_id`. The schema then derives `nix_desktop`, but `.devman/project.toml` says `nix-desktop`. Set `project_id` from `.devman/project.toml` in the target answers for every repo.
-- The base preview has four conflicts in nix-desktop: `.gitignore`, `AGENTS.md`, `devenv.nix`, and `devenv.yaml`. Each needs a decision. The project keeps vendomat and shellij inputs that the template dropped. `AGENTS.md` is project text, so the project side stays.
+To land nix-desktop, run from the repo: `jj bookmark set main -r potslvwtswyk && jj git push --bookmark main`.
 
-Open states to settle before a real run:
+Each pushed repo reports CopyRoom status ok with the `base` and `module` layers at `v0.4.0`, and both updates return `no-change`. Every pin points at `/home/andrew/Documents/Projects/template-nix`. No `flake.nix`, `flake.lock`, or module file changed (mnemonix: one stub that `layer add` rendered was deleted). The links are unchanged. No test gate exists for these repos: the template selects no Testee manager.
 
-- loci.nvim: the default workspace has an uncommitted `devenv.lock` change and a WIP commit above `main`.
+Flow used for each repo:
+
+1. Build the baseline source from the old tag with `schemas/v0_2.py`, and adopt the base with `--template-only keep`.
+2. Drop `.copier-answers.yml` and `copyroom.project.yml`. Release `.repoman/project.toml` in its own commit, so that the new base can render it.
+3. Update the base to `v0.4.0` and resolve the conflicts. Apply.
+4. Attach the `module` layer directly at `v0.4.0`: back up the three module files, remove them, run `layer add`, and restore the exact bytes.
+5. Commit `devenv.lock` as its own change.
+
+Decisions made while the agents ran:
+
+- `project_id` comes from `.devman/project.toml` (hyphen form). The schema default would give `nix_desktop`.
+- `.gitignore` takes the template block. The project keeps its own `result`, `result-*`, and `.testee/` rules, because the template does not own them.
+- `AGENTS.md` and `README.md` keep the project text. mnemonix `README.md` still names the Vendomat module and is now stale.
+- The `devenv.lock` change adds `devman` and switches `repoman` from `git+file` to a `path:` input. Both follow from the template `devenv.yaml`.
+
+Findings for the user:
+
+- **The devman overlay imports a missing path.** `~/.config/devman/projects/<repo>/devenv.local.nix` imports `/home/andrew/Documents/Projects/vendomat/modules/devenv.nix`, and that path does not exist. `devenv info` fails inside nix-desktop, nix-paseo, and nix-secrets (nix-desktop failed the same way on an untouched `main`). The tracked tree evaluates with exit 0 without the overlay, before and after the migration. The migration did not edit the overlay files. Remove the vendomat import from each central overlay.
+- **nix-paseo tracks a 79-byte `.env`** that its `.gitignore` also lists. It predates the migration and was left alone. Check what it holds.
+- **template-nix `.gitignore` writes `.agents/` and `.claude/` with a trailing slash.** That form does not match a symlink. template-py writes the names with no slash for this reason. The links stay ignored here only because each repo lists them in `.git/info/exclude`. A `v0.4.1` fix is small.
+- The pilot found that the stub `modules/<name>.nix` can appear for a project that never had one (mnemonix). A later template bump may offer it again.
+- The v0.1.0 and v0.1.1 tag changes in nix-secrets were divergent before this work. They were left alone.
+
+
+Deferred repos:
+
+- loci.nvim (`module_class: none`, so no module layer): the default workspace has an uncommitted `devenv.lock` change and a WIP commit above `main`.
 - nix-nvim: the default workspace sits on a conflicted WIP commit (`stray-devenv`) with three modified files.
-- mnemonix: `main` and the `memprojects` bookmark share one commit. The repo has an untracked `.agents.devman-promoted` directory.
-- nix-desktop, nix-paseo, and nix-secrets are clean.
+
+Settle that work first. Then run the same flow.
