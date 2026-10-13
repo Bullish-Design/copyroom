@@ -251,6 +251,25 @@ Both took the template wiring for `devenv.nix`, `devenv.yaml`, and `.repoman/pro
 
 Leftovers:
 
-- The `AGENTS.md` of nix-nvim and loci.nvim still lists `repoman.lock` under "Inherited". The template omits that file. It is project prose, so it was left.
-- The stale vendomat comments listed above remain in flora-core, loci-core, and nix-nvim files that the migration did not rewrite.
-- The nix-paseo API key in git history needs rotation (the user's item).
+- Handled in "Leftover cleanup" below: the `AGENTS.md` mentions of `repoman.lock`, the stale vendomat comments, and the legacy `template/` tree.
+- The nix-paseo API key in git history needs rotation. The user took this item.
+
+### Leftover cleanup
+
+All edits were comments or prose only. Each ran in its own lane workspace, evaluated the repo with its overlay before and after (exit 0 both), and was pushed. The Testee-gated repos got a GREEN verdict for the exact commit first.
+
+| Repo | Main commit | Change |
+|---|---|---|
+| nix-nvim | `726c6bf34552` | `AGENTS.md`: removed `repoman.lock` from the "see devenv.nix" aside |
+| loci.nvim | `2ab1f9ff875e` | `AGENTS.md` Inherited bullet, one `devenv.nix` comment, one `README.md` comment: dropped the `repoman.lock` claims |
+| flora-core | `e360dc55a467` | `devenv.yaml` comment about the vendomat consumer module (Testee GREEN 4/4) |
+| loci-core | `3537b52f3888` | Stale vendomat comments in `devenv.nix`, `devenv.yaml`, `AGENTS.md`, `pyproject.toml`, and one test comment (Testee GREEN 4/4) |
+| template-nix | `db34efdeab51` | Removed the legacy Copier `template/` tree (11 files, no readers). Tags `v0.4.0` and `v0.4.1` unchanged; no new tag |
+
+Left on purpose:
+
+- The `.gitignore` line `.vendomat/` in loci-core. It names the V5 directory and is still true.
+- `AGENTS.md` line 61 and `devenv.nix` line 106 in loci-core ("gitman is not yet on PATH", "gitman cannot join copyroom yet"). The host now has `gitman` on `PATH`. An owner should review them.
+- The tyo3 overlay still imports the machine RepoMan module. tyo3 declares no `repoman` input, so that import is correct.
+- The template-nix v0.4.1 sources (`devenv_nix`, `agents_md`) and its rendered README still say `repoman-sync` installs from `repoman.lock`. The nix repos record that file as an omission. A next template release should reword it. nix-nvim kept those two lines; loci.nvim edited them. A later `copyroom update` may bring them back.
+- Two old divergent commits ("Implement the flora-core library in full") in flora-core and the v0.1.0 and v0.1.1 tag changes in nix-secrets predate this work.
