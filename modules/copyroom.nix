@@ -1,18 +1,15 @@
-# Importable devenv module: exposes CopyRoom, Templateer, and the pinned jj 0.46.0.
+# CopyRoom is a host tool in nix-meta's developer toolbelt. The developer
+# profile installs its CLI from Vendomat's shared toolchain and puts it on PATH.
+# Projects do not need a CopyRoom input or this module to run `copyroom`.
 #
-# Any devenv-managed project can depend on this repo and pull this module in:
+# Central overlays import RepoMan's manager module when a repository needs it:
 #
-#   # devenv.yaml
-#   inputs:
-#     copyroom:
-#       url: github:Bullish-Design/copyroom?ref=v0.8.6
-#       flake: false
-#   imports:
-#     - copyroom
+#   imports = [ /run/current-system/sw/share/repoman/module/devenv.nix ];
 #
-# That puts the `copyroom` command and jj 0.46.0 on PATH. Set `copyroom.enable = false` to
-# opt out, or override `copyroom.package` to supply your own build. Set
-# `copyroom.jj.package = null` when the project already supplies its own jj 0.46 or later.
+# This module is not installed at a central CopyRoom path. Keep project tasks,
+# packages, and test settings in tracked project files. This module remains for
+# CopyRoom's own shell and other explicit standalone environments. Its options
+# apply only where a project deliberately imports it.
 {
   config,
   lib,
