@@ -278,10 +278,33 @@ Left on purpose:
 
 **1. template-nix `repoman.lock` (a defect, not only wording).** Commit `18330502e35c` is on `main` and origin. RepoMan `v0.14.1` (and every tag since `v0.12.1`) makes `repoman-sync` exit 2 with "`repoman.lock` is obsolete in a consumer repo" when the file exists; the host profile replaced the lock. Template-nix `v0.4.0` and `v0.4.1` still rendered one. The commit follows template-py: it removes the `repoman_lock` artifact (templates, schema copy, five goldens), rewords the `devenv_nix`, `readme_md`, and `agents_md` text, and makes `scripts/check_render.py` ban the file. `registry validate`, `release-check nix`, `scripts/release-check.sh`, `sync_schema.py --check`, and `check_render.py` all exit 0; module goldens are unchanged. No tag exists for it.
 
-Effect on the six repos: only mnemonix tracks a `repoman.lock` (its marker has no omission), so `repoman-sync` would exit 2 there with the `path:` RepoMan input. `devenv info` does not run `repoman-sync`, so the earlier checks missed it. The other five never had the file. A `v0.4.2` tag and an update of all six would delete mnemonix's file and update the wording. Expected conflicts: mnemonix `README.md` (customised) and nix-nvim `AGENTS.md` (project prose). This waits for the user's go.
+Effect on the six repos: only mnemonix tracks a `repoman.lock` (its marker has no omission), so `repoman-sync` would exit 2 there with the `path:` RepoMan input. `devenv info` does not run `repoman-sync`, so the earlier checks missed it. The other five never had the file. A `v0.4.2` tag and an update of all six would delete mnemonix's file and update the wording. Expected conflicts: mnemonix `README.md` (customised) and nix-nvim `AGENTS.md` (project prose). The user gave the go; see "template-nix v0.4.2 rollout" below.
 
 **2. loci-core gitman statements.** Commit `462c9655535a`, Testee GREEN 4/4. `AGENTS.md` now says `gitman` is on `PATH` from the user profile and is not in the venv, because `pyjutsu` is not on PyPI (checked: 404) and the repo does not build the wheel. The old code block used a `gitman status` subcommand that does not exist, so it was removed. `devenv.nix` line 102 still says `gitman` cannot join the venv; that is true and was left. `pyproject.toml` lines 50 to 53 still say to route version control through gitman's checkout; that is partly stale and was left for the owner.
 
 **3. Divergent commits.** All are permanent and benign. Both twins are immutable (on `main` and origin, or tagged) in flora-core, poddantic, nix-secrets, and flora (12 changes). In inferference the real patches are immutable, and the mutable empty twins are held by two workspace working copies (`032-power-cap-actuator`, `032-build-identity`); abandoning that chain needs those two workspaces rebased or closed first. Divergence only breaks addressing by change id (`jj` refuses an ambiguous change id). `jj bookmark set`, `jj git push`, and `jj abandon -r 'divergent()'` on mutable commits are unaffected. nix-secrets also has a local-only tag `v0.1.0` that origin lacks; `jj tag delete v0.1.0` would quiet it. Nothing was changed. (An earlier note that nix-nvim had `qtunvxvs` was wrong.)
 
 **Workspaces in loci-core.** The workspaces `phase-a-base-review` and `testee-docfix` were forgotten at 23:06:02 by `jj workspace forget`, run as `andrew@server` from the default workspace, and their directories are gone. Their working-copy commits were empty, and the `phase-a-base-review` bookmark remains. No transcript of this session's agents contains those commands. The cause is unknown. The commits `43e9993c` and `e198b314` can be recovered from the operation log if needed.
+
+### template-nix v0.4.2 rollout
+
+Tag `v0.4.2` is published on `18330502e35c` (template-nix `main`). The base source no longer has the `repoman_lock` template. The user approved the tag and the update of all six repos.
+
+| Repo | Main commit | Notes |
+|---|---|---|
+| mnemonix | `a4da85008746` | Deleted its tracked `repoman.lock` (the real fix). `README.md` is customised: project side kept. `AGENTS.md` and `devenv.nix` took the template wording. |
+| nix-paseo | `aef7eb06a17b` | `README.md` conflict: project side kept (no `repoman-sync` line there). `AGENTS.md` Inherited list drops `repoman.lock`. |
+| nix-secrets | `9f67711f4b48` | `AGENTS.md` and `devenv.nix` conflicts: project side kept; one sentence and one comment fixed. `modules/secrets.nix` and `secrets/` unchanged. |
+| nix-desktop | `a127859d5ccb` | `AGENTS.md` conflict: project prose kept; the `repoman.lock` mention removed. |
+| nix-nvim | `048a6ba53876` | `README.md` and `devenv.nix` updated; `AGENTS.md` merged as a no-op. |
+| loci.nvim | `ec6f2b86d19a` | `AGENTS.md` kept; `README.md` and `devenv.nix` took the template wording. Base layer only. |
+
+Each repo reports status ok with every layer at `v0.4.2`, `no-change` for each layer, no tracked `repoman.lock`, and an in-repo `devenv info` with exit 0 and an unchanged `devenv.lock`. All earlier cleanup commits are still ancestors of `main`. No commit in any pushed range is undescribed or divergent.
+
+Lessons from this run:
+
+- A default working copy can sit on an old parent that is behind `main`. A preview built on it drops later commits. Run `jj new main` before the first preview (loci.nvim hit this; its agent caught it).
+- `jj describe` in a loop over commit ids splits changes into twins, because the first rewrite makes the other ids stale. Describe by change id.
+- Forgetting a preview workspace by hand and deleting its metadata file leaves a pending journal entry that `copyroom discard` cannot clear. Use `copyroom discard --preview PATH` while the preview file exists. Here, loci.nvim needed its `.copyroom-local/journal` and `previews` entries, plus the orphan preview commits, removed by hand.
+
+Left on purpose (not from this work): the content commit `d46d41c3` (2026-10-09) in mnemonix, the local `v0.1.0` tag target `58ae4ab1` in nix-secrets, and the remote branch `migration-wallpaper-asset` ("Track noctalia space wallpaper asset", `13736e0e`) in nix-desktop. Eight empty leftover heads from this session's agents were abandoned.
