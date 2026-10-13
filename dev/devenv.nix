@@ -38,8 +38,6 @@ in
     pkgs.secretspec
   ];
 
-  allium.enable = true;
-
   # https://devenv.sh/languages/
   languages = {
     python = {

@@ -11,15 +11,11 @@ inputs:
   mypy-agent:
     url: github:Bullish-Design/mypi-agent?ref=v0.3.6
     flake: false
-  allium-env:
-    url: github:Bullish-Design/allium-env?ref=v0.3.3
-    flake: false
 
   # devman: the automation plane's repo interface (CONCEPT.md §3.2). A devenv
   # import is a PATH inside an input, never a flake output attribute, and the
   # file it resolves to must be named devenv.nix.
 imports:
-  - allium-env
   - mypy-agent
   # Development-only tooling (Python toolchain, etc.). Consumers that
   # `imports: - copyroom` only pull in the root devenv.nix module, never this.
