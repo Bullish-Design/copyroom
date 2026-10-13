@@ -85,7 +85,39 @@ The commit `cf2ec939f8f1` is on `main` and on origin. It does four things:
 
 The tag `v0.8.1` is published. It is annotated and points to `cf2ec939f8f1`. The user authorized the push after the permission policy first denied it.
 
-No repo uses the tag yet. Update each repo above with `copyroom update --ref v0.8.1`. The change is documentation only, so each update should merge with no conflict.
+### template-py v0.8.1 rollout
+
+Twelve repos moved to `v0.8.1` and are pushed: poddantic, agentman, argentic, Eventic, Flora, flora-core, flora-qc, Linkman, llgym, pyllij, scopeman, and shellij. Each update changed only `.copyroom-local.json`, `AGENTS.md`, and `README.md` (Eventic: no README change). Each repo reports CopyRoom status ok with pin `v0.8.1`, and a second update returns `no-change`. The devman links did not change. No tests ran: the change is documentation only.
+
+| Repo | Main commit |
+|---|---|
+| poddantic | `9a11378f5754` |
+| agentman | `fa2d7baf9fcc` |
+| argentic | `fe254979227f` |
+| eventic | `a58974b083ee` |
+| flora | `55889d4affd7` |
+| flora-core | `90e02b0bf525` |
+| flora-qc | `474ccfb77fde` |
+| linkman | `6c3e2f97e543` |
+| llgym | `2d92e9d869d4` |
+| pyllij | `70fecebc62b7` |
+| scopeman | `d2639d3cc2c4` |
+| shellij | `03801bbd2608` |
+
+Three previews had a README conflict:
+
+- Eventic: the whole README is project text. The project side stayed.
+- flora-core: the project had edited the paragraph by hand. The template side replaced both hunks.
+- Linkman: the project had reworded the first sentence. The template side replaced it, so the text matches the other repos.
+
+inferference and pytuin carry neither stale text and stay at `v0.8.0`.
+
+Two lessons for a later rollout:
+
+- `jj describe` on a change that has a visible twin split each update into two lines with one change ID. Check `divergent()` before you describe, or describe the empty commits before apply.
+- Moving `main` to a twin commit with the same tree needs `--allow-backwards`.
+
+agentman and flora-qc still list an old pending preview each (`copyroom status` reports `pending_previews`). Those previews predate this rollout and were left alone.
 
 ### template-nix migration: pilot only
 
