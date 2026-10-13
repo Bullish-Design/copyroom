@@ -308,3 +308,21 @@ Lessons from this run:
 - Forgetting a preview workspace by hand and deleting its metadata file leaves a pending journal entry that `copyroom discard` cannot clear. Use `copyroom discard --preview PATH` while the preview file exists. Here, loci.nvim needed its `.copyroom-local/journal` and `previews` entries, plus the orphan preview commits, removed by hand.
 
 Left on purpose (not from this work): the content commit `d46d41c3` (2026-10-09) in mnemonix, the local `v0.1.0` tag target `58ae4ab1` in nix-secrets, and the remote branch `migration-wallpaper-asset` ("Track noctalia space wallpaper asset", `13736e0e`) in nix-desktop. Eight empty leftover heads from this session's agents were abandoned.
+
+### loci-core brought in line with current gitman
+
+Commit `51d5606cbe68` (was `462c9655535a`), Testee GREEN 4/4. `devenv info` with the overlay exits 0 before and after. The change is comments, prose, and one deleted file.
+
+Facts checked against the tools: `gitman` 0.13.1 has two commands, `work NAME [--from REVSET]` and `done NAME` (no `status`, `land`, `--version`, or `--path`). Its changelog says it dropped `gitman.toml`, the lane model, and the `pyjutsu` dependency; `pyproject.toml` has `dependencies = []`. Nothing in its source reads `gitman.toml`. RepoMan 0.14 has `managers`, `doctor`, and `install-skills`, and no `status`.
+
+Changes:
+
+- `AGENTS.md`: `repoman status` became `repoman managers` and `repoman doctor`. The version-control paragraph now says `gitman work` and `gitman done` open and close lanes, and native `jj` and `gh` do the rest. The statement that gitman needs `pyjutsu` is gone. This corrects the sentence that commit `462c9655` added: the `pyjutsu` reason was true of an older gitman and is not true of 0.13.1.
+- `pyproject.toml` (comments): RepoMan runs managers by name from `PATH`; gitman is a host tool, not a venv package; the `pyjutsu` reason is removed.
+- `devenv.nix` (comment, line 102): same correction.
+- `docs/PROCESS.md`: "the branch is pushed" became "the change is on `main` and pushed".
+- `gitman.toml` deleted (it held `trunk = "main"`; nothing reads it).
+
+Left alone: comments in `tests/unit/test_skill_conformance.py` that cite old skill paths (history, and the test logic is still valid).
+
+Other fleet repos still track a `gitman.toml` (for example nix-desktop and the template-py repos). No tool reads it. It was not part of this change.
