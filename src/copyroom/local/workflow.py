@@ -25,6 +25,7 @@ from .composer import (
     digest_bytes,
     digest_source,
     plan_digest,
+    safe_output_path,
 )
 from .errors import LocalError
 from .guard import Guard, is_colocated_child_workspace, resolve_guard, unguarded_requested
@@ -465,6 +466,45 @@ def _apply_omissions(plan: RenderPlan, record: dict[str, Any]) -> RenderPlan:
     files = {path: entry for path, entry in plan.files.items() if path not in omissions}
     owners = {path: owner for path, owner in plan.owners.items() if path not in omissions}
     return replace(plan, files=files, owners=owners, render_digest=plan_digest(files))
+
+
+def _record_omissions(
+    record: dict[str, Any], additions: list[str], plan: RenderPlan, layer: str,
+) -> dict[str, Any]:
+    """Add safe, rendered paths to a layer's persistent omission list."""
+
+    current = record.get("omissions", [])
+    if not isinstance(current, list) or any(not isinstance(path, str) for path in current):
+        raise LocalError("invalid conditional omissions in layer marker")
+    normalized_current: list[str] = []
+    for path in current:
+        try:
+            resolved = safe_output_path(path, {})
+        except LocalError as exc:
+            raise LocalError("invalid conditional omissions in layer marker") from exc
+        if resolved != path:
+            raise LocalError("invalid conditional omissions in layer marker")
+        normalized_current.append(resolved)
+    normalized: list[str] = []
+    for path in additions:
+        if not isinstance(path, str):
+            raise LocalError("omitted paths must be text", 3)
+        try:
+            resolved = safe_output_path(path, {})
+        except LocalError as exc:
+            raise LocalError(f"unsafe omitted path: {path!r}", 3) from exc
+        if resolved != path:
+            raise LocalError(f"unsafe omitted path: {path!r}", 3)
+        normalized.append(resolved)
+    available = set(plan.files) | set(record.get("owners", {})) | set(normalized_current)
+    unknown = sorted(set(normalized) - available)
+    if unknown:
+        raise LocalError(
+            f"path is not rendered by layer {layer}: " + ", ".join(unknown), 3,
+        )
+    if not normalized_current and not normalized:
+        return record
+    return {**record, "omissions": sorted(set(normalized_current) | set(normalized))}
 
 
 def _render_subject(project_id: str, layer: str, revision: int, source_digest: str) -> str:
@@ -1169,6 +1209,7 @@ def preview(
     plan_override: RenderPlan | None = None,
     record_metadata: dict[str, Any] | None = None,
     ref: str | None = None,
+    omit_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Render and merge in a separate jj workspace.
 
@@ -1186,7 +1227,7 @@ def preview(
     with open_layer_source(project, data, record, source_override, ref) as source:
         return _preview(
             project, out, source, data, record, answers_file, layer, plan_override,
-            record_metadata,
+            record_metadata, omit_paths or [],
         )
 
 
@@ -1200,6 +1241,7 @@ def _preview(
     layer: str,
     plan_override: RenderPlan | None,
     record_metadata: dict[str, Any] | None,
+    omit_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Render one layer from an opened source and merge it in a separate jj workspace."""
 
@@ -1218,7 +1260,11 @@ def _preview(
         plan = _frozen_plan(record)
     else:
         plan = compose(content, answers)
+    raw_plan = plan
+    base_record = record
+    record = _record_omissions(base_record, omit_paths or [], raw_plan, layer)
     plan = _apply_omissions(plan, record)
+    _refuse_symlinked_parents(project, record.get("omissions", []))
     jj = JJ(project)
     _preflight_paths(
         project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
@@ -1229,22 +1275,35 @@ def _preview(
         exclude_local_state(project)
         _require_local_state_untracked(jj)
         # Read all active state after taking the lock.
-        previous = record
+        previous = base_record
         data = marker(project)
         record = _layer_record(data, layer)
         if (
             record.get("source"), record.get("pin"), record["source_digest"],
+            record.get("omissions", []),
         ) != (
             previous.get("source"), previous.get("pin"), previous["source_digest"],
+            previous.get("omissions", []),
         ):
-            raise LocalError("project source locator changed during render", 1)
+            raise LocalError("project layer inputs changed during render", 1)
+        record = _record_omissions(record, omit_paths or [], raw_plan, layer)
+        plan = _apply_omissions(raw_plan, record)
+        _refuse_symlinked_parents(project, record.get("omissions", []))
+        active_paths = jj.tracked_paths("@")
+        for name in record.get("omissions", []):
+            path = project / name
+            if (path.exists() or path.is_symlink()) and name not in active_paths:
+                raise LocalError(
+                    f"cannot preserve omitted path because it is not tracked by jj: {name}", 1,
+                )
         _preflight_paths(
-            project, data, layer, plan.owners, tracked_paths=jj.tracked_paths("@"),
+            project, data, layer, plan.owners, tracked_paths=active_paths,
         )
         if (
             plan.render_digest == record["render_digest"]
             and plan.source_digest == record["source_digest"]
             and plan.answers == record["answers"]
+            and record.get("omissions", []) == previous.get("omissions", [])
             and plan.templateer_digest == record["templateer_digest"]
             and plan.composer_digest == record["composer_digest"]
             # A new pin is a change even when the tree is the same. A moved path is not.
@@ -1301,6 +1360,11 @@ def _preview(
             if JJ(out).merge_base(active_head, next_render) != old_render:
                 raise LocalError("project and render have the wrong merge base")
             JJ(out).run("new", active_head, next_render, "-m", "copyroom:preview")
+            omissions = sorted(record.get("omissions", []))
+            if omissions:
+                JJ(out).run(
+                    "restore", "--from", active_head, "--into", "@", "--", *omissions,
+                )
             conflict_paths = JJ(out).conflicts()
             # The private store keeps the source. The reviewed tree holds no copy of it.
             store_source(project, content, plan.source_digest)
@@ -1342,6 +1406,7 @@ def _preview(
                 "composer_digest": plan.composer_digest,
                 "answers": plan.answers,
                 "owners": plan.owners,
+                "omissions": omissions,
                 "render_digest": plan.render_digest,
                 "conflicts": conflict_paths,
                 "record_metadata": record_metadata,
@@ -1385,6 +1450,9 @@ def _validate_preview_state(out: Path, state: dict[str, Any]) -> dict[str, Any]:
         or not re.fullmatch(r"copyroom-[0-9a-f]{12}", str(state["workspace"]))
         or normalize_path(Path(str(state["path"]))) != out
     ):
+        raise LocalError("unsupported preview state")
+    omissions = state.get("omissions", [])
+    if not isinstance(omissions, list) or any(not isinstance(path, str) for path in omissions):
         raise LocalError("unsupported preview state")
     return state
 

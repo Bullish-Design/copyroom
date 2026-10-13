@@ -8,7 +8,7 @@ Workshop commands use `copyroom.yml`, `registry/`, and `scenarios/`.
 | Command | Behavior |
 | --- | --- |
 | `copyroom new SOURCE TARGET --answers FILE [--ref REF]` | Create from a local Templateer source, optionally pinned to a Git ref. |
-| `copyroom update [--layer NAME] [--source DIR] [--ref REF] [--answers FILE] [--out DIR]` | Create a separate update preview. A pinned layer renders its pinned commit. `--ref` moves it. |
+| `copyroom update [--layer NAME] [--source DIR] [--ref REF] [--answers FILE] [--omit-path PATH] [--out DIR]` | Create a separate update preview. A pinned layer renders its pinned commit. `--ref` moves it. Repeat `--omit-path` to keep rendered paths outside layer ownership. |
 | `copyroom update --apply DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom apply --preview DIR [--publish-unguarded]` | Apply the exact reviewed preview through the pyjutsu guard. |
 | `copyroom discard --preview DIR` | Discard a pending preview. |

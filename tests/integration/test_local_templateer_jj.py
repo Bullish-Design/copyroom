@@ -189,6 +189,38 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertFalse((self.project / ".copyroom-local/sources").exists())
         self.assertEqual(1, marker(self.project)["revision"])
 
+    def test_update_omits_a_path_and_preserves_the_project_file_bytes(self) -> None:
+        manifest_path = self.source / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["static"] = [{"path": ".devman/project.toml", "source": "project.toml"}]
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        source_file = self.source / "project.toml"
+        source_file.write_text('schema = 1\nname = "template"\n', encoding="utf-8")
+        self.create()
+
+        owned_file = self.project / ".devman/project.toml"
+        project_bytes = b"schema = 1\r\n# project-owned\r\nname = 'repo'\r\n"
+        owned_file.write_bytes(project_bytes)
+        owned_file.chmod(0o644)
+        JJ(self.project).run("commit", "-m", "project: own DevMan manifest")
+        source_file.write_text('schema = 1\nname = "template v2"\n', encoding="utf-8")
+
+        out = self.root / "omit-path-preview"
+        state = preview(self.project, out, omit_paths=[".devman/project.toml"])
+
+        self.assertEqual([".devman/project.toml"], state["omissions"])
+        self.assertEqual([], JJ(out).conflicts())
+        preview_marker = marker(out)
+        self.assertEqual([".devman/project.toml"], preview_marker["layers"]["base"]["omissions"])
+        self.assertNotIn(".devman/project.toml", preview_marker["layers"]["base"]["owners"])
+        self.assertEqual(project_bytes, owned_file.read_bytes())
+        self.assertEqual(project_bytes, (out / ".devman/project.toml").read_bytes())
+
+        apply(self.project, out)
+
+        self.assertEqual(project_bytes, owned_file.read_bytes())
+        self.assertNotIn(".devman/project.toml", marker(self.project)["layers"]["base"]["owners"])
+
     def test_exclude_rules_keep_preview_state_out_of_the_colocated_tree(self) -> None:
         self.create()
         self.change_template(

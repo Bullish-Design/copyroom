@@ -48,8 +48,14 @@ preview workspace. With no `--out`, CopyRoom creates a unique path beside the
 project, in `.copyroom-previews/`. Set the path with `--out`:
 
 ```bash
-copyroom update --out ../app-update-1
+copyroom update --omit-path .devman/project.toml --out ../app-update-1
 ```
+
+Use `--omit-path PATH` when a rendered path belongs to the repository. You can
+repeat the option. CopyRoom records each path in that layer's `omissions` list,
+removes it from layer ownership, and restores its current tracked content from
+the active project into the preview. This keeps the repository file unchanged
+while the layer updates. The omission remains for later updates.
 
 The preview workspace must be outside the project. If `--out` is inside the
 project, `copyroom update` exits with code `2` and prints `preview must be
@@ -60,6 +66,9 @@ Review files in the preview workspace. Apply the exact reviewed preview with:
 ```bash
 copyroom update --apply ../app-update-1
 ```
+
+The apply uses the omission recorded in that preview. Do not pass omission
+options with `--apply`; create and review a new preview to change layer inputs.
 
 The active project does not change during preview. If the project changes after
 preview, CopyRoom refuses the apply. A jj conflict remains in the preview

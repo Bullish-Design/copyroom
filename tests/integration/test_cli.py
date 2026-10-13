@@ -50,6 +50,46 @@ def test_new_and_update_use_local_source(tmp_path: Path) -> None:
     assert 'revision: "v2"' in (project / "config/project.yml").read_text(encoding="utf-8")
 
 
+def test_update_omit_path_records_and_applies_a_project_owned_file(tmp_path: Path) -> None:
+    source, answers = _source(tmp_path)
+    manifest_path = source / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["static"] = [{"path": ".devman/project.toml", "source": "project.toml"}]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    (source / "project.toml").write_text('schema = 1\nname = "template"\n', encoding="utf-8")
+    project = tmp_path / "project"
+    created = _run("new", str(source), str(project), "--answers", str(answers), cwd=tmp_path)
+    assert created.returncode == 0, created.stderr
+
+    project_bytes = b"schema = 1\r\n# owned by this repository\r\nname = 'repo'\r\n"
+    target = project / ".devman/project.toml"
+    target.write_bytes(project_bytes)
+    committed = subprocess.run(
+        ["jj", "commit", "-m", "project: own DevMan manifest"],
+        cwd=project, capture_output=True, text=True,
+    )
+    assert committed.returncode == 0, committed.stderr
+
+    preview = tmp_path / "omit-preview"
+    updated = _run(
+        "update", "--out", str(preview), "--omit-path", ".devman/project.toml", "--json",
+        cwd=project,
+    )
+    assert updated.returncode == 0, updated.stderr
+    state = json.loads(updated.stdout)
+    assert state["omissions"] == [".devman/project.toml"]
+    preview_marker = json.loads((preview / ".copyroom-local.json").read_text(encoding="utf-8"))
+    assert preview_marker["layers"]["base"]["omissions"] == [".devman/project.toml"]
+    assert (preview / ".devman/project.toml").read_bytes() == project_bytes
+
+    applied = _run("update", "--apply", str(preview), cwd=project)
+    assert applied.returncode == 0, applied.stderr
+    project_marker = json.loads((project / ".copyroom-local.json").read_text(encoding="utf-8"))
+    assert project_marker["layers"]["base"]["omissions"] == [".devman/project.toml"]
+    assert project_marker["layers"]["base"]["owners"].get(".devman/project.toml") is None
+    assert target.read_bytes() == project_bytes
+
+
 def test_inspect_and_status_emit_local_json(tmp_path: Path) -> None:
     source, answers = _source(tmp_path)
     project = tmp_path / "project"
@@ -90,7 +130,7 @@ def test_jj_warning_stays_off_json_stdout(tmp_path: Path, monkeypatch) -> None:
 
     def report_with_warning(
         project: Path, out: Path, source: Path | None, answers: Path | None, layer: str,
-        ref: str | None = None,
+        ref: str | None = None, omit_paths: list[str] | None = None,
     ) -> dict[str, str]:
         return {"result": "warning-test", "path": JJ(project).run("new", "preview")}
 

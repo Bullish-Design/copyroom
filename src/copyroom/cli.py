@@ -176,6 +176,9 @@ def update_command(
     ),
     answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
     layer: str = typer.Option("base", "--layer", help="Layer to converge"),
+    omit_paths: list[str] = typer.Option(
+        [], "--omit-path", help="Leave this rendered path outside layer ownership (repeatable)",
+    ),
     publish_unguarded: bool = typer.Option(
         False, "--publish-unguarded",
         help="Publish without the pyjutsu guard; a foreign writer is found only afterward",
@@ -190,7 +193,7 @@ def update_command(
 
     project = _project_root()
     if apply_preview is not None:
-        if out is not None or source is not None or answers is not None or ref is not None:
+        if out is not None or source is not None or answers is not None or ref is not None or omit_paths:
             _error("--apply cannot be combined with preview inputs", 3)
         result = _call(
             apply, project, apply_preview, publish_unguarded=publish_unguarded,
@@ -203,6 +206,7 @@ def update_command(
         )
         result = _call(
             preview, project, destination, source, answers, layer, ref=ref,
+            omit_paths=omit_paths,
             json_output=json_output,
         )
     if isinstance(result, dict) and result.get("conflicts"):
@@ -219,11 +223,17 @@ def preview_create(
     ),
     answers: Path | None = typer.Option(None, "--answers", help="JSON answers override"),
     layer: str = typer.Option("base", "--layer", help="Layer to converge"),
+    omit_paths: list[str] = typer.Option(
+        [], "--omit-path", help="Leave this rendered path outside layer ownership (repeatable)",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit a JSON report"),
 ) -> None:
     from .local.workflow import preview
 
-    _call(preview, project, out, source, answers, layer, ref=ref, json_output=json_output)
+    _call(
+        preview, project, out, source, answers, layer, ref=ref,
+        omit_paths=omit_paths, json_output=json_output,
+    )
 
 
 @preview_app.command("list")
