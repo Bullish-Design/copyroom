@@ -17,6 +17,7 @@ from .composer import compose, safe_output_path
 from .errors import LocalError
 from .jj import JJ
 from .source import read_json, write_json
+from .store import run_git
 from .workflow import discard, new, preview, tree_files, write_tree
 
 WORKSHOP_STATE = ".copyroom-workshop"
@@ -369,11 +370,62 @@ def _candidate_path(root: Path) -> Path:
     return root / WORKSHOP_STATE / "candidate.json"
 
 
+def _outer_repo(source: Path) -> tuple[Path | None, str]:
+    """Return the repository root that holds ``source`` and its subdirectory (POSIX text).
+
+    The root is ``None`` when no repository holds ``source``. A jj repository wins. A
+    Git-only repository raises, because CopyRoom must never nest a second repository in it.
+    """
+
+    try:
+        found = Path(JJ(source).run("root").strip()).resolve()
+    except LocalError:
+        found = None
+    if found is None:
+        try:
+            top = Path(run_git(source, "rev-parse", "--show-toplevel").decode().strip()).resolve()
+        except LocalError:
+            return None, ""
+        if top == source:
+            return None, ""
+        raise LocalError(
+            f"template source is inside a Git-only repository: {top}; "
+            "run `jj git init --colocate` at its root first",
+            2,
+        )
+    relative = source.relative_to(found).as_posix()
+    return found, "" if relative == "." else relative
+
+
+def _snapshot_copy(jj: JJ, template_id: str) -> str:
+    """Copy the working-copy commit of a shared repository and return the copy's ID.
+
+    The copy holds uncommitted source edits. It is a sibling of @, not a child. A child
+    would change whenever the outer working copy changes, and jj would then mark the
+    candidate workspace stale.
+    """
+
+    siblings = 'children(parents(@)) ~ @'
+    listing = ("log", "--no-graph", "-r", siblings, "-T", 'commit_id ++ "\\n"')
+    before = set(jj.run(*listing).split())
+    jj.run("duplicate", "@")
+    created = set(jj.run(*listing).split()) - before
+    if len(created) != 1:
+        raise LocalError(f"expected one copied commit, found {len(created)}")
+    base_head = created.pop()
+    jj.run("describe", "-r", base_head, "-m", f"copyroom:template {template_id} candidate base")
+    return base_head
+
+
 def template_checkout(
     template_id: str,
     workshop_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Create a separate jj workspace for local candidate template edits."""
+    """Create a separate jj workspace for local candidate template edits.
+
+    A source below the root of a jj repository gets a workspace of that repository.
+    The candidate source is then ``candidate/<subdir>``.
+    """
 
     root = _workshop(workshop_root)
     source = _source(root, template_id)
@@ -382,29 +434,46 @@ def template_checkout(
         state = read_json(state_file)
         if Path(state.get("candidate", "")).is_dir():
             raise LocalError(f"candidate already exists for {state.get('template')}; discard it first", 1)
-    jj = JJ(source)
-    if not (source / ".jj").is_dir():
-        jj.run("git", "init", "--colocate")
-        jj.run("commit", "-m", f"copyroom:template {template_id} baseline")
-    base_head = jj.commit_id("@").strip()
+    repo, subdir = _outer_repo(source)
+    if repo is None:
+        repo = source
+        jj = JJ(source)
+        if not (source / ".jj").is_dir():
+            jj.run("git", "init", "--colocate")
+            jj.run("commit", "-m", f"copyroom:template {template_id} baseline")
+    else:
+        jj = JJ(repo)
+    if subdir:
+        base_head = _snapshot_copy(jj, template_id)
+    else:
+        base_head = jj.commit_id("@").strip()
     candidate = Path(tempfile.mkdtemp(prefix=f"copyroom-{template_id}-"))
     candidate.rmdir()
     try:
-        jj.run("workspace", "add", "--name", f"copyroom-{template_id}", str(candidate))
+        jj.run(
+            "workspace", "add", "--name", f"copyroom-{template_id}", "-r", base_head,
+            str(candidate),
+        )
     except LocalError:
         shutil.rmtree(candidate, ignore_errors=True)
         raise
     state = {
         "template": template_id,
         "source": str(source),
+        "repo": str(repo),
+        "subdir": subdir,
         "candidate": str(candidate),
         "base_head": base_head,
     }
     write_json(state_file, state)
-    return {"result": "candidate-ready", **state}
+    return {"result": "candidate-ready", **state, "candidate_source": str(candidate / subdir)}
 
 
-def _load_candidate(root: Path, template_id: str | None = None) -> tuple[dict[str, Any], Path]:
+def _load_candidate(
+    root: Path, template_id: str | None = None,
+) -> tuple[dict[str, Any], Path, Path]:
+    """Return the candidate state, its workspace root, and its source directory."""
+
     path = _candidate_path(root)
     if not path.is_file():
         raise LocalError("no template candidate is checked out", 3)
@@ -414,14 +483,15 @@ def _load_candidate(root: Path, template_id: str | None = None) -> tuple[dict[st
     candidate = Path(str(state.get("candidate", "")))
     if not candidate.is_dir():
         raise LocalError("candidate workspace is missing; run template-discard", 2)
-    return state, candidate
+    # A candidate.json without "subdir" comes from an older CopyRoom: the root is the source.
+    return state, candidate, candidate / str(state.get("subdir", ""))
 
 
 def template_test(template_id: str, workshop_root: Path | None = None) -> dict[str, Any]:
     """Render and compare every scenario against the candidate workspace."""
 
     root = _workshop(workshop_root)
-    _, candidate = _load_candidate(root, template_id)
+    _, _, candidate = _load_candidate(root, template_id)
     results = []
     for scenario_file in sorted((root / "scenarios" / template_id).glob("*.yml")):
         result = golden_diff(template_id, scenario_file.stem, root, source=candidate)
@@ -443,7 +513,7 @@ def update_test(
     from .edits import apply_edits, load_edits
 
     root = _workshop(workshop_root)
-    _, candidate = _load_candidate(root, template_id)
+    _, _, candidate = _load_candidate(root, template_id)
     source = _source(root, template_id)
     state_dir = root / WORKSHOP_STATE
     test_root = Path(tempfile.mkdtemp(prefix=f"copyroom-update-{template_id}-{scenario_id}-"))
@@ -517,7 +587,7 @@ def template_preview(
     from .workflow import preview
 
     root = _workshop(workshop_root)
-    _, candidate = _load_candidate(root, template_id)
+    _, _, candidate = _load_candidate(root, template_id)
     return preview(project, out, candidate, None, layer)
 
 
@@ -526,7 +596,7 @@ def template_discard(workshop_root: Path | None = None) -> dict[str, Any]:
 
     root = _workshop(workshop_root)
     state_file = _candidate_path(root)
-    state, candidate = _load_candidate(root)
+    state, candidate, _ = _load_candidate(root)
     source = Path(str(state["source"]))
     JJ(candidate).run("workspace", "forget", f"copyroom-{state['template']}")
     shutil.rmtree(candidate, ignore_errors=True)

@@ -480,6 +480,12 @@ The active source remains unchanged while the candidate is edited. The project
 preview is separate from the active project. Apply a reviewed project preview
 from that project's directory.
 
+A source can be a subdirectory of a jj repository. Then `template-checkout`
+makes the candidate a workspace of that repository. Edit the files in
+`candidate_source`, which is the candidate path plus the subdirectory. If the
+repository is Git-only, the command exits `2`. Run `jj git init --colocate`
+at its root first.
+
 `copyroom update-test` exits `0` and reports `no-change` when the candidate
 renders the same tree as the project. That result means the update path was not
 exercised. It exits `1` when the update preview has conflicts.

@@ -1904,6 +1904,83 @@ class LocalTemplateerJJTests(unittest.TestCase):
         self.assertEqual(before, after)
         template_discard(workshop)
 
+    def make_golden(self, workshop: Path) -> None:
+        rendered = render_scenario("demo", "basic", workshop)
+        shutil.copytree(rendered["output"], workshop / "goldens/demo/basic")
+
+    def test_checkout_without_subdir_in_state_uses_candidate_root(self) -> None:
+        workshop = self.make_workshop()
+        self.make_golden(workshop)
+        template_checkout("demo", workshop)
+        state_file = workshop / ".copyroom-workshop/candidate.json"
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+        self.assertEqual("", state["subdir"])
+        del state["subdir"]
+        state_file.write_text(json.dumps(state), encoding="utf-8")
+        self.assertEqual("candidate-passed", template_test("demo", workshop)["result"])
+        template_discard(workshop)
+
+    def test_checkout_of_nested_source_makes_a_workspace_of_the_outer_repository(self) -> None:
+        workshop = self.make_workshop()
+        self.make_golden(workshop)
+        outer = JJ(workshop)
+        outer.run("git", "init", "--colocate")
+        outer.run("commit", "-m", "outer baseline")
+        source = workshop / "source"
+        tracked = outer.tracked_paths()
+        self.assertIn("source/manifest.json", tracked)
+        # An uncommitted edit in the working copy must reach the candidate.
+        (source / "UNCOMMITTED.txt").write_text("draft\n", encoding="utf-8")
+
+        report = template_checkout("demo", workshop)
+
+        candidate = Path(report["candidate"])
+        self.assertFalse((source / ".git").exists())
+        self.assertFalse((source / ".jj").exists())
+        self.assertLessEqual(tracked, outer.tracked_paths())
+        self.assertIn("source/UNCOMMITTED.txt", outer.tracked_paths())
+        state = json.loads(
+            (workshop / ".copyroom-workshop/candidate.json").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(str(workshop.resolve()), state["repo"])
+        self.assertEqual("source", state["subdir"])
+        self.assertEqual(str(candidate / "source"), report["candidate_source"])
+        self.assertTrue((candidate / "source/manifest.json").is_file())
+        self.assertTrue((candidate / "source/UNCOMMITTED.txt").is_file())
+        self.assertFalse((candidate / "source/.jj").exists())
+        self.assertIn("copyroom-demo", outer.run("workspace", "list"))
+
+        self.assertEqual("candidate-passed", template_test("demo", workshop)["result"])
+        active_readme = (source / "templates/readme/template.j2").read_bytes()
+        candidate_readme = candidate / "source/templates/readme/template.j2"
+        candidate_readme.write_bytes(candidate_readme.read_bytes() + b"Candidate line.\n")
+        with self.assertRaisesRegex(LocalError, "candidate golden differs"):
+            template_test("demo", workshop)
+        self.assertEqual(active_readme, (source / "templates/readme/template.j2").read_bytes())
+
+        template_discard(workshop)
+
+        self.assertFalse(candidate.exists())
+        self.assertNotIn("copyroom-demo", outer.run("workspace", "list"))
+        self.assertFalse((workshop / ".copyroom-workshop/candidate.json").exists())
+        self.assertFalse((source / ".jj").exists())
+
+    def test_checkout_refuses_a_source_inside_a_git_only_repository(self) -> None:
+        workshop = self.make_workshop()
+        self.make_golden(workshop)
+        subprocess.run(["git", "init", "-q", str(workshop)], check=True)
+        source = workshop / "source"
+
+        with self.assertRaises(LocalError) as caught:
+            template_checkout("demo", workshop)
+
+        self.assertEqual(2, caught.exception.code)
+        self.assertIn("jj git init --colocate", str(caught.exception))
+        self.assertFalse((source / ".git").exists())
+        self.assertFalse((source / ".jj").exists())
+        self.assertFalse((workshop / ".jj").exists())
+        self.assertFalse((workshop / ".copyroom-workshop/candidate.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

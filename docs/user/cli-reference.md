@@ -51,7 +51,7 @@ from that tree. Legacy answer files are not rewritten.
 | `copyroom golden ID SCENARIO` | Compare a full-tree golden. |
 | `copyroom golden ID SCENARIO --refresh` | Audit Templateer, then refresh the golden. |
 | `copyroom release-check ID` | Audit, compare all goldens, and run scenario tests. |
-| `copyroom template-checkout ID` | Create a separate jj candidate workspace. |
+| `copyroom template-checkout ID` | Create a separate jj candidate workspace. A nested source gets a workspace of its repository. |
 | `copyroom template-test ID` | Compare candidate renders with all scenario goldens. |
 | `copyroom update-test ID SCENARIO` | Preview the candidate against a disposable project and run `devenv test`. |
 | `copyroom template-preview ID --project DIR --out DIR` | Preview a candidate update in a separate project workspace. |
